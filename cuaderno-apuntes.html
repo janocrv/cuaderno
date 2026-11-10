@@ -421,6 +421,7 @@ dialog.viewer[open]{display:flex;flex-direction:column}
 .al-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:#e3a33b}
 .al-item.urgent .al-dot{background:var(--danger)}
 .al-item.info .al-dot{background:var(--accent)}
+.al-group.upd{color:#ff9f0a}.al-item.upd .al-dot{background:#ff9f0a;box-shadow:0 0 6px #ff9f0a}
 .al-txt{flex:1;min-width:0;cursor:pointer}
 .al-txt b{display:block;font-weight:500;font-size:.93rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .al-txt small{display:block;color:var(--muted);font-size:.78rem;margin-top:2px}
@@ -1838,7 +1839,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   /* Efecto lupa del Dock de macOS en la columna de asignaturas: el botón bajo el cursor crece
      y los vecinos un poco menos, empujándose unos a otros para no solaparse. */
   (() => {
-    const nav = $('#subjects'), MAX = 0.32, RANGE = 125, EASE = 0.16;   // hasta +32 %, alcance ~125 px, suavizado
+    const nav = $('#subjects'), MAX = 0.2, RANGE = 105, EASE = 0.2;   // hasta +20 %, alcance ~105 px, suavizado (contenido)
     if (matchMedia('(prefers-reduced-motion: reduce)').matches || matchMedia('(hover: none)').matches) return;
     let base = null, cur = [], tgt = [], raf = 0, mouseY = null, free = Infinity, chH = 40, curFit = 1;
     const chips = () => [...nav.querySelectorAll('.subj .chip')];
@@ -1891,7 +1892,13 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     nav.addEventListener('mouseleave', () => { mouseY = null; kick(); });
     nav.addEventListener('scroll', () => { base = null; kick(); });
     addEventListener('resize', () => { base = null; kick(); });
-    new MutationObserver(() => { base = null; cur = []; kick(); }).observe(nav, { childList: true });
+    // Al redibujar la lista (cada guardado o sincronización) los botones nuevos toman en el acto el tamaño que tenían:
+    // antes volvían a tamaño normal y crecían otra vez, y eso se veía como un temblor
+    new MutationObserver(() => {
+      base = null; if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      if (cur.length !== chips().length) cur = chips().map(() => 1);
+      frame();
+    }).observe(nav, { childList: true });
     setTimeout(kick, 300);
   })();
 
@@ -3740,7 +3747,12 @@ Gracias.` },
     }
     const rv = state.autoMail.review.length;
     if (rv) out.push({ key: 'review', kind: 'review', level: 'info', title: rv === 1 ? '1 posible tarea por revisar' : `${rv} posibles tareas por revisar`, sub: 'Lo he visto en el correo y no estoy seguro de si es una tarea' });
-    const rank = { urgent: 0, soon: 1, important: 1, info: 2 };
+    // versión nueva sin instalar desde hace 2 días o más
+    if (typeof updInfo !== 'undefined' && updInfo && updInfo.available && updInfo.since && !['downloading', 'installing'].includes(updInfo.state)) {
+      const days = Math.floor((Date.now() - updInfo.since) / 86400000);
+      if (days >= 2) out.push({ key: 'upd:' + updInfo.latest, kind: 'upd', level: 'upd', title: `Hay una versión nueva del Cuaderno (${updInfo.latest})`, sub: `Disponible desde hace ${days} días · tienes la ${updInfo.current}. Tus datos no se tocan al actualizar.` });
+    }
+    const rank = { urgent: 0, upd: 1, soon: 1, important: 1, info: 2 };
     return out.sort((a, b) => rank[a.level] - rank[b.level] || (a.d ?? 99) - (b.d ?? 99));
   }
   function updateAlertBadge() {
@@ -3751,6 +3763,7 @@ Gracias.` },
   function openAlert(a) {
     if (a.kind === 'task') { flushEditor(); state.active = a.s.id; document.querySelector('[name=taskScope][value=subject]').checked = true; setView('tasks'); renderSubjects(); }
     else if (a.kind === 'mail') { setView('mail'); mailSel = a.m.uid; state.mailSeen[a.m.uid] = true; save(); renderMail(); renderSubjects(); updateAlertBadge(); document.querySelector('.mail-body')?.classList.add('reading'); }
+    else if (a.kind === 'upd') manualUpdate();
     else { document.querySelector('[name=taskScope][value=all]').checked = true; setView('tasks'); }
   }
   const canNotify = () => 'Notification' in window;
@@ -3761,7 +3774,7 @@ Gracias.` },
       perm = `<div class="al-perm"><span>¿Quieres que te avise también con notificaciones de Windows, aunque tengas el Cuaderno minimizado?</span><button class="btn primary" id="alPerm">Activar avisos de Windows</button></div>`;
     else if (canNotify() && Notification.permission === 'denied')
       perm = `<div class="al-perm"><span>Las notificaciones de Windows están bloqueadas. Puedes activarlas desde el candado de la barra de la ventana → Notificaciones → Permitir.</span></div>`;
-    const groups = [['urgent', 'Urgente'], ['soon', 'Esta semana'], ['important', 'Correos importantes sin leer'], ['info', 'Por revisar']];
+    const groups = [['urgent', 'Urgente'], ['upd', 'Versión nueva'], ['soon', 'Esta semana'], ['important', 'Correos importantes sin leer'], ['info', 'Por revisar']];
     box.innerHTML = `<div class="al-head"><h2>Avisos</h2><span class="hint">${list.filter(x => x.level !== 'info').length ? 'Lo que requiere tu atención' : ''}</span></div>${perm}` +
       (list.length ? groups.map(([lv, name]) => { const g = list.filter(x => x.level === lv); return g.length ? `<div class="al-group ${lv}">${name}</div><ul class="al-list" data-lv="${lv}"></ul>` : ''; }).join('')
         : '<p class="al-empty">Todo al día: no hay fechas cercanas ni correos importantes sin leer.</p>');
@@ -3771,7 +3784,9 @@ Gracias.` },
         const li = document.createElement('li'); li.className = 'al-item ' + a.level;
         li.innerHTML = `<span class="al-dot"></span><span class="al-txt"><b>${esc(a.title)}</b><small>${esc(a.sub)}</small></span>` +
           (a.kind === 'mail' ? '<button class="btn" data-a="ok" title="Marcar como leído">Visto</button>' : '') +
-          (a.kind === 'task' ? '<button class="btn" data-a="done">Hecha</button>' : '');
+          (a.kind === 'task' ? '<button class="btn" data-a="done">Hecha</button>' : '') +
+          (a.kind === 'upd' ? '<button class="btn primary" data-a="upd">Actualizar</button>' : '');
+        const up = li.querySelector('[data-a=upd]'); if (up) up.onclick = () => manualUpdate();
         li.querySelector('.al-txt').onclick = () => openAlert(a);
         const ok = li.querySelector('[data-a=ok]'); if (ok) ok.onclick = () => { state.mailSeen[a.m.uid] = true; save(); updateMailBadge(); renderAlerts(); updateAlertBadge(); };
         const dn = li.querySelector('[data-a=done]'); if (dn) dn.onclick = () => { a.t.done = true; a.t.doneAt = Date.now(); save(); renderSubjects(); renderAlerts(); updateAlertBadge(); toast('¡Tarea hecha!'); };
@@ -3820,6 +3835,7 @@ Gracias.` },
       if (a.kind === 'task' && a.d > 1) return; // solo mañana, hoy o atrasada
       const k = keyOf(a); if (N[k]) return; N[k] = t0;
       if (a.kind === 'task') send(a.d < 0 ? 'Tarea atrasada' : a.d === 0 ? 'Tarea para hoy' : 'Tarea para mañana', `${a.s.short} · ${a.t.title}`, a);
+      else if (a.kind === 'upd') send('Cuaderno · versión nueva', a.title + '. Pulsa para actualizar.', a);
       else send((a.level === 'urgent' ? '⚠ ' : '') + a.sub.split(' · ')[0], a.title, a);
     });
     // limpia lo que ya no existe
@@ -4520,12 +4536,16 @@ Gracias.` },
 
   /* ---------- Actualizaciones (solo en la app de escritorio) ---------- */
   let updHidden = false, updPoll = null;
+  var updInfo = null;   // última respuesta de /api/version (var: buildAlerts puede llamar antes de llegar aquí)
   async function checkVersion(force) {
     if (!IN_APP) return null;
     let v = null; try { v = await (await fetch('/api/version', { method: force ? 'POST' : 'GET' })).json(); } catch (e) {}
     renderUpd(v); return v;
   }
   function renderUpd(v) {
+    const had = !!(updInfo && updInfo.available && updInfo.since), hasNow = !!(v && v.available && v.since);
+    if (v) updInfo = v;
+    if (had !== hasNow || v) { updateAlertBadge(); if (state.view === 'alerts') renderAlerts(); }
     $('#updDot').hidden = !(v && v.available);
     $('#updTopBtn').classList.toggle('has-upd', !!(v && v.available));
     $('#updTopBtn').title = v && v.available ? `Actualizar a la versión ${v.latest}` : 'Actualizar Cuaderno';
@@ -4571,7 +4591,10 @@ Gracias.` },
       <button type="button" class="btn ${v.available ? 'primary' : ''}" id="updRowBtn">${v.available ? 'Actualizar' : 'Buscar actualizaciones'}</button>`;
     $('#updRowBtn').onclick = () => { $('#setDlg').close(); manualUpdate(); };
   }
-  if (IN_APP) { setTimeout(() => checkVersion(false), 12000); setInterval(() => checkVersion(false), 5 * 60000); }   // la app consulta GitHub cada 30 min; aquí se mira su resultado
+  // la app consulta GitHub al arrancar y cada 30 min y avisa en cuanto hay versión nueva (cuadernoVersionCheck);
+  // por si acaso, aquí se mira su resultado cada minuto y al volver a la ventana (es local, no cuesta nada)
+  window.cuadernoVersionCheck = () => checkVersion(false);
+  if (IN_APP) { setTimeout(() => checkVersion(false), 3000); setTimeout(() => checkVersion(false), 12000); setInterval(() => checkVersion(false), 60000); addEventListener('focus', () => checkVersion(false)); }   // la app consulta GitHub cada 30 min; aquí se mira su resultado
 
   /* Foto de perfil: se recorta en cuadrado, se reduce a 256 px y se guarda con los datos (se sincroniza) */
   function renderSetPhoto() {

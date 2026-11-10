@@ -477,9 +477,18 @@ async function checkUpdate() {
     const a = (j.assets || []).find(x => x.name === assetName());
     updAsset = a ? a.browser_download_url : null;
     upd.latest = v; upd.notes = String(j.body || '').trim().slice(0, 800);
+    const was = upd.available;
     upd.available = !!(v && updAsset && cmpVer(v, upd.current) > 0);
     upd.error = null; upd.checked = new Date().toISOString();
     if (upd.state === 'error') upd.state = 'idle';
+    // desde cuándo hay versión nueva sin instalar (para avisar en «Avisos» si pasan días)
+    if (upd.available) {
+      let s = ajustes().updSeen;
+      if (!s || s.cur !== upd.current) { s = { cur: upd.current, t: Date.now() }; setAjustes({ updSeen: s }); }
+      upd.since = s.t;
+    } else upd.since = null;
+    // la interfaz se entera en el acto (la rueda se pone naranja sin tener que pulsarla)
+    if (upd.available && !was && win && !win.isDestroyed()) win.webContents.executeJavaScript('window.cuadernoVersionCheck && window.cuadernoVersionCheck()').catch(() => {});
   } catch (e) { upd.error = 'No se ha podido comprobar si hay versiones nuevas (¿hay internet?).'; log('Actualizaciones:', e.message); }
   return upd;
 }

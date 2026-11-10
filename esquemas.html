@@ -14,6 +14,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #board{position:fixed;inset:0;overflow:hidden;background-color:var(--board,var(--boarddef));background-image:radial-gradient(var(--grid) 1.2px,transparent 1.3px);background-size:24px 24px}
 #board.panning{cursor:grabbing}#board.tool-add{cursor:crosshair}
+#board.space,#board.space .node{cursor:grab}#board.space.panning,#board.space.panning .node{cursor:grabbing}
+#marq{position:absolute;border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);border-radius:3px;pointer-events:none;z-index:5}
 #world{position:absolute;left:0;top:0;transform-origin:0 0}
 #edges{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
 #edges .e{fill:none;stroke-width:2.2;stroke-linecap:round}
@@ -273,7 +275,9 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
   • <b>Agita</b> una figura mientras la arrastras (de lado a lado, deprisa) para <b>desconectarla</b> de sus flechas.<br>
   • Clic en una flecha para elegirla: cambia su color o hazla <b>curva o recta</b>.<br>
   • <b>Punto</b> (<kbd>D</kbd>): un nudo pequeño del que sacar varias flechas. <b>Doble clic en una flecha</b> → nudo en ese sitio.<br>
-  • <kbd>Supr</kbd> (o <kbd>⌫</kbd> en Mac) borra la figura o la flecha elegida.<br> <kbd>Supr</kbd> borra · arrastra un hueco para moverte · <kbd>Ctrl</kbd>+rueda acerca.
+  • <kbd>Supr</kbd> (o <kbd>⌫</kbd> en Mac) borra lo elegido.<br>
+  • <b>Elegir varias</b>: arrastra en un hueco para hacer un recuadro · <kbd>Mayús</kbd>+clic añade · <kbd>Ctrl</kbd>+<kbd>A</kbd> todo.<br>
+  • <b>Moverte</b>: rueda o dos dedos · <kbd>Espacio</kbd>+arrastrar · arrastrar con el botón derecho · <kbd>Ctrl</kbd>+rueda acerca.
 </div>
 <div class="toast" id="toast"></div>
 
@@ -553,8 +557,19 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
   }
 
   /* ---------- ratón ---------- */
-  let drag = null;
+  let drag = null, spaceDown = false;
+  /* Moverse por el lienzo: rueda / dos dedos, barra espaciadora + arrastrar, o arrastrar con el botón derecho o la rueda.
+     Arrastrar en un hueco (botón izquierdo) dibuja un recuadro para elegir varias figuras. */
+  const startPan = e => { e.preventDefault(); closePop(); drag = { kind: 'pan', sx: e.clientX, sy: e.clientY, vx: view.x, vy: view.y }; board.classList.add('panning'); };
+  board.addEventListener('contextmenu', e => e.preventDefault());
+  addEventListener('keydown', e => {
+    if (e.code !== 'Space' || editing() || e.target.closest?.('input,textarea,select,[contenteditable=true]') || document.querySelector('dialog[open]')) return;
+    e.preventDefault(); if (!spaceDown) { spaceDown = true; board.classList.add('space'); }
+  });
+  addEventListener('keyup', e => { if (e.code === 'Space') { spaceDown = false; board.classList.remove('space'); } });
+  addEventListener('blur', () => { spaceDown = false; board.classList.remove('space'); });
   board.addEventListener('pointerdown', e => {
+    if (e.button === 1 || e.button === 2 || (e.button === 0 && spaceDown)) return startPan(e);
     if (e.button !== 0) return; closePop();
     // el foco vuelve a la pizarra (dentro de la app es un marco: sin esto Supr/Retroceso no llegaría aquí)
     const ae = document.activeElement; if (ae && ae !== document.body && !ae.closest('.node')) ae.blur(); window.focus();
@@ -598,13 +613,24 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
       document.body.appendChild(a); setTimeout(() => { pickEdgeColor(a); a.remove(); }, 0); return;
     }
     if (tool !== 'select') { addNode(tool, wx, wy); setTool('select'); return; }
-    sel.clear(); selEdge = null; render();
-    drag = { kind: 'pan', sx: e.clientX, sy: e.clientY, vx: view.x, vy: view.y }; board.classList.add('panning');
+    // recuadro de selección (con Mayús se añade a lo que ya estaba elegido)
+    e.preventDefault(); if (!e.shiftKey) sel.clear(); selEdge = null; render();
+    const mq = document.createElement('div'); mq.id = 'marq'; world.appendChild(mq);
+    drag = { kind: 'marquee', sx: wx, sy: wy, cx: e.clientX, cy: e.clientY, base: new Set(sel), el: mq };
   });
   addEventListener('pointermove', e => {
     const [wx, wy] = toWorld(e.clientX, e.clientY);
     if (polyPts) { drawPolyPrev([wx, wy]); return; }
     if (!drag) return;
+    if (drag.kind === 'marquee') {
+      const x0 = Math.min(drag.sx, wx), y0 = Math.min(drag.sy, wy), x1 = Math.max(drag.sx, wx), y1 = Math.max(drag.sy, wy);
+      Object.assign(drag.el.style, { left: x0 + 'px', top: y0 + 'px', width: x1 - x0 + 'px', height: y1 - y0 + 'px', borderWidth: 1.5 / view.k + 'px' });
+      drag.moved = drag.moved || Math.hypot(e.clientX - drag.cx, e.clientY - drag.cy) > 4;
+      // se eligen las figuras que toca el recuadro
+      sel = new Set(drag.base); S.nodes.forEach(n => { if (n.x < x1 && n.x + n.w > x0 && n.y < y1 && n.y + n.h > y0) sel.add(n.id); });
+      world.querySelectorAll('.node').forEach(el => el.classList.toggle('sel', sel.has(el.dataset.id)));
+      return;
+    }
     if (drag.kind === 'pan') { view.x = drag.vx + e.clientX - drag.sx; view.y = drag.vy + e.clientY - drag.sy; applyView(); }
     if (drag.kind === 'move') {
       drag.moved = true; drag.start.forEach(([n, x, y]) => { n.x = Math.round(x + wx - drag.sx); n.y = Math.round(y + wy - drag.sy); });
@@ -659,6 +685,7 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
   }
   addEventListener('pointerup', e => {
     if (!drag) return; const d = drag; drag = null; board.classList.remove('panning');
+    if (d.kind === 'marquee') { d.el.remove(); render(); if (sel.size > 1) toast(`${sel.size} figuras elegidas: arrástralas, cambia su color o bórralas juntas`); return; }
     if (d.kind === 'move') { if (!d.moved) hist.pop(); save(); }
     if (d.kind === 'resize' || d.kind === 'rotate' || d.kind === 'page') save();
     if (d.kind === 'link') {
@@ -699,6 +726,8 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
     const mod = e.ctrlKey || e.metaKey;
     if (polyPts) { if (e.key === 'Enter') finishPoly(); if (e.key === 'Escape') { polyPts = null; drawPolyPrev(); setTool('select'); } return; }
     if (mod && e.key.toLowerCase() === 'z' && !editing()) { e.preventDefault(); undo(); return; }
+    if (mod && e.key.toLowerCase() === 'a' && !editing()) { e.preventDefault(); select(S.nodes.map(n => n.id)); return; }   // elegir todo
+    if (e.code === 'Space') return;   // la barra espaciadora es para moverse por el lienzo
     if (editing()) { if (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey)) { e.preventDefault(); stopEdit(); } return; }
     if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeSel(); return; }
     const one = sel.size === 1 ? node([...sel][0]) : null;
@@ -939,38 +968,160 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
       lines.slice(1).forEach(l => {
         const ind = l.match(/^\s*/)[0].replace(/\t/g, '  ').length, h = (l.match(/^\s*(#+)/) || [, ''])[1].length;
         const lvl = h ? h : Math.floor(ind / 2) + 1;
-        const t = clean(l); let parts = t.split(/:\s+/); const nd = { t: parts[0], note: parts.slice(1).join(': '), kids: [] };
+        const t = clean(l); let parts = t.split(/:\s+/);
+        // los elementos muy largos se resumen (lo demás queda como nota debajo, no se pierde)
+        const nd = parts.length < 2 && words(t) > 9 ? idea(t) : { t: parts[0], note: parts.slice(1).join(': '), kids: [] };
         while (stack.length > 1 && stack[stack.length - 1].lvl >= lvl) stack.pop();
         stack[stack.length - 1].node.kids.push(nd); stack.push({ lvl, node: nd });
       });
       return root;
     }
-    // texto corrido: idea central = primera frase (o lo que va antes de «:»), ramas = frases siguientes / elementos de listas «a, b y c»
-    const sentences = txt.replace(/\s+/g, ' ').split(/(?<=[.!?;])\s+/).filter(Boolean);
-    let first = sentences.shift() || txt; let root;
-    if (first.includes(':')) { const [a, b] = first.split(/:(.+)/); root = { t: a.trim(), kids: b.split(/,|\sy\s/).map(x => ({ t: x.replace(/[.;]$/, '').trim(), kids: [] })).filter(x => x.t) }; }
-    else root = { t: first.replace(/[.;]$/, ''), kids: [] };
-    sentences.forEach(s => { const short = s.replace(/[.;]$/, ''); root.kids.push({ t: short.length > 70 ? short.slice(0, 67).replace(/\s\S*$/, '') + '…' : short, kids: [] }); });
-    if (root.t.length > 60) root.t = root.t.slice(0, 57).replace(/\s\S*$/, '') + '…';
+    /* Texto corrido → esquema simplificado:
+       · título: la primera línea si es corta; si no, el sujeto de la primera definición o la palabra clave más repetida
+       · cada párrafo es una rama (si solo hay uno, cada frase); su etiqueta es la idea de la primera frase, resumida
+       · las demás frases son ideas hijas, resumidas a pocas palabras (sin muletillas, artículos ni subordinadas)
+       · «X es Y» → «X» con «Y» de nota; «… son: a, b y c» → una rama por elemento */
+    const paras = txt.split(/\n+/).map(p => p.trim()).filter(Boolean);
+    let title = null;
+    if (paras.length > 1 && words(paras[0]) <= 8 && !/[.;]$/.test(paras[0])) title = paras.shift().replace(/:$/, '');
+    const sents = p => p.replace(/\s+/g, ' ').split(/(?<=[.!?;])\s+(?=[A-ZÁÉÍÓÚÑ¿¡0-9«"])/).map(s => s.trim()).filter(s => words(s) >= 2);
+    const groups = paras.length > 1 ? paras.map(sents).filter(g => g.length) : sents(paras[0] || '').map(s => [s]);
+    if (!groups.length) return null;
+    let root;
+    if (title) root = { t: cap(shorten(title, 7)), kids: [] };
+    else {
+      const d = defOf(groups[0][0]);
+      root = { t: d ? d.t : topicWord(txt) || cap(shorten(groups[0][0], 4)), kids: [] };
+    }
+    const lc = s => String(s).toLowerCase().replace(/…$/, '');
+    // si una frase habla de algo que ya es una rama («La escuela introduce…»), va debajo de esa rama
+    const attach = (kids, it) => {
+      const k = kids.find(k => k.t && words(k.t) <= 5 && lc(it.t).startsWith(lc(k.t)));
+      if (!k) return false;
+      k.kids.push({ t: cap(it.note || shorten(it.t.slice(k.t.length), 7)), kids: it.kids || [] }); return true;
+    };
+    groups.slice(0, 8).forEach((g, gi) => {
+      let sents0 = g;
+      // la definición del tema va de nota bajo el título; el resto del párrafo cuelga del centro
+      if (gi === 0 && !title) { const d = defOf(g[0]); if (d && lc(d.t) === lc(root.t)) { root.note = d.note; sents0 = g.slice(1); sents0.forEach(s => root.kids.push(idea(s))); return; } }
+      const b = idea(sents0[0]);
+      if (lc(b.t) === lc(root.t) && b.note) { b.t = cap(shorten(b.note, 5)); b.note = ''; }
+      sents0.slice(1).forEach(s => { const it = idea(s); if (!attach(b.kids, it) && !attach([b], it) && b.kids.length < 5) b.kids.push(it); });
+      if (!attach(root.kids, b)) root.kids.push(b);
+    });
+    // si todo quedó colgando de una sola rama, se sube un nivel
+    if (root.kids.length === 1 && root.kids[0].kids.length > 1 && !title) { const only = root.kids[0]; root.kids = only.kids; if (!root.note) root.note = only.t; }
     return root;
   }
-  function layoutTree(root) {
-    const [, , , y1] = S.nodes.length ? bounds() : [0, 0, 0, -120];
-    const top = y1 + 140, GAPX = 270, ROWH = 86;
-    const leaves = n => n.kids.length ? n.kids.reduce((a, k) => a + leaves(k), 0) : 1;
-    let row = 0; const colorFor = i => [2, 3, 4, 5, 6, 7, 8, 9][i % 8];
-    function place(n, depth, branch, parentId) {
-      const L = leaves(n), y = top + (row + (L - 1) / 2) * ROWH;
-      const kind = depth === 0 ? 'circle' : 'box', [w, h] = depth === 0 ? [180, 180] : [210, n.note ? 84 : 60];
-      const id = uid(), b = depth === 1 ? branch : branch;
-      S.nodes.push({ id, kind, x: 80 + depth * GAPX + (depth === 0 ? 0 : 20), y: Math.round(y - h / 2), w, h, rot: 0,
-        t: depth === 0 ? `<b>${esc(n.t)}</b>` : esc(n.t) + (n.note ? `<br><span style="font-size:.85em;opacity:.8">${esc(n.note)}</span>` : ''),
-        fill: depth === 0 ? 3 : colorFor(b), line: depth === 0 ? 3 : [3, 4, 5, 6, 7, 8, 9, 10][b % 8] });
-      if (parentId) S.edges.push({ id: uid(), a: parentId, b: id, t: '', line: 2 });
-      if (!n.kids.length) { row++; return; }
-      n.kids.forEach((k, i) => place(k, depth + 1, depth === 0 ? i : branch, id));
+  /* ---------- simplificar frases ---------- */
+  const words = s => (String(s).trim().match(/\S+/g) || []).length;
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const STOP = new Set('de del la el los las y o u a al en con por para que se su sus un una unos unas lo como más muy también es son ser está están fue era hay entre sobre sin pero sino si no ni le les ya este esta estos estas ese esa esos esas cual cuyo sus nos'.split(' '));
+  const CONNECT = /^(se trata de|además|asimismo|por (otro lado|otra parte|tanto|ejemplo|ello|lo tanto|último|su parte)|sin embargo|no obstante|en (primer|segundo|tercer|último) lugar|en (cambio|resumen|definitiva|conclusión)|es decir|también|así( pues)?|finalmente|de (este|ese) modo|de hecho|en este sentido|cabe (destacar|señalar) que|hay que (destacar|señalar) que|por consiguiente|igualmente|del mismo modo|a su vez|en general|primero|segundo|luego|después)\s*,?\s*/i;
+  // muletillas en medio de la frase («La escuela, por su parte, introduce…»)
+  const INLINE = /,\s*(por su parte|además|sin embargo|por tanto|en cambio|a su vez|por ejemplo|es decir|no obstante|asimismo|por otro lado|de hecho),?\s*/gi;
+  const clean = s => String(s).replace(/\([^)]*\)/g, '').replace(/["“”«»]/g, '').replace(INLINE, ' ').replace(/\s+/g, ' ').trim().replace(/[.;:!?¡¿]+$/g, '').replace(/^[¡¿]/, '').replace(CONNECT, '').replace(CONNECT, '');
+  function shorten(s, n) {
+    let t = clean(s);
+    if (words(t) > n) {
+      // se queda con la idea principal: lo que va antes de una coma o una subordinada, si el trozo tiene sentido
+      // (al menos 3 palabras y no acaba en «de», «el», «por»…)
+      const re = /,\s|\s(?:que|ya que|porque|puesto que|lo cual|la cual|el cual|los cuales|las cuales|donde|cuando|aunque|mientras que|pues|de modo que|de manera que|con el fin de|para que|para|a fin de)\s/gi;
+      let m; while ((m = re.exec(t))) {
+        const cut = t.slice(0, m.index), lw = cut.split(' ').pop().toLowerCase();
+        if (words(cut) >= 3 && !STOP.has(lw)) { t = cut; break; }
+      }
     }
-    place(root, 0, 0, null);
+    t = t.replace(/^(el|la|los|las|un|una|unos|unas|lo)\s+/i, '');
+    let w = t.split(' ');
+    if (w.length > n) { w = w.slice(0, n); while (w.length > 2 && STOP.has(w[w.length - 1].toLowerCase().replace(/[,;:]$/, ''))) w.pop(); t = w.join(' ').replace(/[,;:]$/, '') + '…'; }
+    return cap(t.trim());
+  }
+  // «X es / son / consiste en … Y» → { t: X, note: Y }
+  function defOf(s) {
+    const c = String(s).replace(CONNECT, '').replace(/\([^)]*\)/g, '');
+    const m = c.match(/^(.{3,70}?)\s+(es|son|consiste en|consisten en|se define como|se definen como|significa|se refiere a|se entiende por|implica|supone)\s+(.{6,})$/i);
+    if (!m || words(m[1]) > 7) return null;
+    return { t: cap(shorten(m[1], 5)), note: shorten(m[3], 10) };
+  }
+  // una frase → idea corta, con sus elementos si es una enumeración
+  // sujeto → lo que se dice de él: «Los medios de comunicación tienen gran influencia…» → Medios de comunicación / Tienen gran influencia…
+  const VERB = 'se\\s+\\S+|es|son|está|están|tiene|tienen|puede|pueden|debe|deben|hace|hacen|ha|han|permite|permiten|transmite|transmiten|introduce|introducen|ofrece|ofrecen|influye|influyen|depende|dependen|consiste|consisten|aparece|aparecen|incluye|incluyen|favorece|favorecen|ayuda|ayudan|produce|producen|genera|generan|requiere|requieren|implica|implican|necesita|necesitan|busca|buscan|pretende|pretenden|facilita|facilitan|aporta|aportan|refleja|reflejan|determina|determinan|condiciona|condicionan|sirve|sirven|trabaja|trabajan';
+  function split(c) {
+    const m = c.match(new RegExp(`^(.{3,60}?)\\s+((?:${VERB})\\b.*)$`, 'i'));
+    if (!m || words(m[1]) > 5) return null;
+    return { t: cap(shorten(m[1], 5)), note: shorten(m[2], 9) };
+  }
+  function idea(s) {
+    const c = clean(s);
+    const en = c.match(/^(.*?)(?::|\s(?:son|como|incluyen|incluye|destacan|destaca|tales como|entre (?:ellos|ellas|otros|otras)|se dividen en|se clasifican en|pueden ser|hay)\s)\s*(.+)$/i);
+    if (en) {
+      const items = en[2].replace(/[.;]$/, '').replace(/,?\s+etc\.?$/i, '').split(/,\s*|\s+y\s+|\s+e\s+|\s+o\s+/).map(x => x.trim()).filter(x => words(x) >= 1 && words(x) <= 7);
+      if (items.length >= 2) {
+        const head = (en[1] || c).replace(/\s+(son|es|como|incluyen|incluye|destacan|destaca|tales|hay)$/i, '').trim(), sp = split(head.split(/,\s/)[0]);
+        return { t: sp ? sp.t : cap(shorten(head, 5)), note: sp ? sp.note : '', kids: items.slice(0, 6).map(x => ({ t: cap(shorten(x, 5)), kids: [] })) };
+      }
+    }
+    const d = defOf(c); if (d) return { ...d, kids: [] };
+    if (words(c) > 6) { const sp = split(c); if (sp) return { ...sp, kids: [] }; }
+    return { t: shorten(c, 7), kids: [] };
+  }
+  // palabra clave: la palabra con contenido que más se repite (para el centro del esquema)
+  function topicWord(txt) {
+    const cnt = {}; (txt.toLowerCase().match(/[a-záéíóúñü]{5,}/g) || []).forEach(w => { if (!STOP.has(w)) cnt[w] = (cnt[w] || 0) + 1; });
+    const best = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
+    return best && best[1] > 1 ? cap(best[0]) : null;
+  }
+  /* Mapa mental a dos lados: la idea central en medio (oscura), las ramas principales a derecha e izquierda con
+     un color fuerte cada una, y sus ideas en el tono claro del mismo color; los niveles más hondos, en blanco con
+     el borde del color de su rama. Las flechas toman el color de su rama. */
+  function layoutTree(root) {
+    const bb = S.nodes.length ? bounds() : null;
+    const top = bb ? bb[3] + 160 : 80, CX = bb ? (bb[0] + bb[2]) / 2 : 560;
+    const COL = [0, 330, 610, 870, 1110], ROWH = { 1: 92, 2: 70, 3: 60 }, GAP = 26;
+    const leaves = n => n.kids.length ? n.kids.reduce((a, k) => a + leaves(k), 0) : 1;
+    const rowH = n => ROWH[Math.min(3, n._d || 1)] + (n.note ? 16 : 0);
+    const mark = (n, d) => { n._d = d; n.kids.forEach(k => mark(k, d + 1)); };
+    root.kids.forEach(k => mark(k, 1));
+    const height = n => n.kids.length ? n.kids.reduce((a, k) => a + height(k), 0) : rowH(n);
+    // reparto a derecha e izquierda equilibrando la altura (en orden: derecha de arriba abajo, luego izquierda)
+    const tot = root.kids.reduce((a, k) => a + height(k) + GAP, 0); let acc = 0;
+    const right = [], left = [];
+    root.kids.forEach(k => { (acc < tot / 2 || root.kids.length < 2 ? right : left).push(k); acc += height(k) + GAP; });
+    const sideH = arr => arr.reduce((a, k) => a + height(k) + GAP, -GAP);
+    const H = Math.max(sideH(right), sideH(left), 200), midY = top + H / 2;
+    const SIZE = d => d === 1 ? [190, 56] : d === 2 ? [200, 46] : [180, 40];
+    const add = (n, d, cx, cy, ci) => {
+      const [w, h0] = d === 0 ? [190, 190] : SIZE(d), h = h0 + (n.note ? 22 : 0), id = uid();
+      const txt = d === 0 ? `<b>${esc(n.t)}</b>` : d === 1 ? `<b>${esc(n.t)}</b>` : esc(n.t);
+      const note = n.note ? `<br><span style="font-size:.78em;opacity:.85">${esc(n.note)}</span>` : '';
+      const fill = d === 0 ? 16 : d === 1 ? 10 + ci : d === 2 ? 2 + ci : 1, line = d === 0 ? 2 : 3 + ci;
+      const nd = { id, kind: d === 0 ? 'circle' : 'box', x: Math.round(cx - w / 2), y: Math.round(cy - h / 2), w, h, rot: 0, t: txt + note, fill, line };
+      if (d === 0) nd.tfs = 20; else if (d === 1) nd.tfs = 16; else if (d >= 3) nd.tfs = 13;
+      S.nodes.push(nd); return id;
+    };
+    const rootId = add(root, 0, CX, midY, 0);
+    const placeSide = (arr, dir, startIdx) => {
+      let y = midY - sideH(arr) / 2;
+      arr.forEach((b, i) => {
+        const ci = (startIdx + i) % 6;
+        const walk = (n, d, parentId, y0) => {   // devuelve el centro vertical del nodo
+          const hgt = height(n); let cy;
+          if (!n.kids.length) cy = y0 + hgt / 2;
+          else { let yy = y0; const cs = n.kids.map(k => { const c = walk(k, d + 1, null, yy); yy += height(k); return c; }); cy = (cs[0] + cs[cs.length - 1]) / 2; n._cs = cs; }
+          n._cy = cy; return cy;
+        };
+        walk(b, 1, rootId, y);
+        const emit = (n, d, parentId) => {
+          const id = add(n, d, CX + dir * COL[Math.min(d, 4)], n._cy, ci);
+          S.edges.push({ id: uid(), a: parentId, b: id, t: '', line: 3 + ci });
+          n.kids.forEach(k => emit(k, d + 1, id));
+        };
+        emit(b, 1, rootId);
+        y += height(b) + GAP;
+      });
+    };
+    placeSide(right, 1, 0); placeSide(left, -1, right.length);
   }
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
