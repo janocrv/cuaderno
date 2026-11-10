@@ -159,8 +159,7 @@ html,body{overflow:hidden}
 /* nota de papel con chincheta: esquina doblada abajo a la derecha, sombra suave y una chincheta roja arriba */
 .editor .sticky{--s:1;--n1:#ffe36e;--n2:#f9d64a;--n3:#efc634;--ni:#3b3200;--nb:rgba(110,85,0,.75);
   position:absolute;z-index:3;width:calc(200px * var(--s));height:calc(200px * var(--s));color:var(--ni);font-size:calc(.92rem * var(--s));line-height:1.45;display:flex;flex-direction:column;
-  background:linear-gradient(172deg,var(--n1) 0%,var(--n2) 58%,var(--n3) 100%);border-radius:1px;
-  box-shadow:inset 0 -16px 20px -16px rgba(0,0,0,.18);
+  --cut:calc(30px * var(--s));
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.12)) drop-shadow(4px 10px 10px rgba(0,0,0,.22));
   transform-origin:50% 8%;   /* gira y se balancea desde arriba, como un papel pegado por su borde */
   transform:rotate(calc(var(--rot,-1.5deg) + var(--swing,0deg)));transition:transform .6s cubic-bezier(.3,1.7,.4,1),scale .2s}
@@ -179,10 +178,15 @@ html,body{overflow:hidden}
 .editor .sticky[data-col="celeste"]{--n1:#b3e8f1;--n2:#9adbe8;--n3:#84cddc;--ni:#0f3d47;--nb:rgba(15,61,71,.7)}
 .editor .sticky[data-col="verde"]{--n1:#a9d376;--n2:#94c55b;--n3:#80b448;--ni:#1f3a08;--nb:rgba(31,58,8,.7)}
 .editor .sticky[data-col="azul"]{--n1:#78a9cb;--n2:#5e95bb;--n3:#4b82a8;--ni:#fff;--nb:rgba(255,255,255,.85)}
-/* esquina levantada: abajo a la izquierda en la rosa, abajo a la derecha en la azul */
-.editor .sticky[data-col="rosa"]::after,.editor .sticky[data-col="azul"]::after{content:'';position:absolute;bottom:0;width:calc(34px * var(--s));height:calc(34px * var(--s));pointer-events:none}
-.editor .sticky[data-col="azul"]::after{right:0;background:linear-gradient(315deg,transparent 48%,var(--n1) 50%,#a9cbe2 70%,var(--n2) 100%);border-top-left-radius:70% 40%;box-shadow:-3px -3px 6px rgba(0,0,0,.18)}
-.editor .sticky[data-col="rosa"]::after{left:0;background:linear-gradient(45deg,transparent 48%,#fff3f0 52%,var(--n1) 75%,var(--n2) 100%);border-top-right-radius:70% 40%;box-shadow:3px -3px 6px rgba(0,0,0,.12)}
+/* el papel va en ::before (así se puede recortar una esquina y la sombra de la nota sigue esa forma) */
+.editor .sticky::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:1px;
+  background:linear-gradient(172deg,var(--n1) 0%,var(--n2) 58%,var(--n3) 100%);box-shadow:inset 0 -16px 20px -16px rgba(0,0,0,.18)}
+/* esquina doblada: abajo a la derecha en la azul, abajo a la izquierda en la rosa (la esquina se recorta y encima va el doblez) */
+.editor .sticky[data-col="azul"]::before{clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%)}
+.editor .sticky[data-col="rosa"]::before{clip-path:polygon(0 0,100% 0,100% 100%,var(--cut) 100%,0 calc(100% - var(--cut)))}
+.editor .sticky[data-col="rosa"]::after,.editor .sticky[data-col="azul"]::after{content:'';position:absolute;bottom:0;width:var(--cut);height:var(--cut);pointer-events:none;z-index:-1}
+.editor .sticky[data-col="azul"]::after{right:0;background:linear-gradient(to top left,transparent 50%,#9fc3dc 50%,#c9dfee 78%,#e3eef6 100%);filter:drop-shadow(-1px -1px 1.5px rgba(0,0,0,.2))}
+.editor .sticky[data-col="rosa"]::after{left:0;background:linear-gradient(to top right,transparent 50%,#f3d9d3 50%,#fff3f0 80%,#fffaf8 100%);filter:drop-shadow(1px -1px 1.5px rgba(0,0,0,.15))}
 .editor .sticky[data-col="azul"] .st-size{right:auto;left:3px;bottom:30px}
 .editor .sticky[data-col="rosa"] .st-rot{left:auto;right:30px}
 .editor .sticky .st-x,.editor .sticky .st-rot,.editor .sticky .st-size{color:var(--nb)}
