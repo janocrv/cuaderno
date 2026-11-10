@@ -107,6 +107,9 @@ function mergeStates(disk, inc) {
     const base = (s._u || 0) > (cur._u || 0) ? s : cur;
     const merged = { ...base };
     for (const k of LISTS) merged[k] = mergeList(cur[k], s[k], deleted);
+    // los esquemas llevan su propia hora de cambio: no los pisa un cambio de nombre o color de la asignatura en otro ordenador
+    const ea = cur.esquemas, eb = s.esquemas;
+    if (ea || eb) merged.esquemas = !ea ? eb : !eb ? ea : ((eb._u || 0) > (ea._u || 0) ? eb : ea);
     subs[s.id] = merged;
   }
   for (const s of Object.values(subs)) for (const k of LISTS) s[k] = mergeList(s[k], [], deleted);
@@ -198,6 +201,37 @@ function backupState() {
     fs.copyFileSync(f, path.join(dir, name));
     for (const old of list.slice(0, Math.max(0, list.length + 1 - 60))) fs.unlinkSync(path.join(dir, old));
   } catch (e) { log('Copia de seguridad:', e.message); }
+}
+/* Dos copias de seguridad que se turnan cada 5 minutos: «copia-A.json» y «copia-B.json», en la carpeta
+   «copias-seguridad» junto a los datos. Cada vez se sobrescribe la más antigua, así que siempre queda una de hace
+   como mucho 5 minutos y otra de hace como mucho 10, aunque una se estropee al escribirse.
+   Nunca se pierde nada: si los datos han encogido de golpe (muchos apuntes menos), antes de turnar se aparta la copia
+   grande en «copia-antes-de-borrar-<fecha>.json», que no se borra nunca. Los adjuntos (carpeta «archivos») no se borran nunca. */
+const SAFE_DIR = () => path.join(dataDir(), 'copias-seguridad');
+function rotatingBackup() {
+  try {
+    const f = STATE_FILE(); if (!fs.existsSync(f)) return;
+    let st; try { st = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { log('Copia alterna: los datos no se pueden leer ahora; se reintentará'); return; }
+    if (!st || !Array.isArray(st.subjects)) return;
+    const dir = SAFE_DIR(); fs.mkdirSync(dir, { recursive: true });
+    const slots = ['A', 'B'].map(k => { const p = path.join(dir, `copia-${k}.json`); let m = 0; try { m = fs.statSync(p).mtimeMs; } catch (e) {} return { p, m }; });
+    const newest = slots[0].m >= slots[1].m ? slots[0] : slots[1], target = newest === slots[0] ? slots[1] : slots[0];
+    const prev = newest.m ? loadJSON(newest.p, null) : null;
+    if (prev && canon(prev) === canon(st)) return;   // nada nuevo desde la última copia
+    if (prev) {
+      const a = itemIds(prev).size, b = itemIds(st).size;
+      if (a - b > 5 && b < a * 0.7) {
+        const d = new Date(), p2 = n => String(n).padStart(2, '0');
+        const side = path.join(dir, `copia-antes-de-borrar-${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}.json`);
+        if (!fs.existsSync(side)) fs.copyFileSync(newest.p, side);
+        log(`Copia alterna: los datos han bajado de ${a} a ${b} elementos; la copia anterior queda guardada en ${path.basename(side)}`);
+      }
+    }
+    const tmp = target.p + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(st), 'utf8');
+    JSON.parse(fs.readFileSync(tmp, 'utf8'));   // se comprueba que se ha escrito entera antes de sustituir la copia
+    fs.renameSync(tmp, target.p);
+  } catch (e) { log('Copia alterna:', e.message); }
 }
 function syncState(inc) {
   const run = async () => {
@@ -723,6 +757,8 @@ if (!app.requestSingleInstanceLock()) {
     setInterval(syncMail, INTERVAL_MIN * 60 * 1000);
     setTimeout(checkUpdate, 8000);
     setInterval(checkUpdate, 30 * 60 * 1000);   // cada media hora mira si hay versión nueva en GitHub
+    setTimeout(rotatingBackup, 60 * 1000);
+    setInterval(rotatingBackup, 5 * 60 * 1000);   // dos copias que se turnan cada 5 minutos (copias-seguridad/copia-A y copia-B)
     log('Cuaderno', app.getVersion(), 'iniciado. Datos en', dataDir());
   });
 }

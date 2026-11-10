@@ -2111,6 +2111,10 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   const effTheme = () => state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   const schemaSubjects = () => state.subjects.map(s => ({ id: s.id, short: s.short, name: s.name, notes: sortedNotes(s).map(n => ({ id: n.id, title: n.title || 'Sin título' })) }));
   const toSchema = m => $('#schemaFrame').contentWindow?.postMessage({ esqApp: true, ...m }, '*');
+  // cambios de la pizarra que aún no habían llegado (se recogen al cerrar la app para no perder nada)
+  function takeSchemaPending() {
+    try { const p = $('#schemaFrame').contentWindow?.__esqPending?.(); if (!p) return; const s = state.subjects.find(x => x.id === (p.sid || schemaSid)); if (s) s.esquemas = { ...p.db, _u: Date.now() }; } catch (e) {}
+  }
   function renderSchemas() {
     const fr = $('#schemaFrame'), th = effTheme();
     if (!schemaReady || schemaTheme !== th) {   // primera vez, o ha cambiado el modo día/noche
@@ -2123,7 +2127,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   addEventListener('message', async e => {
     const m = e.data; if (!m || !m.esq || e.source !== $('#schemaFrame').contentWindow) return;
     if (m.type === 'ready') { schemaReady = true; schemaSid = null; if (state.view === 'schemas') renderSchemas(); return; }
-    if (m.type === 'save') { const s = state.subjects.find(x => x.id === (m.sid || schemaSid)); if (s) { s.esquemas = m.db; save(); } return; }
+    if (m.type === 'save') { const s = state.subjects.find(x => x.id === (m.sid || schemaSid)); if (s) { s.esquemas = { ...m.db, _u: Date.now() }; save(); } return; }   // hora propia de los esquemas (para combinar ordenadores)
     const blob = m.png ? await (await fetch(m.png)).blob() : null;
     if (m.type === 'png') { download(fileName(m.name || 'Esquema', 'png'), blob, 'image/png'); toast('Imagen del esquema guardada'); return; }
     if (m.type === 'pdf') {
@@ -2744,7 +2748,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); flushEditor(); clearTimeout(saveTimer); saveNow(); toast('Guardado'); }
     if (mod && e.altKey && e.key.toLowerCase() === 'n') { e.preventDefault(); newNote(); }
   });
-  window.addEventListener('beforeunload', () => { flushEditor(); clearTimeout(saveTimer); saveNow(); });
+  window.addEventListener('beforeunload', () => { flushEditor(); takeSchemaPending(); clearTimeout(saveTimer); saveNow(); });
 
   /* ---------- Citar en APA 7 ----------
      Cita en el texto a partir de las referencias de la asignatura:
@@ -4634,7 +4638,7 @@ Gracias.` },
     fetchMails(); setInterval(fetchMails, 60000);
     const firstSync = syncState(); setInterval(syncState, 60000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) syncState(); });
-    addEventListener('pagehide', () => { if (SERVED && !RESETTING) { flushEditor(); stampChanges(); try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} const p = JSON.parse(JSON.stringify(state)); UI_KEYS.forEach(k => delete p[k]); navigator.sendBeacon && fetch('/api/datos', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).catch(() => {}); } });
+    addEventListener('pagehide', () => { if (SERVED && !RESETTING) { flushEditor(); takeSchemaPending(); stampChanges(); try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} const p = JSON.parse(JSON.stringify(state)); UI_KEYS.forEach(k => delete p[k]); navigator.sendBeacon && fetch('/api/datos', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).catch(() => {}); } });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) fetchMails(); });
     firstSync.finally(() => setTimeout(maybeWelcome, 300));
   } else setTimeout(maybeWelcome, 300);
