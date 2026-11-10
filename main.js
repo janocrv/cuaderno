@@ -112,6 +112,13 @@ function mergeStates(disk, inc) {
   for (const s of Object.values(subs)) for (const k of LISTS) s[k] = mergeList(s[k], [], deleted);
   const incNewer = (inc._u || 0) >= (disk._u || 0);
   const out = { ...(incNewer ? inc : disk) };
+  // Ajustes (nombre, idioma, foto…) y horario: gana el que se cambió más tarde, no el ordenador que guardó el último
+  const sd = disk.settings || {}, si = inc.settings || {};
+  if (sd._u || si._u) {
+    const incSet = (si._u || 0) >= (sd._u || 0);
+    out.settings = incSet ? inc.settings : disk.settings;
+    out.schedule = incSet ? (inc.schedule || disk.schedule) : (disk.schedule || inc.schedule);
+  }
   out.subjects = order.filter(i => i in subs && !(i in deleted && deleted[i] >= (subs[i]._u || 0))).map(i => subs[i]);
   out.deleted = deleted;
   out.library = mergeList(disk.library, inc.library, deleted);
@@ -170,14 +177,48 @@ function contextMenu(wc, p) {
   if (items.length) Menu.buildFromTemplate(items).popup({ window: BrowserWindow.fromWebContents(wc) || undefined });
 }
 let stateBusy = Promise.resolve();
+// Cuántos apuntes, tareas, referencias, archivos y asignaturas hay (para frenar borrados masivos)
+function itemIds(st) {
+  const ids = new Set();
+  for (const s of (st && st.subjects) || []) { ids.add(s.id); for (const k of LISTS) for (const x of s[k] || []) if (x && x.id) ids.add(x.id); }
+  for (const x of (st && st.library) || []) if (x && x.id) ids.add(x.id);
+  return ids;
+}
+// Copia de seguridad automática antes de cambiar los datos (como mucho una cada 20 minutos; se guardan 60)
+function backupState() {
+  try {
+    const f = STATE_FILE(); if (!fs.existsSync(f)) return;
+    const dir = path.join(dataDir(), 'copias'); fs.mkdirSync(dir, { recursive: true });
+    const list = fs.readdirSync(dir).filter(n => /^cuaderno-datos-.*\.json$/.test(n)).sort();
+    const last = list.length ? fs.statSync(path.join(dir, list[list.length - 1])).mtimeMs : 0;
+    if (Date.now() - last < 20 * 60 * 1000) return;
+    const d = new Date(), p2 = n => String(n).padStart(2, '0');
+    const name = `cuaderno-datos-${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}.json`;
+    fs.copyFileSync(f, path.join(dir, name));
+    for (const old of list.slice(0, Math.max(0, list.length + 1 - 60))) fs.unlinkSync(path.join(dir, old));
+  } catch (e) { log('Copia de seguridad:', e.message); }
+}
 function syncState(inc) {
   const run = async () => {
+    const exists = fs.existsSync(STATE_FILE());
     const disk = loadJSON(STATE_FILE(), null);
+    // El archivo existe pero no se puede leer (p. ej. Google Drive lo está bajando): no se escribe nada, se reintenta
+    if (exists && !disk) throw new Error('Los datos guardados no se pueden leer ahora mismo; se reintentará');
     const fresh = inc._fresh; delete inc._fresh;
     if (fresh && disk) return disk;   // ordenador nuevo (Cuaderno vacío): adopta los datos guardados
     for (const k of LOCAL_KEYS) delete inc[k];
+    // Freno de seguridad: si un ordenador pide borrar de golpe muchos elementos que siguen guardados, no se hace caso
+    if (disk && inc.deleted) {
+      const have = itemIds(disk), known = disk.deleted || {};
+      const gone = Object.keys(inc.deleted).filter(id => have.has(id) && !(id in known));
+      if (gone.length > 5 && gone.length > have.size * 0.3) {
+        log(`Borrado masivo ignorado: ${gone.length} de ${have.size} elementos`);
+        for (const id of gone) delete inc.deleted[id];
+      }
+    }
     const merged = mergeStates(disk, inc);
     if (!disk || canon(merged) !== canon(disk)) {
+      backupState();
       fs.mkdirSync(dataDir(), { recursive: true });
       const tmp = STATE_FILE() + '.tmp';
       fs.writeFileSync(tmp, JSON.stringify(merged), 'utf8');

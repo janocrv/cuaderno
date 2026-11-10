@@ -115,6 +115,13 @@ html,body{overflow:hidden}
 .toolbar{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:2px;padding:6px;margin:0 -6px 18px;background:var(--surface);border-bottom:1px solid var(--line)}
 .tb{min-width:32px;height:30px;padding:0 8px;border-radius:7px;font-size:.85rem;color:var(--muted)}
 .tb:hover{background:var(--soft);color:var(--ink)}
+.tb.on{background:color-mix(in srgb,var(--c,#0a84ff) 17%,transparent);color:var(--c,var(--ink));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c,#0a84ff) 35%,transparent)}
+.tb-font{min-width:92px;padding:0 6px;border:0;background:transparent;cursor:pointer;font:inherit;font-size:.82rem;color:var(--muted)}
+.tb-font option{color:#1d1d1f;background:#fff}
+.editor blockquote[style*="margin"]{border-left:0;padding:0;color:inherit}
+.editor ul ul{list-style:circle}.editor ul ul ul{list-style:square}
+.editor ol ol{list-style:lower-alpha}.editor ol ol ol{list-style:lower-roman}
+.editor li{margin:.15em 0}
 .sep{width:1px;background:var(--line);margin:6px 4px}
 .editor{font-size:1.02rem;line-height:1.75;min-height:50vh;outline:none}
 .editor h2{font-size:1.3rem;margin:1.2em 0 .3em;line-height:1.3}
@@ -604,6 +611,27 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
   .grid{grid-template-columns:1fr 1fr}.s2,.s3,.s6,.f-actions{grid-column:span 2}
   .b-inner,.p-inner{padding:20px 18px 40px}
 }
+/* Portátiles de 13" (≈1280–1470 × 750–900): todo cabe sin recortar la barra lateral ni las ventanas */
+@media (max-width:1470px){
+  .notes{grid-template-columns:220px 1fr}
+  .paper{padding-left:clamp(20px,3vw,48px);padding-right:clamp(20px,3vw,48px)}
+  .mail-body{grid-template-columns:300px 1fr}
+}
+@media (max-height:900px){
+  .rail{padding-top:10px;padding-bottom:10px;gap:3px}
+  .brand{padding-bottom:6px;margin-bottom:2px}
+  .rail-btn .ic{height:34px}
+  .subjects{gap:6px;margin:4px -12px}
+  .subj .chip{height:calc(34px * var(--z,1))}
+  dialog{max-height:calc(100vh - 24px);overflow:auto}
+}
+@media (max-height:780px){
+  .rail-btn .ic{height:29px}
+  .subjects{gap:3px}
+  .subj .chip{height:calc(27px * var(--z,1));font-size:calc(.72rem * var(--z,1))}
+  .toolbar{margin-bottom:10px;padding:4px}
+  .tb{height:28px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none !important}}
 </style>
 </head>
@@ -707,8 +735,27 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
                 <button class="tb" data-cmd="underline" title="Subrayado"><u>S</u></button>
                 <button class="tb" data-cmd="mark" title="Resaltar"><span style="background:var(--mark);padding:0 4px;border-radius:3px;color:var(--ink)">ab</span></button>
                 <span class="sep"></span>
-                <button class="tb" data-cmd="insertUnorderedList" title="Lista">•</button>
-                <button class="tb" data-cmd="insertOrderedList" title="Lista numerada">1.</button>
+                <select class="tb tb-font" id="tbFont" title="Tipo de letra" data-noi18n>
+                  <option value="">Letra</option>
+                  <option value="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Sistema</option>
+                  <option value="Georgia, 'Times New Roman', serif">Georgia</option>
+                  <option value="'Times New Roman', Times, serif">Times</option>
+                  <option value="Arial, Helvetica, sans-serif">Arial</option>
+                  <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                  <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+                  <option value="'Courier New', Courier, monospace">Courier</option>
+                </select>
+                <span class="sep"></span>
+                <button class="tb" data-cmd="insertUnorderedList" title="Lista con viñetas (o escribe «- » al empezar una línea)">•</button>
+                <button class="tb" data-cmd="insertOrderedList" title="Lista numerada (o escribe «1. » al empezar una línea)">1.</button>
+                <button class="tb" data-cmd="outdent" title="Quitar sangría (Mayús+Tab)"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 5h16M11 10h9M11 14h9M4 19h16M8 9l-4 3 4 3"/></svg></button>
+                <button class="tb" data-cmd="indent" title="Sangría (Tab)"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 5h16M11 10h9M11 14h9M4 19h16M4 9l4 3-4 3"/></svg></button>
+                <span class="sep"></span>
+                <button class="tb" data-cmd="justifyLeft" title="Alinear a la izquierda"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg></button>
+                <button class="tb" data-cmd="justifyCenter" title="Centrar"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></svg></button>
+                <button class="tb" data-cmd="justifyRight" title="Alinear a la derecha"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></svg></button>
+                <button class="tb" data-cmd="justifyFull" title="Justificar"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button>
+                <span class="sep"></span>
                 <button class="tb" data-block="blockquote" title="Cita">❝</button>
                 <button class="tb" data-cmd="cite" title="Citar en APA 7 una referencia de la bibliografía"><b style="font-size:.78rem">Cita</b></button>
                 <button class="tb" data-cmd="hr" title="Línea de separación (p. ej. entre diapositivas)"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M3 12h18"/></svg></button>
@@ -1532,7 +1579,8 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       ['notes', 'tasks', 'biblio', 'files'].forEach(k => (s[k] || []).forEach(x => fn(x.id, sigOf(x), x)));
     });
     (state.library || []).forEach(x => fn(x.id, sigOf(x), x));
-    fn('_settings', JSON.stringify([state.settings, state.schedule]), null);
+    state.settings ||= {};
+    fn('_settings', sigOf([state.settings, state.schedule]), state.settings);   // los ajustes llevan su propia hora de cambio
   }
   function buildSnap() { snap = new Map(); walkItems((id, sig) => snap.set(id, sig)); }
   function stampChanges() {
@@ -1891,20 +1939,93 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     e.preventDefault();
     document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text/plain'));
   });
-  document.querySelectorAll('#toolbar .tb').forEach(b => {
+  // Subrayado: si el navegador no consigue quitarlo (pasa con subrayados anidados o de otros estilos), se quita a mano
+  function unUnderline() {
+    const sel = getSelection(); if (!sel.rangeCount) return;
+    const r = sel.getRangeAt(0), ed = $('#editor');
+    const hits = [...ed.querySelectorAll('u, [style*="underline"]')].filter(el => r.intersectsNode(el));
+    let a = r.startContainer; a = a.nodeType === 1 ? a : a.parentElement;
+    for (let el = a; el && el !== ed; el = el.parentElement) if (el.matches('u, [style*="underline"]') && !hits.includes(el)) hits.push(el);
+    hits.forEach(el => {
+      if (el.tagName === 'U') { el.replaceWith(...el.childNodes); return; }
+      el.style.textDecoration = (el.style.textDecoration || '').replace('underline', '').trim();
+      el.style.textDecorationLine = (el.style.textDecorationLine || '').replace('underline', '').trim();
+    });
+  }
+  function runCmd(cmd, val = null) {
+    const ed = $('#editor'); ed.focus();
+    if (cmd === 'hr') document.execCommand('insertHTML', false, '<hr class="slide-break"><p><br></p>');
+    else if (cmd === 'mark') {
+      document.execCommand('styleWithCSS', false, true);
+      document.execCommand('hiliteColor', false, getComputedStyle(document.documentElement).getPropertyValue('--mark').trim() || 'yellow');
+      document.execCommand('styleWithCSS', false, false);
+    } else if (cmd === 'underline') {
+      const was = document.queryCommandState('underline');
+      document.execCommand('underline');
+      if (was && document.queryCommandState('underline') && !getSelection().isCollapsed) unUnderline();
+    } else if (cmd === 'fontName') {
+      document.execCommand('styleWithCSS', false, true); document.execCommand('fontName', false, val); document.execCommand('styleWithCSS', false, false);
+    } else document.execCommand(cmd, false, val);
+    ed.dispatchEvent(new Event('input'));
+    updateToolbar();
+  }
+  document.querySelectorAll('#toolbar button.tb').forEach(b => {
     b.addEventListener('mousedown', e => e.preventDefault());
     b.addEventListener('click', () => {
-      $('#editor').focus();
-      if (b.dataset.block) document.execCommand('formatBlock', false, b.dataset.block);
-      else if (b.dataset.cmd === 'hr') document.execCommand('insertHTML', false, '<hr class="slide-break"><p><br></p>');
-      else if (b.dataset.cmd === 'cite') { openCite(); return; }
-      else if (b.dataset.cmd === 'mark') {
-        document.execCommand('styleWithCSS', false, true);
-        document.execCommand('hiliteColor', false, getComputedStyle(document.documentElement).getPropertyValue('--mark').trim() || 'yellow');
-        document.execCommand('styleWithCSS', false, false);
-      } else document.execCommand(b.dataset.cmd, false, null);
-      $('#editor').dispatchEvent(new Event('input'));
+      if (b.dataset.cmd === 'cite') { openCite(); return; }
+      if (b.dataset.block) {
+        $('#editor').focus();
+        // Volver a pulsar Título/Subtítulo/Cita los quita (vuelve a texto normal)
+        const cur = (document.queryCommandValue('formatBlock') || '').toLowerCase();
+        document.execCommand('formatBlock', false, cur === b.dataset.block && b.dataset.block !== 'p' ? 'p' : b.dataset.block);
+        $('#editor').dispatchEvent(new Event('input')); updateToolbar(); return;
+      }
+      runCmd(b.dataset.cmd);
     });
+  });
+  $('#tbFont').addEventListener('change', e => { if (e.target.value) runCmd('fontName', e.target.value); });
+  // Botones encendidos según el formato donde está el cursor (negrita, subrayado, listas, alineación…)
+  const STATE_CMDS = ['bold', 'italic', 'underline', 'insertUnorderedList', 'insertOrderedList', 'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'];
+  function updateToolbar() {
+    const ed = $('#editor'), sel = getSelection();
+    if (!sel.rangeCount || !ed.contains(sel.anchorNode)) return;
+    STATE_CMDS.forEach(c => {
+      let on = false; try { on = document.queryCommandState(c); } catch (e) {}
+      document.querySelectorAll(`#toolbar .tb[data-cmd="${c}"]`).forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    });
+    const blk = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
+    document.querySelectorAll('#toolbar .tb[data-block]').forEach(b => { const on = b.dataset.block === blk || (b.dataset.block === 'p' && blk === 'div'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    const n = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+    const fam = n ? getComputedStyle(n).fontFamily.split(',')[0].replace(/["']/g, '').trim().toLowerCase() : '';
+    const f = $('#tbFont'), opt = [...f.options].find(o => o.value && o.value.split(',')[0].replace(/["']/g, '').trim().toLowerCase() === fam);
+    f.value = opt ? opt.value : '';
+  }
+  document.addEventListener('selectionchange', () => { if (document.activeElement === $('#editor')) updateToolbar(); });
+  // Listas automáticas: «- », «* » o «• » al empezar una línea → viñetas; «1. » o «1) » → numerada.
+  // Tab / Mayús+Tab: sangría (dentro de una lista, sube o baja de nivel).
+  $('#editor').addEventListener('keydown', e => {
+    if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); runCmd(e.shiftKey ? 'outdent' : 'indent'); return; }
+    if (e.key !== ' ' || e.ctrlKey || e.metaKey || e.altKey) return;
+    const sel = getSelection(); if (!sel.isCollapsed || !sel.rangeCount) return;
+    const node = sel.anchorNode; if (!node || node.nodeType !== 3) return;
+    const ed = $('#editor');
+    let blk = node.parentElement; while (blk && blk !== ed && !/^(P|DIV|H2|H3|BLOCKQUOTE)$/.test(blk.tagName)) blk = blk.parentElement;
+    if (!blk || blk.closest('li')) return;
+    const before = node.textContent.slice(0, sel.anchorOffset);
+    const range = document.createRange(); range.setStart(blk === ed ? node : blk, 0); range.setEnd(node, sel.anchorOffset);
+    const typed = range.toString();
+    if (typed !== before) return;   // el marcador tiene que estar al principio de la línea
+    const ol = /^\s*(1|a)[.)]$/i.test(typed), ul = /^\s*[-*•–]$/.test(typed);
+    if (!ol && !ul) return;
+    e.preventDefault();
+    range.deleteContents();
+    runCmd(ol ? 'insertOrderedList' : 'insertUnorderedList');
+    const an = getSelection().anchorNode, list = an && (an.nodeType === 1 ? an : an.parentElement).closest('ul,ol');
+    if (list) {
+      if (ol && /a/i.test(typed)) list.type = 'a';
+      const nx = list.nextElementSibling;   // el párrafo vacío que deja el navegador
+      if (nx && nx.tagName === 'P' && !nx.textContent && !nx.children.length) nx.remove();
+    }
   });
   document.addEventListener('keydown', e => {
     const mod = e.ctrlKey || e.metaKey;
