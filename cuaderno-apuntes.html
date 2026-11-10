@@ -2161,7 +2161,8 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     const range = document.createRange(); range.setStart(blk === ed ? node : blk, 0); range.setEnd(node, sel.anchorOffset);
     const typed = range.toString();
     if (typed !== before) return;   // el marcador tiene que estar al principio de la línea
-    const ol = /^\s*(1|a)[.)]$/i.test(typed), ul = /^\s*[-*•–]$/.test(typed);
+    // numerada: «1.», «1)», «1-», «3.»… (empieza en ese número) o «a)», «a.»; viñetas: «-», «*», «•», «–»
+    const ol = /^\s*(\d{1,3}|a)[.)\-]$/i.test(typed), ul = /^\s*[-*•–]$/.test(typed), startN = parseInt(typed, 10);
     if (!ol && !ul) return;
     e.preventDefault();
     range.deleteContents();
@@ -2169,6 +2170,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     const an = getSelection().anchorNode, list = an && (an.nodeType === 1 ? an : an.parentElement).closest('ul,ol');
     if (list) {
       if (ol && /a/i.test(typed)) list.type = 'a';
+      if (ol && startN > 1) list.start = startN;
       const nx = list.nextElementSibling;   // el párrafo vacío que deja el navegador
       if (nx && nx.tagName === 'P' && !nx.textContent && !nx.children.length) nx.remove();
     }
