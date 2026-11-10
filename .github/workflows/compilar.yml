@@ -33,7 +33,7 @@ jobs:
           set -e
           B=build; rm -rf $B; mkdir -p $B/web $B/recursos
           cp main.js package.json $B/
-          cp cuaderno-apuntes.html aviso.mp3 cuaderno.png $B/web/
+          cp cuaderno-apuntes.html esquemas.html aviso.mp3 cuaderno.png $B/web/
           cp cuaderno-uv.ico $B/recursos/icono.ico
           T="$(mktemp -d)/icono.iconset"; mkdir -p "$T"
           for s in 16 32 64 128 256 512; do
