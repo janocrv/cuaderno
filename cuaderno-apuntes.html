@@ -702,6 +702,7 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
   #print-area p{margin:0 0 6pt}
   #print-area blockquote{border-left:2pt solid #999;margin:6pt 0;padding-left:10pt}
   #print-area table{border-collapse:collapse;width:100%;margin:6pt 0}#print-area td,#print-area th{border:1px solid #999;padding:3pt 5pt;vertical-align:top;text-align:left}#print-area th{background:#eee}
+  #print-area .sticky{display:none}#print-area .pa-notes{margin:14pt 0 4pt;padding-top:8pt;border-top:1px dashed #bbb;display:flex;flex-wrap:wrap;gap:8pt}#print-area .pa-notes-h{width:100%;font-weight:700;font-size:9pt;color:#7a8494;text-transform:uppercase}#print-area .pa-note-st{width:46%;padding:6pt 9pt;border-radius:3pt;color:#2b2b2b;break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .pa-ref{padding-left:2em;text-indent:-2em}
   #print-area a{color:#000}
 }
@@ -2235,7 +2236,17 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     root.querySelectorAll('.att[data-fid]').forEach(a => a.setAttribute('contenteditable', 'false'));
   }
   // Para el PDF y la exportación: las imágenes van dentro del documento
-  const withAttData = html => String(html || '').replace(/<img([^>]*?)data-fid="([^"]+)"([^>]*)>/g, (m, a, id, b) => attData[id] ? `<img${a}data-fid="${id}"${b} src="${attData[id]}">` : m);
+  // Para el PDF: las notas adhesivas pueden estar en cualquier sitio de la pantalla, así que no se dibujan donde
+  // están: se sacan del texto y se ponen al final del apunte, en un recuadro «Notas», cada una con su color.
+  const NOTE_PDF = { amarillo: '#fbe7a1', rosa: '#f9ddd7', rojo: '#fbc2ae', celeste: '#cdeef4', verde: '#d6eabd', azul: '#c6dbea' };
+  function notesToEnd(html) {
+    const s = String(html || ''); if (!s.includes('sticky')) return s;
+    const d = document.createElement('div'); d.innerHTML = s;
+    const notes = [...d.querySelectorAll('.sticky')].map(st => { const b = st.querySelector('.st-body'); const t = b ? b.innerHTML : ''; st.remove(); return { t, c: st.dataset.col || 'amarillo', txt: b ? b.textContent.trim() : '' }; }).filter(n => n.txt);
+    if (!notes.length) return d.innerHTML;
+    return d.innerHTML + `<div class="pa-notes"><div class="pa-notes-h">Notas</div>${notes.map(n => `<div class="pa-note-st" style="background:${NOTE_PDF[n.c] || NOTE_PDF.amarillo}">${n.t}</div>`).join('')}</div>`;
+  }
+  const withAttData = html => notesToEnd(html).replace(/<img([^>]*?)data-fid="([^"]+)"([^>]*)>/g, (m, a, id, b) => attData[id] ? `<img${a}data-fid="${id}"${b} src="${attData[id]}">` : m);
   // Al arrancar se preparan las imágenes de todos los apuntes, para que salgan en los PDF
   setTimeout(() => state.subjects.forEach(s => s.notes.forEach(n => (String(n.content || '').match(/data-fid="([^"]+)"/g) || []).forEach(x => attBlob(x.slice(10, -1))))), 4000);
   async function attachFiles(files) {
@@ -2849,7 +2860,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     try { await navigator.clipboard.writeText(t); }
     catch { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
   }
-  const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;line-height:1.7;color:#1f2633}.pa-head{border-bottom:1px solid #ccc;margin:40px 0 16px;padding-bottom:8px}.pa-subj,.pa-date{font-size:.85rem;color:#7a8494}h1{margin:4px 0}.pa-ref{padding-left:2em;text-indent:-2em}table{border-collapse:collapse;width:100%;margin:8pt 0}td,th{border:1px solid #999;padding:4pt 6pt;vertical-align:top;text-align:left}th{background:#eee}img{max-width:100%;height:auto}img.bh{display:block;position:static!important;margin:6pt auto;max-width:100%}.sticky{position:static!important;background:#ffe57a;color:#3b3200;border-radius:4pt;padding:4pt 8pt;margin:6pt 0;max-width:60%;font-size:.92em}.st-bar{font-weight:700;font-size:.75em}.st-x{display:none}img.img-center{display:block;margin:6pt auto}img.img-left{float:left;margin:2pt 12pt 6pt 0;max-width:60%}img.img-right{float:right;margin:2pt 0 6pt 12pt;max-width:60%}blockquote{border-left:3px solid #ccc;padding-left:12px;color:#555}hr{border:0;border-top:2px solid #b8c6d4;margin:26px 12px;height:0}</style></head><body>${body}</body></html>`;
+  const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;line-height:1.7;color:#1f2633}.pa-head{border-bottom:1px solid #ccc;margin:40px 0 16px;padding-bottom:8px}.pa-subj,.pa-date{font-size:.85rem;color:#7a8494}h1{margin:4px 0}.pa-ref{padding-left:2em;text-indent:-2em}table{border-collapse:collapse;width:100%;margin:8pt 0}td,th{border:1px solid #999;padding:4pt 6pt;vertical-align:top;text-align:left}th{background:#eee}img{max-width:100%;height:auto}img.bh{display:block;position:static!important;margin:6pt auto;max-width:100%}.sticky{display:none}.pa-notes{margin:14pt 0 4pt;padding-top:8pt;border-top:1px dashed #bbb;display:flex;flex-wrap:wrap;gap:8pt}.pa-notes-h{width:100%;font-weight:700;font-size:.85em;color:#7a8494;text-transform:uppercase;letter-spacing:.05em}.pa-note-st{width:46%;padding:6pt 9pt;border-radius:3pt;font-size:.92em;color:#2b2b2b;break-inside:avoid}img.img-center{display:block;margin:6pt auto}img.img-left{float:left;margin:2pt 12pt 6pt 0;max-width:60%}img.img-right{float:right;margin:2pt 0 6pt 12pt;max-width:60%}blockquote{border-left:3px solid #ccc;padding-left:12px;color:#555}hr{border:0;border-top:2px solid #b8c6d4;margin:26px 12px;height:0}</style></head><body>${body}</body></html>`;
 
   /* ---------- Compartir ---------- */
   const shareDlg = $('#shareDlg');
