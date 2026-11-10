@@ -133,7 +133,26 @@ html,body{overflow:hidden}
 .tb.on{background:color-mix(in srgb,var(--c,#0a84ff) 17%,transparent);color:var(--c,var(--ink));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c,#0a84ff) 35%,transparent)}
 .tb-font{min-width:92px;padding:0 6px;border:0;background:transparent;cursor:pointer;font:inherit;font-size:.82rem;color:var(--muted)}
 .tb-font option{color:#1d1d1f;background:#fff}
-.tb-color-wrap{position:relative;display:inline-flex}
+.tb-color-wrap,.tb-table-wrap{position:relative;display:inline-flex}
+/* Tablas */
+.table-pop{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);z-index:20;padding:10px;border-radius:14px;background:var(--surface);box-shadow:0 10px 30px rgba(16,48,70,.22),0 0 0 1px var(--line);display:flex;flex-direction:column;align-items:center;gap:6px}
+.table-pop[hidden]{display:none}
+.tp-grid{display:grid;grid-template-columns:repeat(8,16px);gap:3px}
+.tp-grid i{width:16px;height:16px;border-radius:3px;box-shadow:inset 0 0 0 1px var(--line);cursor:pointer}
+.tp-grid i.on{background:color-mix(in srgb,var(--c,#5b7cfa) 45%,transparent);box-shadow:inset 0 0 0 1px var(--c,#5b7cfa)}
+.tp-lbl{font-size:.78rem;color:var(--muted)}
+.editor table{border-collapse:collapse;width:100%;margin:.6em 0 .9em;font-size:.95em}
+.editor th,.editor td{border:1px solid color-mix(in srgb,var(--line) 70%,var(--ink) 30%);padding:6px 9px;vertical-align:top;min-width:40px}
+.editor th{background:color-mix(in srgb,var(--c,#5b7cfa) 14%,transparent);font-weight:650;text-align:left}
+.table-bar{position:fixed;z-index:30;display:flex;flex-wrap:wrap;gap:4px;padding:5px;border-radius:12px;background:var(--surface);box-shadow:0 8px 24px rgba(16,48,70,.2),0 0 0 1px var(--line)}
+.table-bar[hidden]{display:none}
+.table-bar button{font-size:.74rem;padding:4px 8px;border-radius:8px;color:var(--ink)}
+.table-bar button:hover{background:var(--soft)}
+.table-bar .danger{color:var(--danger,#e5484d)}
+/* Adjuntos en el apunte */
+.editor img{max-width:100%;height:auto;border-radius:10px;display:block;margin:.5em 0}
+.editor .att{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:8px;background:color-mix(in srgb,var(--c,#5b7cfa) 14%,transparent);color:var(--ink);font-size:.9em;cursor:pointer;user-select:none}
+.editor .att:hover{background:color-mix(in srgb,var(--c,#5b7cfa) 26%,transparent)}
 .tb-color{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .tb-color b{line-height:1;font-size:.9rem}
 .tb-color i{display:block;width:16px;height:3px;border-radius:2px;background:currentColor}
@@ -618,6 +637,7 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
   #print-area h3{font-size:12pt;margin:10pt 0 4pt}
   #print-area p{margin:0 0 6pt}
   #print-area blockquote{border-left:2pt solid #999;margin:6pt 0;padding-left:10pt}
+  #print-area table{border-collapse:collapse;width:100%;margin:6pt 0}#print-area td,#print-area th{border:1px solid #999;padding:3pt 5pt;vertical-align:top;text-align:left}#print-area th{background:#eee}
   .pa-ref{padding-left:2em;text-indent:-2em}
   #print-area a{color:#000}
 }
@@ -803,6 +823,12 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
                 <span class="sep"></span>
                 <button class="tb" data-block="blockquote" title="Cita">❝</button>
                 <button class="tb" data-cmd="cite" title="Citar en APA 7 una referencia de la bibliografía"><b style="font-size:.78rem">Cita</b></button>
+                <span class="tb-table-wrap">
+                  <button class="tb" data-cmd="table" title="Insertar tabla"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M3.5 10h17M3.5 14.5h17M9.5 5v14M15 5v14"/></svg></button>
+                  <span class="table-pop" id="tablePop" hidden><span class="tp-grid" id="tpGrid"></span><span class="tp-lbl" id="tpLbl">Tabla</span></span>
+                </span>
+                <button class="tb" data-cmd="attach" title="Adjuntar imagen o archivo (también puedes pegar o arrastrar imágenes)"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M20.5 11.5l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.8-8.8a3.3 3.3 0 0 1 4.7 4.7l-8.8 8.8a1.7 1.7 0 0 1-2.4-2.4l8-8"/></svg></button>
+                <input type="file" id="attInput" multiple hidden>
                 <button class="tb" data-cmd="hr" title="Línea de separación (p. ej. entre diapositivas)"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M3 12h18"/></svg></button>
                 <button class="tb" data-cmd="removeFormat" title="Quitar formato">⌫</button>
               </div>
@@ -1863,6 +1889,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     [...col.children].forEach(c => c.style.display = '');
     $('#noteTitle').value = n.title; $('#noteDate').value = n.date || '';
     $('#editor').innerHTML = n.content;
+    resolveAtts($('#editor'));
     updateCount();
   }
   const TYPE = {libro:'Libro', capitulo:'Capítulo', articulo:'Artículo', web:'Web', legislacion:'Ley', otro:'Otro'};
@@ -2011,7 +2038,13 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     const s = subj(); s.notes = s.notes.filter(x => x.id !== n.id);
     state.activeNote = sortedNotes(s)[0]?.id || null; save(); renderNotesList(); renderEditor();
   };
-  const edHTML = () => $('#editor').innerHTML.replace(/​/g, '');   // sin las marcas invisibles que usa el subrayado
+  // Contenido para guardar: sin las marcas invisibles del subrayado ni las direcciones temporales de las imágenes adjuntas
+  const edHTML = () => {
+    const ed = $('#editor');
+    if (!ed.querySelector('img[data-fid][src]')) return ed.innerHTML.replace(/​/g, '');
+    const c = ed.cloneNode(true); c.querySelectorAll('img[data-fid]').forEach(i => i.removeAttribute('src'));
+    return c.innerHTML.replace(/​/g, '');
+  };
   function flushEditor() { const n = note(); if (n && state.view === 'notes') n.content = edHTML(); }
   function touchItem() {
     const n = note(), b = document.querySelector(`.item[data-id="${n.id}"]`);
@@ -2101,6 +2134,8 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     b.addEventListener('click', () => {
       if (b.dataset.cmd === 'cite') { openCite(); return; }
       if (b.dataset.cmd === 'color') { $('#colorPop').hidden = !$('#colorPop').hidden; return; }
+      if (b.dataset.cmd === 'table') { $('#tablePop').hidden = !$('#tablePop').hidden; return; }
+      if (b.dataset.cmd === 'attach') { saveCaret(); $('#attInput').click(); return; }
       if (b.dataset.block) {
         $('#editor').focus();
         // Volver a pulsar Título/Subtítulo/Cita los quita (vuelve a texto normal)
@@ -2112,6 +2147,131 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     });
   });
   $('#tbFont').addEventListener('change', e => { if (e.target.value) runCmd('fontName', e.target.value); });
+  /* ---------- Adjuntos dentro del apunte (imágenes y archivos) ----------
+     El archivo se guarda como los de «Archivos» (en la carpeta de datos, no dentro del texto) y el apunte solo
+     lleva una referencia: <img data-fid> para las imágenes y un «clip» <span class="att" data-fid> para el resto. */
+  var attURL = {}, attData = {};   // id → dirección temporal para verla / imagen en texto para el PDF (var: se usan al arrancar)
+  var savedRange = null;
+  const saveCaret = () => { const s = getSelection(); if (s.rangeCount && $('#editor').contains(s.anchorNode)) savedRange = s.getRangeAt(0).cloneRange(); };
+  const restoreCaret = () => { const ed = $('#editor'); ed.focus(); if (savedRange) { const s = getSelection(); s.removeAllRanges(); s.addRange(savedRange); } };
+  const blobToData = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.onerror = () => r(null); fr.readAsDataURL(b); });
+  async function attBlob(id) {
+    if (attURL[id]) return attURL[id];
+    const b = await getFile(id); if (!b) return null;
+    attURL[id] = URL.createObjectURL(b);
+    blobToData(b).then(d => { if (d && d.startsWith('data:image')) attData[id] = d; });
+    return attURL[id];
+  }
+  function resolveAtts(root) {
+    root.querySelectorAll('img[data-fid]').forEach(async img => { const u = await attBlob(img.dataset.fid); if (u) img.src = u; else img.alt = (img.alt || 'Imagen') + ' (no encontrada)'; });
+    root.querySelectorAll('.att[data-fid]').forEach(a => a.setAttribute('contenteditable', 'false'));
+  }
+  // Para el PDF y la exportación: las imágenes van dentro del documento
+  const withAttData = html => String(html || '').replace(/<img([^>]*?)data-fid="([^"]+)"([^>]*)>/g, (m, a, id, b) => attData[id] ? `<img${a}data-fid="${id}"${b} src="${attData[id]}">` : m);
+  // Al arrancar se preparan las imágenes de todos los apuntes, para que salgan en los PDF
+  setTimeout(() => state.subjects.forEach(s => s.notes.forEach(n => (String(n.content || '').match(/data-fid="([^"]+)"/g) || []).forEach(x => attBlob(x.slice(10, -1))))), 4000);
+  async function attachFiles(files) {
+    const s = subj(), n = note(); if (!n || !files.length) return;
+    restoreCaret();
+    for (const f of files) {
+      const id = uid(), m = f.name.match(/^(.*?)(?:\.([A-Za-z0-9]{1,8}))?$/), ext = (m[2] || '').toLowerCase();
+      try { await idb.put(id, f); uploadFile(id, f); } catch (e) { toast('No se ha podido guardar «' + f.name + '»'); continue; }
+      s.files ||= []; s.files.push({ id, name: m[1] || f.name || 'imagen', ext, mime: f.type || '', size: f.size, added: Date.now(), desc: 'Apunte: ' + (n.title || 'Sin título') });
+      if (/^image\//.test(f.type)) {
+        document.execCommand('insertHTML', false, `<img class="att-img" data-fid="${id}" alt="${esc(f.name || 'imagen')}"><br>`);
+      } else {
+        document.execCommand('insertHTML', false, `<span class="att" data-fid="${id}" contenteditable="false">📎 ${esc(f.name)}</span>&nbsp;`);
+      }
+    }
+    resolveAtts($('#editor'));
+    $('#editor').dispatchEvent(new Event('input'));
+    if (state.view === 'files') renderFiles();
+    toast(files.length === 1 ? 'Adjunto añadido (también está en «Archivos»)' : files.length + ' adjuntos añadidos (también en «Archivos»)');
+  }
+  $('#attInput').addEventListener('change', e => { const fs = [...e.target.files]; e.target.value = ''; attachFiles(fs); });
+  // Pegar o arrastrar imágenes/archivos directamente en el apunte
+  $('#editor').addEventListener('paste', e => {
+    const fs = [...(e.clipboardData?.files || [])]; if (!fs.length) return;
+    e.preventDefault(); e.stopImmediatePropagation(); saveCaret(); attachFiles(fs);
+  }, true);
+  $('#editor').addEventListener('dragover', e => { if (e.dataTransfer?.types?.includes('Files')) e.preventDefault(); });
+  $('#editor').addEventListener('drop', e => {
+    const fs = [...(e.dataTransfer?.files || [])]; if (!fs.length) return;
+    e.preventDefault();
+    const r = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null;
+    if (r) { const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+    saveCaret(); attachFiles(fs);
+  });
+  // Clic en un adjunto: se abre con su programa; doble clic en una imagen: también
+  $('#editor').addEventListener('click', e => {
+    const a = e.target.closest('.att[data-fid]'); if (!a) return;
+    const f = subj().files.find(x => x.id === a.dataset.fid) || state.subjects.flatMap(s => s.files || []).find(x => x.id === a.dataset.fid);
+    if (f) openLocal(f); else toast('No se encuentra el archivo');
+  });
+  $('#editor').addEventListener('dblclick', e => {
+    const i = e.target.closest('img[data-fid]'); if (!i) return;
+    const f = state.subjects.flatMap(s => s.files || []).find(x => x.id === i.dataset.fid); if (f) openLocal(f);
+  });
+
+  /* ---------- Tablas ---------- */
+  (() => {
+    const grid = $('#tpGrid'), lbl = $('#tpLbl'), pop = $('#tablePop'), R = 8, C = 8;
+    for (let r = 1; r <= R; r++) for (let c = 1; c <= C; c++) { const b = document.createElement('i'); b.dataset.r = r; b.dataset.c = c; grid.appendChild(b); }
+    const paint = (r, c) => { grid.querySelectorAll('i').forEach(x => x.classList.toggle('on', +x.dataset.r <= r && +x.dataset.c <= c)); lbl.textContent = r ? `${r} × ${c}` : 'Tabla'; };
+    grid.addEventListener('mousemove', e => { const x = e.target.closest('i'); if (x) paint(+x.dataset.r, +x.dataset.c); });
+    grid.addEventListener('mouseleave', () => paint(0, 0));
+    grid.addEventListener('mousedown', e => e.preventDefault());
+    grid.addEventListener('click', e => {
+      const x = e.target.closest('i'); if (!x) return;
+      const r = +x.dataset.r, c = +x.dataset.c; pop.hidden = true; paint(0, 0);
+      const row = tag => '<tr>' + Array.from({ length: c }, () => `<${tag}><br></${tag}>`).join('') + '</tr>';
+      $('#editor').focus();
+      document.execCommand('insertHTML', false, `<table class="nt"><thead>${row('th')}</thead><tbody>${Array.from({ length: Math.max(1, r - 1) }, () => row('td')).join('')}</tbody></table><p><br></p>`);
+      $('#editor').dispatchEvent(new Event('input'));
+    });
+    document.addEventListener('mousedown', e => { if (!pop.hidden && !e.target.closest('.tb-table-wrap')) pop.hidden = true; });
+  })();
+  // Barra pequeña sobre la tabla donde está el cursor: añadir/quitar filas y columnas, borrar tabla
+  const tbar = document.createElement('div'); tbar.className = 'table-bar'; tbar.hidden = true;
+  tbar.innerHTML = '<button data-t="rowAbove" title="Fila encima">＋ Fila ↑</button><button data-t="rowBelow" title="Fila debajo">＋ Fila ↓</button><button data-t="colLeft" title="Columna a la izquierda">＋ Col ←</button><button data-t="colRight" title="Columna a la derecha">＋ Col →</button><button data-t="delRow" title="Quitar fila">− Fila</button><button data-t="delCol" title="Quitar columna">− Col</button><button data-t="delTable" title="Borrar la tabla" class="danger">Borrar tabla</button>';
+  document.body.appendChild(tbar);
+  let curCell = null;
+  const cellAt = () => { const s = getSelection(); let n = s.anchorNode; n = n && (n.nodeType === 1 ? n : n.parentElement); const c = n && n.closest('td,th'); return c && $('#editor').contains(c) ? c : null; };
+  function placeTbar() {
+    curCell = cellAt(); const t = curCell && curCell.closest('table');
+    if (!t) { tbar.hidden = true; return; }
+    const r = t.getBoundingClientRect(); tbar.hidden = false;
+    tbar.style.left = Math.max(8, r.left) + 'px'; tbar.style.top = Math.max(8, r.top - tbar.offsetHeight - 6) + 'px';
+  }
+  document.addEventListener('selectionchange', placeTbar);
+  $('#editor').closest('.paper')?.parentElement?.addEventListener('scroll', () => { if (!tbar.hidden) placeTbar(); }, true);
+  tbar.addEventListener('mousedown', e => e.preventDefault());
+  tbar.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || !curCell) return;
+    const tr = curCell.parentElement, table = tr.closest('table'), idx = [...tr.children].indexOf(curCell);
+    const newRow = () => { const r = document.createElement('tr'); for (let i = 0; i < tr.children.length; i++) r.appendChild(Object.assign(document.createElement('td'), { innerHTML: '<br>' })); return r; };
+    const rows = [...table.rows];
+    switch (b.dataset.t) {
+      case 'rowAbove': if (tr.parentElement.tagName === 'THEAD') (table.tBodies[0] || table).prepend(newRow()); else tr.before(newRow()); break;
+      case 'rowBelow': if (tr.parentElement.tagName === 'THEAD') (table.tBodies[0] || table).prepend(newRow()); else tr.after(newRow()); break;
+      case 'colLeft': case 'colRight': rows.forEach(r => { const ref = r.children[idx]; if (!ref) return; const c = document.createElement(ref.tagName); c.innerHTML = '<br>'; b.dataset.t === 'colLeft' ? ref.before(c) : ref.after(c); }); break;
+      case 'delRow': if (tr.parentElement.tagName !== 'THEAD' && table.tBodies[0] && table.tBodies[0].rows.length > 1) tr.remove(); else toast('La tabla necesita al menos una fila'); break;
+      case 'delCol': if (tr.children.length > 1) rows.forEach(r => r.children[idx]?.remove()); else toast('La tabla necesita al menos una columna'); break;
+      case 'delTable': if (confirm('¿Borrar esta tabla?')) table.remove(); break;
+    }
+    tbar.hidden = true; $('#editor').dispatchEvent(new Event('input')); setTimeout(placeTbar, 0);
+  });
+  // Tab dentro de una tabla: a la celda siguiente (en la última, crea una fila nueva); Mayús+Tab: a la anterior
+  $('#editor').addEventListener('keydown', e => {
+    if (e.key !== 'Tab' || e.ctrlKey || e.metaKey || e.altKey) return;
+    const c = cellAt(); if (!c) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    const cells = [...c.closest('table').querySelectorAll('th,td')], i = cells.indexOf(c);
+    let next = cells[i + (e.shiftKey ? -1 : 1)];
+    if (!next && !e.shiftKey) { const tr = c.parentElement, r = document.createElement('tr'); for (let k = 0; k < tr.children.length; k++) r.appendChild(Object.assign(document.createElement('td'), { innerHTML: '<br>' })); (c.closest('table').tBodies[0] || c.closest('table')).appendChild(r); next = r.children[0]; $('#editor').dispatchEvent(new Event('input')); }
+    if (next) { const s = getSelection(), rg = document.createRange(); rg.selectNodeContents(next); rg.collapse(false); s.removeAllRanges(); s.addRange(rg); }
+  }, true);
+
   // Color de la letra: paleta pequeña bajo el botón «A»
   const colorPop = $('#colorPop');
   colorPop.querySelectorAll('button').forEach(sw => {
@@ -2351,7 +2511,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   function buildDocHTML(notes, s, withBiblio, onlyBiblio = false) {
     const head = t => `<div class="pa-head"><div class="pa-subj">${esc(s.short)} · ${esc(s.name)}</div><h1>${esc(t)}</h1>`;
     let body = '';
-    if (!onlyBiblio) notes.forEach(n => body += `<section class="pa-note">${head(n.title || 'Sin título')}<div class="pa-date">${esc(fmtLong(n.date))}</div></div>${n.content}</section>`);
+    if (!onlyBiblio) notes.forEach(n => body += `<section class="pa-note">${head(n.title || 'Sin título')}<div class="pa-date">${esc(fmtLong(n.date))}</div></div>${withAttData(n.content)}</section>`);
     if ((withBiblio || onlyBiblio) && s.biblio.length) body += `<section class="pa-note">${head('Bibliografía')}</div>${sortedRefs(s).map(r => `<p class="pa-ref">${apaHTML(r)}</p>`).join('')}</section>`;
     return body;
   }
@@ -2373,7 +2533,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     try { await navigator.clipboard.writeText(t); }
     catch { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
   }
-  const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;line-height:1.7;color:#1f2633}.pa-head{border-bottom:1px solid #ccc;margin:40px 0 16px;padding-bottom:8px}.pa-subj,.pa-date{font-size:.85rem;color:#7a8494}h1{margin:4px 0}.pa-ref{padding-left:2em;text-indent:-2em}blockquote{border-left:3px solid #ccc;padding-left:12px;color:#555}hr{border:0;border-top:2px solid #b8c6d4;margin:26px 12px;height:0}</style></head><body>${body}</body></html>`;
+  const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;line-height:1.7;color:#1f2633}.pa-head{border-bottom:1px solid #ccc;margin:40px 0 16px;padding-bottom:8px}.pa-subj,.pa-date{font-size:.85rem;color:#7a8494}h1{margin:4px 0}.pa-ref{padding-left:2em;text-indent:-2em}table{border-collapse:collapse;width:100%;margin:8pt 0}td,th{border:1px solid #999;padding:4pt 6pt;vertical-align:top;text-align:left}th{background:#eee}blockquote{border-left:3px solid #ccc;padding-left:12px;color:#555}hr{border:0;border-top:2px solid #b8c6d4;margin:26px 12px;height:0}</style></head><body>${body}</body></html>`;
 
   /* ---------- Compartir ---------- */
   const shareDlg = $('#shareDlg');

@@ -143,7 +143,8 @@ function setSpellLang(lang) {
   try {
     const ses = session.defaultSession;
     const ok = ses.availableSpellCheckerLanguages || [];
-    const want = uiLang === 'ca' ? ['ca', 'es-ES'] : ['es-ES', 'ca'];
+    // un solo diccionario, el del idioma elegido: con los dos a la vez sugería palabras del otro idioma
+    const want = uiLang === 'ca' ? ['ca'] : ['es-ES'];
     const langs = want.filter(l => ok.includes(l));
     const now = ses.getSpellCheckerLanguages();
     if (langs.length && langs.join() !== now.join()) { ses.setSpellCheckerLanguages(langs); log('Ortografía:', langs.join(', ')); }
