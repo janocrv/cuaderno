@@ -2001,13 +2001,43 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       el.style.textDecorationLine = (el.style.textDecorationLine || '').replace('underline', '').trim();
     });
   }
+  // Parte un elemento de formato (subrayado, resaltado…) en el cursor y deja el cursor fuera de él
+  function splitOut(el) {
+    const sel = getSelection();
+    const r = document.createRange(); r.setStart(sel.anchorNode, sel.anchorOffset); r.setEnd(el, el.childNodes.length);
+    const rest = el.cloneNode(false); rest.append(r.extractContents());
+    const z = document.createTextNode('​'); el.after(z);
+    if (rest.textContent.replace(/​/g, '')) z.after(rest);
+    if (!el.textContent.replace(/​/g, '')) el.remove();
+    sel.collapse(z, 1);
+  }
+  const isMark = el => el.nodeType === 1 && el.style && /background/.test(el.getAttribute('style') || '') && !/transparent|rgba\(0, 0, 0, 0\)/.test(el.style.backgroundColor || '');
+  function markedAt() {
+    const sel = getSelection(), ed = $('#editor'); if (!sel.rangeCount) return null;
+    let n = sel.anchorNode; n = n && (n.nodeType === 1 ? n : n.parentElement);
+    for (; n && n !== ed && ed.contains(n); n = n.parentElement) if (isMark(n)) return n;
+    if (!sel.isCollapsed) { const r = sel.getRangeAt(0); return [...ed.querySelectorAll('[style*="background"]')].find(el => isMark(el) && r.intersectsNode(el)) || null; }
+    return null;
+  }
   function runCmd(cmd, val = null) {
     const ed = $('#editor'); ed.focus();
     if (cmd === 'hr') document.execCommand('insertHTML', false, '<hr class="slide-break"><p><br></p>');
     else if (cmd === 'mark') {
-      document.execCommand('styleWithCSS', false, true);
-      document.execCommand('hiliteColor', false, getComputedStyle(document.documentElement).getPropertyValue('--mark').trim() || 'yellow');
-      document.execCommand('styleWithCSS', false, false);
+      const sel = getSelection(), hl = markedAt();
+      if (hl) {
+        // Ya está resaltado → se quita (con selección: de todo lo seleccionado; sin selección: se sale del resaltado)
+        if (sel.isCollapsed) splitOut(hl);
+        else {
+          const r = sel.getRangeAt(0);
+          const els = [...ed.querySelectorAll('[style*="background"]')].filter(el => r.intersectsNode(el));
+          for (let el = hl; el && el !== ed; el = el.parentElement) if (isMark(el) && !els.includes(el)) els.push(el);
+          els.forEach(el => { el.style.backgroundColor = ''; el.style.background = ''; if (el.tagName === 'SPAN' && !el.getAttribute('style')) el.replaceWith(...el.childNodes); });
+        }
+      } else {
+        document.execCommand('styleWithCSS', false, true);
+        document.execCommand('hiliteColor', false, getComputedStyle(document.documentElement).getPropertyValue('--mark').trim() || 'yellow');
+        document.execCommand('styleWithCSS', false, false);
+      }
     } else if (cmd === 'underline') {
       const sel = getSelection();
       let an = sel.anchorNode; an = an && (an.nodeType === 1 ? an : an.parentElement);
@@ -2015,12 +2045,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       if (sel.isCollapsed && uEl && ed.contains(uEl)) {
         // Cursor dentro de un subrayado y sin selección: el navegador no sabe «apagarlo» (lo de dentro hereda la raya),
         // así que se parte el subrayado en el cursor y se sigue escribiendo fuera de él.
-        const r = document.createRange(); r.setStart(sel.anchorNode, sel.anchorOffset); r.setEnd(uEl, uEl.childNodes.length);
-        const rest = uEl.cloneNode(false); rest.append(r.extractContents());
-        const z = document.createTextNode('​'); uEl.after(z);
-        if (rest.textContent.replace(/​/g, '')) z.after(rest);
-        if (!uEl.textContent.replace(/​/g, '')) uEl.remove();
-        sel.collapse(z, 1);
+        splitOut(uEl);
       } else {
         const was = document.queryCommandState('underline');
         document.execCommand('underline');
@@ -2056,6 +2081,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       let on = false; try { on = document.queryCommandState(c); } catch (e) {}
       document.querySelectorAll(`#toolbar .tb[data-cmd="${c}"]`).forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     });
+    const mk = !!markedAt(); document.querySelectorAll('#toolbar .tb[data-cmd="mark"]').forEach(b => { b.classList.toggle('on', mk); b.setAttribute('aria-pressed', String(mk)); });
     const blk = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
     document.querySelectorAll('#toolbar .tb[data-block]').forEach(b => { const on = b.dataset.block === blk || (b.dataset.block === 'p' && blk === 'div'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     const n = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
