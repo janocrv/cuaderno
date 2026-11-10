@@ -117,6 +117,15 @@ html,body{overflow:hidden}
 .toolbar{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:2px;padding:6px;margin:0 -6px 18px;background:var(--surface);border-bottom:1px solid var(--line)}
 .tb{min-width:32px;height:30px;padding:0 8px;border-radius:7px;font-size:.85rem;color:var(--muted)}
 .tb:hover{background:var(--soft);color:var(--ink)}
+/* El folio: un recuadro redondeado un poco más claro que el fondo, con un toque del color de la asignatura */
+.editor{background:color-mix(in srgb,var(--surface) 95%,var(--c,#5b7cfa) 5%);border-radius:18px;padding:28px 34px;border:1px solid color-mix(in srgb,var(--line) 80%,var(--c,#5b7cfa) 20%);box-shadow:0 1px 2px rgba(16,48,70,.05),0 10px 28px rgba(16,48,70,.07)}
+:root[data-theme="dark"] .editor{background:color-mix(in srgb,color-mix(in srgb,var(--surface) 88%,#fff 12%) 93%,var(--c,#5b7cfa) 7%);border-color:color-mix(in srgb,#fff 10%,transparent);box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 30px rgba(0,0,0,.25)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .editor{background:color-mix(in srgb,color-mix(in srgb,var(--surface) 88%,#fff 12%) 93%,var(--c,#5b7cfa) 7%);border-color:color-mix(in srgb,#fff 10%,transparent);box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 30px rgba(0,0,0,.25)}}
+@media (max-width:900px){.editor{padding:20px 18px}}
+/* Asignatura que tiene clase ahora (según el horario): brillo suave que va y viene */
+.subj.live .chip::after{content:'';position:absolute;inset:-3px;border-radius:inherit;pointer-events:none;box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 75%,transparent),0 0 16px 3px color-mix(in srgb,var(--c) 60%,transparent);animation:liveGlow 3.6s ease-in-out infinite}
+@keyframes liveGlow{0%,100%{opacity:.2}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.subj.live .chip::after{animation:none;opacity:.75}}
 .tb.on{background:color-mix(in srgb,var(--c,#0a84ff) 17%,transparent);color:var(--c,var(--ink));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c,#0a84ff) 35%,transparent)}
 .tb-font{min-width:92px;padding:0 6px;border:0;background:transparent;cursor:pointer;font:inherit;font-size:.82rem;color:var(--muted)}
 .tb-font option{color:#1d1d1f;background:#fff}
@@ -935,6 +944,7 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
   <button role="menuitem" id="mImport"><svg viewBox="0 0 24 24"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></svg>Restaurar copia</button>
   <hr>
   <button role="menuitem" id="mSound"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span id="mSoundTxt">Sonido de avisos: activado</span></button>
+  <button role="menuitem" id="mLive"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span id="mLiveTxt">Brillo de la clase actual: activado</span></button>
   <button role="menuitem" id="mTheme"><svg viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg>Modo claro / oscuro</button>
   <hr class="app-only" hidden>
   <button role="menuitem" id="mUpdate" class="app-only" hidden><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg>Actualizar Cuaderno</button>
@@ -1749,9 +1759,26 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       const pend = s.tasks.filter(t => !t.done).length;
       b.innerHTML = `<span class="chip tint">${esc(s.short)}${pend ? `<span class="count" aria-label="${pend} tareas pendientes">${pend}</span>` : ''}</span><span class="nm">${esc(s.name)}</span>`;
       b.onclick = () => { selectSubject(s.id); if (matchMedia('(max-width:640px)').matches && state.railOpen) { state.railOpen = false; applyRail(); } };
+      b.dataset.sid = s.id;
       nav.appendChild(b);
     });
+    markLive();
   }
+  // Brillo en la asignatura que tiene clase ahora mismo, según el horario (se puede apagar en el menú ⋯)
+  function markLive() {
+    const now = new Date(), p2 = n => String(n).padStart(2, '0');
+    const day = `${now.getFullYear()}-${p2(now.getMonth() + 1)}-${p2(now.getDate())}`, hm = `${p2(now.getHours())}:${p2(now.getMinutes())}`;
+    const on = !(state.settings && state.settings.liveGlowOff);
+    const cls = on ? (state.schedule || []).find(c => c.d === day && c.s <= hm && hm < c.e) : null;
+    const sub = cls && state.subjects.find(s => String(s.code) === String(cls.code));
+    document.querySelectorAll('#subjects .subj').forEach(b => {
+      const live = !!sub && b.dataset.sid === sub.id;
+      b.classList.toggle('live', live);
+      const base = b.title.replace(/ · En clase ahora.*$/, '');
+      b.title = live ? `${base} · En clase ahora (${cls.s}–${cls.e}${cls.room ? ', ' + cls.room : ''})` : base;
+    });
+  }
+  setInterval(markLive, 60000);
   const VIEWS = { notes: ['#tabNotes', '#notesView'], tasks: ['#tabTasks', '#tasksView'], files: ['#tabFiles', '#filesView'], biblio: ['#tabBiblio', '#biblioView'] };
   const SPECIAL = { schedule: { sec: '#scheduleView', btn: '#schedBtn', title: 'Horario de clases' }, mail: { sec: '#mailView', btn: '#mailBtn', title: 'Correo' }, alerts: { sec: '#alertsView', btn: '#alertsBtn', title: 'Avisos' }, cites: { sec: '#citesView', btn: '#citesBtn', title: 'Citas APA' }, ai: { sec: '#aiView', btn: '#aiBtn', title: 'Resumir con IA' } };
   function renderHeader() {
@@ -1889,6 +1916,12 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     if (!state.soundOff) { lastChime = 0; chime(); toast('Sonido de avisos activado'); } else toast('Sonido de avisos desactivado');
   };
   soundLabel();
+  const liveLabel = () => { $('#mLiveTxt').textContent = 'Brillo de la clase actual: ' + (state.settings.liveGlowOff ? 'desactivado' : 'activado'); };
+  $('#mLive').onclick = () => {
+    menu.hidden = true; state.settings.liveGlowOff = !state.settings.liveGlowOff; save(); liveLabel(); markLive();
+    toast(state.settings.liveGlowOff ? 'Brillo de la clase actual desactivado' : 'Brillo de la clase actual activado');
+  };
+  liveLabel();
   $('#themeBtn').onclick = toggleTheme;
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme());
   $('#mExport').onclick = async () => {
