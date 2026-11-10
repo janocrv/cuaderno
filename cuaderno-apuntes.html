@@ -150,7 +150,71 @@ html,body{overflow:hidden}
 .table-bar button:hover{background:var(--soft)}
 .table-bar .danger{color:var(--danger,#e5484d)}
 /* Adjuntos en el apunte */
-.editor img{max-width:100%;height:auto;border-radius:10px;display:block;margin:.5em 0}
+.editor img{max-width:100%;height:auto;border-radius:10px;display:block;margin:.5em 0;cursor:pointer}
+/* Imágenes detrás del texto: el folio es el marco (position + isolation) y la imagen queda bajo las letras */
+.editor{position:relative;isolation:isolate}
+.editor img.bh{position:absolute;z-index:-1;margin:0;display:block;max-width:none;cursor:grab;transition:box-shadow .15s}
+.editor img.bh.grab{cursor:grabbing;opacity:.85}
+/* Notas adhesivas */
+/* nota de papel con chincheta: esquina doblada abajo a la derecha, sombra suave y una chincheta roja arriba */
+.editor .sticky{--s:1;--n1:#ffe36e;--n2:#f9d64a;--n3:#efc634;--ni:#3b3200;--nb:rgba(110,85,0,.75);
+  position:absolute;z-index:3;width:calc(200px * var(--s));height:calc(200px * var(--s));color:var(--ni);font-size:calc(.92rem * var(--s));line-height:1.45;display:flex;flex-direction:column;
+  background:linear-gradient(172deg,var(--n1) 0%,var(--n2) 58%,var(--n3) 100%);border-radius:1px;
+  box-shadow:inset 0 -16px 20px -16px rgba(0,0,0,.18);
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.12)) drop-shadow(4px 10px 10px rgba(0,0,0,.22));
+  transform-origin:50% 8%;   /* gira y se balancea desde arriba, como un papel pegado por su borde */
+  transform:rotate(calc(var(--rot,-1.5deg) + var(--swing,0deg)));transition:transform .6s cubic-bezier(.3,1.7,.4,1),scale .2s}
+.editor .sticky.grab{scale:1.05;transition:transform .08s linear,scale .2s;filter:drop-shadow(0 4px 4px rgba(0,0,0,.18)) drop-shadow(0 18px 24px rgba(0,0,0,.28))}
+.editor .sticky.turning{transition:none;transform-origin:50% 50%}
+.editor .st-rot{position:absolute;left:4px;bottom:4px;width:22px;height:22px;border-radius:50%;font-size:13px;line-height:22px;text-align:center;color:#6b5a00;background:rgba(255,255,255,.45);cursor:grab;opacity:0;transition:opacity .15s}
+.editor .sticky:hover .st-rot{opacity:1}
+.editor .st-bar{position:relative;flex:none;height:calc(36px * var(--s));display:flex;align-items:flex-start;justify-content:flex-end;padding:4px 4px 0;cursor:grab;user-select:none}
+/* chincheta (SVG): clavada arriba en el centro, sobresale un poco por encima del papel */
+.editor .st-pin{display:none}   /* sin chincheta (por si alguna nota antigua la lleva) */
+.editor .st-bar::before{content:'';position:absolute;left:50%;top:9px;width:34px;height:5px;margin-left:-17px;border-radius:3px;background:var(--nb);opacity:0;transition:opacity .15s}
+.editor .sticky:hover .st-bar::before{opacity:.35}
+/* colores (referencia: pósits amarillo, rosa, rojo, celeste, verde y azul) */
+.editor .sticky[data-col="rosa"]{--n1:#fde6e1;--n2:#f7d2cb;--n3:#efc1b8;--ni:#5a2a24;--nb:rgba(120,60,50,.7)}
+.editor .sticky[data-col="rojo"]{--n1:#ff8a5c;--n2:#f6693f;--n3:#e4532d;--ni:#fff;--nb:rgba(255,255,255,.85)}
+.editor .sticky[data-col="celeste"]{--n1:#b3e8f1;--n2:#9adbe8;--n3:#84cddc;--ni:#0f3d47;--nb:rgba(15,61,71,.7)}
+.editor .sticky[data-col="verde"]{--n1:#a9d376;--n2:#94c55b;--n3:#80b448;--ni:#1f3a08;--nb:rgba(31,58,8,.7)}
+.editor .sticky[data-col="azul"]{--n1:#78a9cb;--n2:#5e95bb;--n3:#4b82a8;--ni:#fff;--nb:rgba(255,255,255,.85)}
+/* esquina levantada: abajo a la izquierda en la rosa, abajo a la derecha en la azul */
+.editor .sticky[data-col="rosa"]::after,.editor .sticky[data-col="azul"]::after{content:'';position:absolute;bottom:0;width:calc(34px * var(--s));height:calc(34px * var(--s));pointer-events:none}
+.editor .sticky[data-col="azul"]::after{right:0;background:linear-gradient(315deg,transparent 48%,var(--n1) 50%,#a9cbe2 70%,var(--n2) 100%);border-top-left-radius:70% 40%;box-shadow:-3px -3px 6px rgba(0,0,0,.18)}
+.editor .sticky[data-col="rosa"]::after{left:0;background:linear-gradient(45deg,transparent 48%,#fff3f0 52%,var(--n1) 75%,var(--n2) 100%);border-top-right-radius:70% 40%;box-shadow:3px -3px 6px rgba(0,0,0,.12)}
+.editor .sticky[data-col="azul"] .st-size{right:auto;left:3px;bottom:30px}
+.editor .sticky[data-col="rosa"] .st-rot{left:auto;right:30px}
+.editor .sticky .st-x,.editor .sticky .st-rot,.editor .sticky .st-size{color:var(--nb)}
+.editor .st-col{position:absolute;left:7px;top:7px;width:16px;height:16px;border-radius:50%;background:conic-gradient(#f9d64a 0 60deg,#f7d2cb 0 120deg,#f6693f 0 180deg,#9adbe8 0 240deg,#94c55b 0 300deg,#5e95bb 0);box-shadow:0 0 0 2px rgba(255,255,255,.7);opacity:0;transition:opacity .15s;cursor:pointer}
+.editor .sticky:hover .st-col{opacity:1}
+.editor .st-pal{position:absolute;left:6px;top:calc(30px * var(--s));z-index:5;display:flex;gap:5px;padding:5px;border-radius:10px;background:rgba(255,255,255,.92);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.editor .st-pal button{width:20px;height:20px;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.editor .st-pal [data-c="amarillo"]{background:#f9d64a}.editor .st-pal [data-c="rosa"]{background:#f7d2cb}.editor .st-pal [data-c="rojo"]{background:#f6693f}
+.editor .st-pal [data-c="celeste"]{background:#9adbe8}.editor .st-pal [data-c="verde"]{background:#94c55b}.editor .st-pal [data-c="azul"]{background:#5e95bb}
+.editor .st-size{position:absolute;right:3px;bottom:3px;width:22px;height:22px;border-radius:50%;font-size:13px;line-height:22px;text-align:center;color:#6b5a00;background:rgba(255,255,255,.45);cursor:nwse-resize;opacity:0;transition:opacity .15s}
+.editor .sticky:hover .st-size{opacity:1}
+.editor .st-x{width:20px;height:20px;border-radius:50%;color:#6b5a00;font-size:15px;line-height:20px;text-align:center;opacity:0;transition:opacity .15s}
+.editor .sticky:hover .st-x{opacity:1}
+.editor .st-x:hover{background:rgba(0,0,0,.1)}
+.editor .st-body{flex:1;min-height:0;min-width:0;width:100%;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;white-space:normal;word-break:break-word;overflow-wrap:anywhere;padding:2px 16px 14px 14px;outline:none;cursor:text;font-family:'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif;scrollbar-width:thin;scrollbar-color:rgba(120,95,0,.35) transparent}
+.editor.show-ws .sticky :is(p,div)::after,.editor.show-ws .sticky.sticky .st-body::after,.editor.show-ws .st-bar::after{content:none}
+.img-bar .hint{font-size:.74rem;color:var(--muted);padding:4px 6px;align-self:center}
+/* Visor de espacios */
+::highlight(ws){background-color:color-mix(in srgb,var(--c,#5b7cfa) 48%,transparent)}
+.editor.show-ws :is(p,h2,h3,li,blockquote,div):not(.sticky):not(.sticky *)::after{content:'¶';color:color-mix(in srgb,var(--muted) 70%,transparent);font-weight:400;margin-left:2px}
+.editor.show-ws td::after,.editor.show-ws th::after{content:none}
+.editor img.img-center{margin-left:auto;margin-right:auto}
+.editor img.img-left{float:left;margin:.3em 1.1em .6em 0;max-width:60%}
+.editor img.img-right{float:right;margin:.3em 0 .6em 1.1em;max-width:60%}
+.editor img.sel{outline:2.5px solid var(--c,#5b7cfa);outline-offset:3px}
+.editor::after{content:'';display:block;clear:both}
+.editor .moving{opacity:.35}
+.dragging-block,.dragging-block *{cursor:grabbing!important;user-select:none}
+.drop-line{position:fixed;z-index:40;height:4px;border-radius:2px;background:var(--c,#5b7cfa);box-shadow:0 0 0 3px color-mix(in srgb,var(--c,#5b7cfa) 25%,transparent);pointer-events:none}
+.drop-line[hidden]{display:none}
+.table-bar .mv-handle{cursor:grab;font-weight:600}
+.table-bar .sep{width:1px;align-self:stretch;margin:2px 3px;background:var(--line)}
 .editor .att{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:8px;background:color-mix(in srgb,var(--c,#5b7cfa) 14%,transparent);color:var(--ink);font-size:.9em;cursor:pointer;user-select:none}
 .editor .att:hover{background:color-mix(in srgb,var(--c,#5b7cfa) 26%,transparent)}
 .tb-color{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
@@ -829,6 +893,8 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
                 </span>
                 <button class="tb" data-cmd="attach" title="Adjuntar imagen o archivo (también puedes pegar o arrastrar imágenes)"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M20.5 11.5l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.8-8.8a3.3 3.3 0 0 1 4.7 4.7l-8.8 8.8a1.7 1.7 0 0 1-2.4-2.4l8-8"/></svg></button>
                 <input type="file" id="attInput" multiple hidden>
+                <button class="tb" data-cmd="sticky" title="Añadir una nota adhesiva (recuadro amarillo que puedes mover)"><svg viewBox="0 0 24 24" style="width:19px;height:19px"><path class="nt-ic" d="M4.5 4h15v10.5l-5.5 5.5h-9.5z" style="fill:#f9d64a;stroke:rgba(0,0,0,.28);stroke-width:1"/><path class="nt-ic2" d="M14 20v-5.5h5.5z" style="fill:#d9b42c;stroke:rgba(0,0,0,.28);stroke-width:1"/></svg></button>
+                <button class="tb" data-cmd="ws" title="Ver espacios y saltos de párrafo"><b style="font-size:.95rem">¶</b></button>
                 <button class="tb" data-cmd="hr" title="Línea de separación (p. ej. entre diapositivas)"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M3 12h18"/></svg></button>
                 <button class="tb" data-cmd="removeFormat" title="Quitar formato">⌫</button>
               </div>
@@ -1889,7 +1955,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     [...col.children].forEach(c => c.style.display = '');
     $('#noteTitle').value = n.title; $('#noteDate').value = n.date || '';
     $('#editor').innerHTML = n.content;
-    resolveAtts($('#editor'));
+    resolveAtts($('#editor')); $('#editor').style.minHeight = ''; setTimeout(fitBehind, 400); setTimeout(paintWS, 0);
     updateCount();
   }
   const TYPE = {libro:'Libro', capitulo:'Capítulo', articulo:'Artículo', web:'Web', legislacion:'Ley', otro:'Otro'};
@@ -2136,6 +2202,8 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       if (b.dataset.cmd === 'color') { $('#colorPop').hidden = !$('#colorPop').hidden; return; }
       if (b.dataset.cmd === 'table') { $('#tablePop').hidden = !$('#tablePop').hidden; return; }
       if (b.dataset.cmd === 'attach') { saveCaret(); $('#attInput').click(); return; }
+      if (b.dataset.cmd === 'sticky') { addSticky(); return; }
+      if (b.dataset.cmd === 'ws') { wsOn = !wsOn; try { localStorage.setItem('cuaderno-espacios', wsOn ? '1' : ''); } catch (e) {} paintWS(); return; }
       if (b.dataset.block) {
         $('#editor').focus();
         // Volver a pulsar Título/Subtítulo/Cita los quita (vuelve a texto normal)
@@ -2173,12 +2241,19 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   async function attachFiles(files) {
     const s = subj(), n = note(); if (!n || !files.length) return;
     restoreCaret();
+    // nunca sustituir texto: si había algo seleccionado, el adjunto va detrás (así se perdió un apunte en la 1.1.6)
+    { const sel = getSelection(); if (sel.rangeCount && !sel.isCollapsed) sel.collapseToEnd(); if (!$('#editor').contains(sel.anchorNode)) { const r = document.createRange(); r.selectNodeContents($('#editor')); r.collapse(false); sel.removeAllRanges(); sel.addRange(r); } }
     for (const f of files) {
       const id = uid(), m = f.name.match(/^(.*?)(?:\.([A-Za-z0-9]{1,8}))?$/), ext = (m[2] || '').toLowerCase();
       try { await idb.put(id, f); uploadFile(id, f); } catch (e) { toast('No se ha podido guardar «' + f.name + '»'); continue; }
       s.files ||= []; s.files.push({ id, name: m[1] || f.name || 'imagen', ext, mime: f.type || '', size: f.size, added: Date.now(), desc: 'Apunte: ' + (n.title || 'Sin título') });
       if (/^image\//.test(f.type)) {
-        document.execCommand('insertHTML', false, `<img class="att-img" data-fid="${id}" alt="${esc(f.name || 'imagen')}"><br>`);
+        // detrás del texto, a la altura del cursor
+        const ed = $('#editor'), s = getSelection(), er = ed.getBoundingClientRect();
+        let top = 20; try { const rr = s.getRangeAt(0).getBoundingClientRect(); if (rr.height) top = rr.top - er.top + ed.scrollTop; } catch (e) {}
+        const img = Object.assign(document.createElement('img'), { className: 'att-img bh', alt: f.name || 'imagen' });
+        img.dataset.fid = id; img.style.cssText = `left:6%;top:${Math.max(0, Math.round(top))}px;width:45%`;
+        ed.appendChild(img); setTimeout(fitBehind, 300);
       } else {
         document.execCommand('insertHTML', false, `<span class="att" data-fid="${id}" contenteditable="false">📎 ${esc(f.name)}</span>&nbsp;`);
       }
@@ -2233,7 +2308,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   })();
   // Barra pequeña sobre la tabla donde está el cursor: añadir/quitar filas y columnas, borrar tabla
   const tbar = document.createElement('div'); tbar.className = 'table-bar'; tbar.hidden = true;
-  tbar.innerHTML = '<button data-t="rowAbove" title="Fila encima">＋ Fila ↑</button><button data-t="rowBelow" title="Fila debajo">＋ Fila ↓</button><button data-t="colLeft" title="Columna a la izquierda">＋ Col ←</button><button data-t="colRight" title="Columna a la derecha">＋ Col →</button><button data-t="delRow" title="Quitar fila">− Fila</button><button data-t="delCol" title="Quitar columna">− Col</button><button data-t="delTable" title="Borrar la tabla" class="danger">Borrar tabla</button>';
+  tbar.innerHTML = '<button data-t="drag" class="mv-handle" title="Arrastra para mover la tabla">✥ Mover</button><button data-t="up" title="Subir la tabla">↑</button><button data-t="down" title="Bajar la tabla">↓</button><button data-t="rowAbove" title="Fila encima">＋ Fila ↑</button><button data-t="rowBelow" title="Fila debajo">＋ Fila ↓</button><button data-t="colLeft" title="Columna a la izquierda">＋ Col ←</button><button data-t="colRight" title="Columna a la derecha">＋ Col →</button><button data-t="delRow" title="Quitar fila">− Fila</button><button data-t="delCol" title="Quitar columna">− Col</button><button data-t="delTable" title="Borrar la tabla" class="danger">Borrar tabla</button>';
   document.body.appendChild(tbar);
   let curCell = null;
   const cellAt = () => { const s = getSelection(); let n = s.anchorNode; n = n && (n.nodeType === 1 ? n : n.parentElement); const c = n && n.closest('td,th'); return c && $('#editor').contains(c) ? c : null; };
@@ -2252,6 +2327,8 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     const newRow = () => { const r = document.createElement('tr'); for (let i = 0; i < tr.children.length; i++) r.appendChild(Object.assign(document.createElement('td'), { innerHTML: '<br>' })); return r; };
     const rows = [...table.rows];
     switch (b.dataset.t) {
+      case 'drag': return;
+      case 'up': case 'down': moveStep(table, b.dataset.t === 'up' ? -1 : 1); break;
       case 'rowAbove': if (tr.parentElement.tagName === 'THEAD') (table.tBodies[0] || table).prepend(newRow()); else tr.before(newRow()); break;
       case 'rowBelow': if (tr.parentElement.tagName === 'THEAD') (table.tBodies[0] || table).prepend(newRow()); else tr.after(newRow()); break;
       case 'colLeft': case 'colRight': rows.forEach(r => { const ref = r.children[idx]; if (!ref) return; const c = document.createElement(ref.tagName); c.innerHTML = '<br>'; b.dataset.t === 'colLeft' ? ref.before(c) : ref.after(c); }); break;
@@ -2261,6 +2338,245 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     }
     tbar.hidden = true; $('#editor').dispatchEvent(new Event('input')); setTimeout(placeTbar, 0);
   });
+  /* ---------- Visor de espacios (¶) ----------
+     Marca cada espacio con un recuadro suave (dos espacios seguidos = dos recuadros) y pone ¶ al final de cada
+     párrafo. No toca el texto: usa resaltados del navegador (CSS Highlight API) y ::after. */
+  var wsOn = (() => { try { return localStorage.getItem('cuaderno-espacios') === '1'; } catch (e) { return false; } })(), wsT = null;
+  function paintWS() {
+    const ed = $('#editor');
+    ed.classList.toggle('show-ws', wsOn);
+    document.querySelectorAll('#toolbar .tb[data-cmd="ws"]').forEach(b => { b.classList.toggle('on', wsOn); b.setAttribute('aria-pressed', String(wsOn)); });
+    if (!window.CSS || !CSS.highlights) return;
+    if (!wsOn) { CSS.highlights.delete('ws'); return; }
+    const ranges = [], it = document.createTreeWalker(ed, NodeFilter.SHOW_TEXT);
+    for (let t; (t = it.nextNode()) && ranges.length < 20000;) {
+      const s = t.data; for (let i = 0; i < s.length; i++) if (s[i] === ' ' || s[i] === ' ') { const r = new Range(); r.setStart(t, i); r.setEnd(t, i + 1); ranges.push(r); }
+    }
+    CSS.highlights.set('ws', new Highlight(...ranges));
+  }
+  $('#editor').addEventListener('input', () => { if (!wsOn) return; clearTimeout(wsT); wsT = setTimeout(paintWS, 120); });
+
+  /* ---------- Mover imágenes y tablas por el apunte ----------
+     ↑/↓ las cambian de sitio con el párrafo de al lado; el asa ✥ se arrastra y una línea marca dónde caerán. */
+  const topBlock = n => { const ed = $('#editor'); while (n && n.parentElement && n.parentElement !== ed) n = n.parentElement; return n && n.parentElement === ed ? n : null; };
+  const tidy = p => { if (p && p !== $('#editor') && !p.textContent.replace(/[\s​]/g, '') && !p.querySelector('img,table,.att,hr')) p.remove(); };
+  function placeAt(el, ref, after) {
+    const old = el.parentElement;
+    if (!ref || ref === el || el.contains(ref)) return;
+    after ? ref.after(el) : ref.before(el);
+    if (old && old !== el.parentElement) tidy(old);
+    if (!el.nextElementSibling) el.after(Object.assign(document.createElement('p'), { innerHTML: '<br>' }));   // para poder seguir escribiendo debajo
+    $('#editor').dispatchEvent(new Event('input'));
+  }
+  function moveStep(el, dir) {
+    const blk = topBlock(el); if (!blk) return;
+    if (blk !== el) { placeAt(el, blk, dir > 0); return; }            // la imagen estaba dentro de un párrafo: sale de él
+    const sib = dir < 0 ? el.previousElementSibling : el.nextElementSibling;
+    if (!sib) return toast(dir < 0 ? 'Ya está arriba del todo' : 'Ya está abajo del todo');
+    placeAt(el, sib, dir > 0);
+  }
+  const dropLine = document.createElement('div'); dropLine.className = 'drop-line'; dropLine.hidden = true; document.body.appendChild(dropLine);
+  function startDrag(el, e) {
+    e.preventDefault();
+    const ed = $('#editor'); let target = null, after = false;
+    el.classList.add('moving'); document.body.classList.add('dragging-block');
+    const move = ev => {
+      dropLine.hidden = true; target = null;
+      const under = document.elementFromPoint(ev.clientX, ev.clientY);
+      if (!under || !ed.contains(under)) return;
+      const b = topBlock(under); if (!b || b === el) return;
+      const r = b.getBoundingClientRect(); after = ev.clientY > r.top + r.height / 2; target = b;
+      const er = ed.getBoundingClientRect();
+      Object.assign(dropLine.style, { left: er.left + 16 + 'px', width: er.width - 32 + 'px', top: (after ? r.bottom : r.top) - 2 + 'px' }); dropLine.hidden = false;
+    };
+    const up = () => {
+      removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+      dropLine.hidden = true; el.classList.remove('moving'); document.body.classList.remove('dragging-block');
+      if (target) placeAt(el, target, after);
+      hideImgBar(); setTimeout(placeTbar, 0);
+    };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+  }
+  tbar.addEventListener('pointerdown', e => { if (e.target.closest('[data-t="drag"]') && curCell) startDrag(curCell.closest('table'), e); });
+
+  // Barra de la imagen: al hacer clic en una imagen del apunte
+  const ibar = document.createElement('div'); ibar.className = 'table-bar img-bar'; ibar.hidden = true;
+  ibar.innerHTML = '<span class="hint">✥ Arrastra la imagen para moverla</span>'
+    + '<span class="sep"></span><button data-i="w25">25%</button><button data-i="w50">50%</button><button data-i="w75">75%</button><button data-i="w100">100%</button>'
+    + '<span class="sep"></span><button data-i="open" title="Abrir la imagen">Abrir</button><button data-i="del" class="danger" title="Quitar del apunte (sigue en «Archivos»)">Quitar</button>';
+  document.body.appendChild(ibar);
+  let selImg = null;
+  function showImgBar(img) {
+    if (selImg && selImg !== img) selImg.classList.remove('sel');
+    selImg = img; img.classList.add('sel');
+    ibar.hidden = false; const r = img.getBoundingClientRect();
+    ibar.style.left = Math.max(8, Math.min(innerWidth - ibar.offsetWidth - 8, r.left)) + 'px';
+    ibar.style.top = (r.top - ibar.offsetHeight - 6 > 8 ? r.top - ibar.offsetHeight - 6 : r.bottom + 6) + 'px';
+  }
+  function hideImgBar() { ibar.hidden = true; if (selImg) selImg.classList.remove('sel'); selImg = null; }
+  /* Imágenes «detrás del texto»: posición libre (left en % del folio, top en px), por debajo de las letras,
+     así no mueven el texto. Se cogen haciendo clic en una parte de la imagen donde no haya letras. */
+  const isBehind = i => i.classList.contains('bh');
+  function textHit(x, y) {
+    const r = document.caretRangeFromPoint && document.caretRangeFromPoint(x, y);
+    if (!r || r.startContainer.nodeType !== 3) return false;
+    const t = r.startContainer, o = r.startOffset, rg = document.createRange();
+    for (const k of [o - 1, o]) {
+      if (k < 0 || k >= t.length) continue;
+      rg.setStart(t, k); rg.setEnd(t, k + 1);
+      for (const b of rg.getClientRects()) if (x >= b.left - 1 && x <= b.right + 1 && y >= b.top && y <= b.bottom) return true;
+    }
+    return false;
+  }
+  function fitBehind() {   // el folio crece si una imagen queda más abajo que el texto
+    const ed = $('#editor'); let need = 0;
+    ed.querySelectorAll('img.bh, .sticky').forEach(i => need = Math.max(need, i.offsetTop + i.offsetHeight + 30));
+    // las notas pueden salir del folio: el panel que se desplaza no debe sacar barra horizontal por ellas
+    let area = ed.parentElement; while (area && area !== document.body && !/(auto|scroll)/.test(getComputedStyle(area).overflowY)) area = area.parentElement;
+    if (area && area !== document.body) area.style.overflowX = 'hidden';
+    ed.style.minHeight = '';                                   // primero el tamaño normal del folio…
+    if (need > ed.offsetHeight) ed.style.minHeight = need + 'px';   // …y solo se alarga si hace falta
+  }
+  function dragBehind(img, e) {
+    e.preventDefault();
+    const ed = $('#editor'), er = ed.getBoundingClientRect(), sx = e.clientX, sy = e.clientY;
+    const l0 = img.offsetLeft, t0 = img.offsetTop; let moved = false;
+    showImgBar(img); img.classList.add('grab');
+    const move = ev => {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy; if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+      const left = Math.max(0, Math.min(er.width - img.offsetWidth, l0 + dx)), top = Math.max(0, t0 + dy);
+      img.style.left = (left / er.width * 100).toFixed(2) + '%'; img.style.top = Math.round(top) + 'px';
+      showImgBar(img);
+    };
+    const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); img.classList.remove('grab'); if (moved) { fitBehind(); ed.dispatchEvent(new Event('input')); } };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+  }
+  /* Notas adhesivas: recuadro amarillo encima del texto; se arrastra por su franja de arriba, × la quita */
+  // chincheta vista un poco de lado: cabeza redonda, cuerpo, platillo y aguja, con brillo y sombra
+  const PIN_SVG = '<svg class="st-pin" viewBox="0 0 40 52" aria-hidden="true"><defs>'
+    + '<radialGradient id="pinH" cx="38%" cy="30%" r="70%"><stop offset="0" stop-color="#ff8f84"/><stop offset=".45" stop-color="#e52b20"/><stop offset="1" stop-color="#8e0c06"/></radialGradient>'
+    + '<linearGradient id="pinB" x1="0" x2="1"><stop offset="0" stop-color="#9c120b"/><stop offset=".45" stop-color="#ef3a2e"/><stop offset="1" stop-color="#a5150d"/></linearGradient></defs>'
+    + '<ellipse cx="22" cy="49" rx="9" ry="2.6" fill="rgba(70,50,0,.32)"/>'
+    + '<path d="M20 36 L21.2 50 L22.4 36z" fill="#9aa0a6"/>'
+    + '<ellipse cx="20" cy="35" rx="11" ry="3.6" fill="url(#pinB)"/>'
+    + '<path d="M13.5 18 Q12.5 30 11 34.5 Q20 38 29 34.5 Q27.5 30 26.5 18z" fill="url(#pinB)"/>'
+    + '<ellipse cx="20" cy="13" rx="12" ry="11" fill="url(#pinH)"/>'
+    + '<ellipse cx="15.5" cy="8.5" rx="4" ry="2.6" fill="rgba(255,255,255,.55)" transform="rotate(-25 15.5 8.5)"/></svg>';
+  // Colores de nota (como los pósits de referencia): cada uno con su diseño
+  const STICKY_COLS = [['amarillo', 'Amarillo'], ['rosa', 'Rosa'], ['rojo', 'Rojo'], ['celeste', 'Celeste'], ['verde', 'Verde'], ['azul', 'Azul']];
+  var lastStickyCol = (() => { try { return localStorage.getItem('cuaderno-nota-color') || 'amarillo'; } catch (e) { return 'amarillo'; } })();
+  // el botón de la barra lleva el color de la próxima nota
+  const NOTE_HEX = { amarillo: ['#f9d64a', '#d9b42c'], rosa: ['#f7d2cb', '#e2aea4'], rojo: ['#f6693f', '#d24d27'], celeste: ['#9adbe8', '#6fc0d1'], verde: ['#94c55b', '#74a63d'], azul: ['#5e95bb', '#467ca1'] };
+  function paintNoteBtn() {
+    const c = NOTE_HEX[lastStickyCol] || NOTE_HEX.amarillo;
+    document.querySelectorAll('#toolbar .nt-ic').forEach(p => p.style.fill = c[0]);
+    document.querySelectorAll('#toolbar .nt-ic2').forEach(p => p.style.fill = c[1]);
+  }
+  setTimeout(paintNoteBtn, 0);
+  function stickyPalette(st) {
+    const old = st.querySelector('.st-pal'); if (old) { old.remove(); return; }
+    const p = document.createElement('div'); p.className = 'st-pal';
+    p.innerHTML = STICKY_COLS.map(([k, t]) => `<button type="button" data-c="${k}" title="${t}"></button>`).join('');
+    st.appendChild(p);
+  }
+  // Tamaño: se arrastra ⤡ y crecen a la vez la nota, la letra y la chincheta (tamaño real: el texto sigue nítido)
+  function sizeSticky(st, e) {
+    e.preventDefault();
+    const r = st.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const s0 = parseFloat(st.style.getPropertyValue('--s')) || 1, d0 = Math.hypot(e.clientX - cx, e.clientY - cy) || 1;
+    st.classList.add('turning');
+    const move = ev => { const s = Math.max(.6, Math.min(2.6, s0 * Math.hypot(ev.clientX - cx, ev.clientY - cy) / d0)); st.style.setProperty('--s', s.toFixed(3)); };
+    const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); st.classList.remove('turning'); fitBehind(); $('#editor').dispatchEvent(new Event('input')); };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+  }
+  function stickyHTML(left, top) {
+    return `<div class="sticky" data-col="${lastStickyCol}" contenteditable="false" style="left:${left}px;top:${top}px"><div class="st-bar" title="Arrastra la nota por aquí (puedes sacarla del folio)"><button type="button" class="st-col" title="Color de la nota"></button><button type="button" class="st-x" title="Quitar la nota">×</button></div><div class="st-body" contenteditable="true"><br></div><button type="button" class="st-rot" title="Arrastra para girar la nota">↻</button><button type="button" class="st-size" title="Arrastra para hacer la nota más grande o más pequeña">⤡</button></div>`;
+  }
+  function addSticky() {
+    const ed = $('#editor'), n = note(); if (!n) return;
+    const er = ed.getBoundingClientRect(); let top = 20;
+    try { const rr = getSelection().getRangeAt(0).getBoundingClientRect(); if (rr.height && ed.contains(getSelection().anchorNode)) top = rr.top - er.top; } catch (e) {}
+    const tmp = document.createElement('div'); tmp.innerHTML = stickyHTML(Math.round(er.width * .58), Math.max(0, Math.round(top)));
+    const st = tmp.firstChild; st.style.setProperty('--rot', (Math.random() * 5 - 3.5).toFixed(1) + 'deg'); ed.appendChild(st);
+    fitBehind(); ed.dispatchEvent(new Event('input'));
+    const body = st.querySelector('.st-body'); body.focus();
+    const r = document.createRange(); r.selectNodeContents(body); r.collapse(true); getSelection().removeAllRanges(); getSelection().addRange(r);
+  }
+  function dragSticky(st, e) {
+    e.preventDefault();
+    // puede salir del folio: el límite es la zona de escritura entera (el panel que se desplaza), no el recuadro
+    const ed = $('#editor'), er = ed.getBoundingClientRect(), sx = e.clientX, sy = e.clientY, l0 = st.offsetLeft, t0 = st.offsetTop; let moved = false;
+    let area = ed.parentElement; while (area && area !== document.body && !/(auto|scroll)/.test(getComputedStyle(area).overflowY)) area = area.parentElement;
+    const ar = (area || document.body).getBoundingClientRect();
+    const minL = ar.left - er.left + 6, maxL = ar.right - er.left - st.offsetWidth - 6, minT = -(er.top - ar.top) + 6;
+    st.classList.add('grab');
+    // balanceo: al moverla se inclina según la velocidad (como colgada de la chincheta) y al soltar vuelve con rebote
+    let lastX = sx, lastT = performance.now(), swing = 0;
+    const move = ev => {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy; if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+      st.style.left = Math.round(Math.max(minL, Math.min(maxL, l0 + dx))) + 'px';
+      st.style.top = Math.round(Math.max(minT, t0 + dy)) + 'px';
+      const now = performance.now(), v = (ev.clientX - lastX) / Math.max(8, now - lastT);
+      swing = swing * .7 + Math.max(-14, Math.min(14, -v * 9)) * .3; lastX = ev.clientX; lastT = now;
+      st.style.setProperty('--swing', swing.toFixed(2) + 'deg');
+    };
+    const up = () => {
+      removeEventListener('pointermove', move); removeEventListener('pointerup', up); st.classList.remove('grab');
+      st.style.setProperty('--swing', '0deg');
+      if (moved) { fitBehind(); ed.dispatchEvent(new Event('input')); }
+    };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+  }
+  // Girar: el ángulo sigue al puntero alrededor del centro de la nota (con Mayús, de 15 en 15 grados)
+  function rotateSticky(st, e) {
+    e.preventDefault();
+    const r = st.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const a0 = Math.atan2(e.clientY - cy, e.clientX - cx), rot0 = parseFloat(st.style.getPropertyValue('--rot')) || -1.5;
+    st.classList.add('turning');
+    const move = ev => {
+      let a = rot0 + (Math.atan2(ev.clientY - cy, ev.clientX - cx) - a0) * 180 / Math.PI;
+      a = ((a + 180) % 360 + 360) % 360 - 180; if (ev.shiftKey) a = Math.round(a / 15) * 15;
+      st.style.setProperty('--rot', a.toFixed(1) + 'deg');
+    };
+    const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); st.classList.remove('turning'); $('#editor').dispatchEvent(new Event('input')); };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+  }
+  $('#editor').addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    const ed = $('#editor');
+    const st = e.target.closest && e.target.closest('.sticky');
+    if (st) {
+      hideImgBar();
+      if (e.target.closest('.st-x')) { e.preventDefault(); if (!st.querySelector('.st-body').textContent.trim() || confirm('¿Quitar esta nota?')) { st.remove(); fitBehind(); ed.dispatchEvent(new Event('input')); } return; }
+      if (e.target.closest('.st-rot')) { rotateSticky(st, e); return; }
+      if (e.target.closest('.st-size')) { sizeSticky(st, e); return; }
+      if (e.target.closest('.st-col')) { e.preventDefault(); stickyPalette(st); return; }
+      const sw = e.target.closest('.st-pal button');
+      if (sw) { e.preventDefault(); st.dataset.col = lastStickyCol = sw.dataset.c; try { localStorage.setItem('cuaderno-nota-color', lastStickyCol); } catch (x) {} paintNoteBtn(); st.querySelector('.st-pal').remove(); ed.dispatchEvent(new Event('input')); return; }
+      if (e.target.closest('.st-bar')) dragSticky(st, e);
+      return;
+    }
+    // ¿hay una imagen de fondo bajo el puntero y no hay letras justo ahí?
+    const hit = [...ed.querySelectorAll('img.bh')].reverse().find(i => { const r = i.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; });
+    if (hit && !textHit(e.clientX, e.clientY)) { dragBehind(hit, e); return; }
+    const img = e.target.closest && e.target.closest('img'); if (img && !isBehind(img)) { showImgBar(img); return; }
+    hideImgBar();
+  }, true);
+  document.addEventListener('mousedown', e => { if (!ibar.hidden && !e.target.closest('.img-bar') && !e.target.closest('#editor img')) hideImgBar(); });
+  $('#editor').closest('.paper')?.parentElement?.addEventListener('scroll', () => { if (selImg) showImgBar(selImg); }, true);
+  ibar.addEventListener('mousedown', e => e.preventDefault());
+  ibar.addEventListener('pointerdown', e => { if (e.target.closest('[data-i="drag"]') && selImg) startDrag(selImg, e); });
+  ibar.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || !selImg) return;
+    const img = selImg, k = b.dataset.i;
+    if (/^w\d+$/.test(k)) { img.style.width = k.slice(1) + '%'; requestAnimationFrame(fitBehind); }
+    else if (k === 'open') { const f = state.subjects.flatMap(s => s.files || []).find(x => x.id === img.dataset.fid); if (f) openLocal(f); return; }
+    else if (k === 'del') { const p = img.parentElement; img.remove(); tidy(p); hideImgBar(); $('#editor').dispatchEvent(new Event('input')); return; }
+    else if (k === 'drag') return;
+    $('#editor').dispatchEvent(new Event('input'));
+    requestAnimationFrame(() => showImgBar(img));
+  });
+
   // Tab dentro de una tabla: a la celda siguiente (en la última, crea una fila nueva); Mayús+Tab: a la anterior
   $('#editor').addEventListener('keydown', e => {
     if (e.key !== 'Tab' || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -2533,7 +2849,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     try { await navigator.clipboard.writeText(t); }
     catch { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
   }
-  const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;line-height:1.7;color:#1f2633}.pa-head{border-bottom:1px solid #ccc;margin:40px 0 16px;padding-bottom:8px}.pa-subj,.pa-date{font-size:.85rem;color:#7a8494}h1{margin:4px 0}.pa-ref{padding-left:2em;text-indent:-2em}table{border-collapse:collapse;width:100%;margin:8pt 0}td,th{border:1px solid #999;padding:4pt 6pt;vertical-align:top;text-align:left}th{background:#eee}blockquote{border-left:3px solid #ccc;padding-left:12px;color:#555}hr{border:0;border-top:2px solid #b8c6d4;margin:26px 12px;height:0}</style></head><body>${body}</body></html>`;
+  const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;line-height:1.7;color:#1f2633}.pa-head{border-bottom:1px solid #ccc;margin:40px 0 16px;padding-bottom:8px}.pa-subj,.pa-date{font-size:.85rem;color:#7a8494}h1{margin:4px 0}.pa-ref{padding-left:2em;text-indent:-2em}table{border-collapse:collapse;width:100%;margin:8pt 0}td,th{border:1px solid #999;padding:4pt 6pt;vertical-align:top;text-align:left}th{background:#eee}img{max-width:100%;height:auto}img.bh{display:block;position:static!important;margin:6pt auto;max-width:100%}.sticky{position:static!important;background:#ffe57a;color:#3b3200;border-radius:4pt;padding:4pt 8pt;margin:6pt 0;max-width:60%;font-size:.92em}.st-bar{font-weight:700;font-size:.75em}.st-x{display:none}img.img-center{display:block;margin:6pt auto}img.img-left{float:left;margin:2pt 12pt 6pt 0;max-width:60%}img.img-right{float:right;margin:2pt 0 6pt 12pt;max-width:60%}blockquote{border-left:3px solid #ccc;padding-left:12px;color:#555}hr{border:0;border-top:2px solid #b8c6d4;margin:26px 12px;height:0}</style></head><body>${body}</body></html>`;
 
   /* ---------- Compartir ---------- */
   const shareDlg = $('#shareDlg');
