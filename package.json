@@ -36,6 +36,13 @@
       "buildResources": "recursos"
     },
     "artifactName": "Cuaderno-${os}-${arch}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "janocrv",
+        "repo": "cuaderno"
+      }
+    ],
     "mac": {
       "icon": "recursos/icono.icns",
       "category": "public.app-category.education",
