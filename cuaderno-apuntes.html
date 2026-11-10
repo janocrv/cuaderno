@@ -165,7 +165,7 @@ html,body{overflow:hidden}
   transform:rotate(calc(var(--rot,-1.5deg) + var(--swing,0deg)));transition:transform .6s cubic-bezier(.3,1.7,.4,1),scale .2s}
 .editor .sticky.grab{scale:1.05;transition:transform .08s linear,scale .2s;filter:drop-shadow(0 4px 4px rgba(0,0,0,.18)) drop-shadow(0 18px 24px rgba(0,0,0,.28))}
 .editor .sticky.turning{transition:none;transform-origin:50% 50%}
-.editor .st-rot{position:absolute;left:4px;bottom:4px;width:22px;height:22px;border-radius:50%;font-size:13px;line-height:22px;text-align:center;color:#6b5a00;background:rgba(255,255,255,.45);cursor:grab;opacity:0;transition:opacity .15s}
+.editor .st-rot{position:absolute;right:4px;bottom:4px;width:22px;height:22px;border-radius:50%;font-size:13px;line-height:22px;text-align:center;color:#6b5a00;background:rgba(255,255,255,.45);cursor:grab;opacity:0;transition:opacity .15s}
 .editor .sticky:hover .st-rot{opacity:1}
 .editor .st-bar{position:relative;flex:none;height:calc(36px * var(--s));display:flex;align-items:flex-start;justify-content:flex-end;padding:4px 4px 0;cursor:grab;user-select:none}
 /* chincheta (SVG): clavada arriba en el centro, sobresale un poco por encima del papel */
@@ -187,8 +187,8 @@ html,body{overflow:hidden}
 .editor .sticky[data-col="rosa"]::after,.editor .sticky[data-col="azul"]::after{content:'';position:absolute;bottom:0;width:var(--cut);height:var(--cut);pointer-events:none;z-index:-1}
 .editor .sticky[data-col="azul"]::after{right:0;background:linear-gradient(to top left,transparent 50%,#9fc3dc 50%,#c9dfee 78%,#e3eef6 100%);filter:drop-shadow(-1px -1px 1.5px rgba(0,0,0,.2))}
 .editor .sticky[data-col="rosa"]::after{left:0;background:linear-gradient(to top right,transparent 50%,#f3d9d3 50%,#fff3f0 80%,#fffaf8 100%);filter:drop-shadow(1px -1px 1.5px rgba(0,0,0,.15))}
-.editor .sticky[data-col="azul"] .st-size{right:auto;left:3px;bottom:30px}
-.editor .sticky[data-col="rosa"] .st-rot{left:auto;right:30px}
+.editor .sticky[data-col="azul"] .st-rot{right:calc(var(--cut) + 4px)}
+.editor .sticky[data-col="rosa"] .st-size{left:calc(var(--cut) + 4px)}
 .editor .sticky .st-x,.editor .sticky .st-rot,.editor .sticky .st-size{color:var(--nb)}
 .editor .st-col{position:absolute;left:7px;top:7px;width:16px;height:16px;border-radius:50%;background:conic-gradient(#f9d64a 0 60deg,#f7d2cb 0 120deg,#f6693f 0 180deg,#9adbe8 0 240deg,#94c55b 0 300deg,#5e95bb 0);box-shadow:0 0 0 2px rgba(255,255,255,.7);opacity:0;transition:opacity .15s;cursor:pointer}
 .editor .sticky:hover .st-col{opacity:1}
@@ -196,8 +196,10 @@ html,body{overflow:hidden}
 .editor .st-pal button{width:20px;height:20px;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
 .editor .st-pal [data-c="amarillo"]{background:#f9d64a}.editor .st-pal [data-c="rosa"]{background:#f7d2cb}.editor .st-pal [data-c="rojo"]{background:#f6693f}
 .editor .st-pal [data-c="celeste"]{background:#9adbe8}.editor .st-pal [data-c="verde"]{background:#94c55b}.editor .st-pal [data-c="azul"]{background:#5e95bb}
-.editor .st-size{position:absolute;right:3px;bottom:3px;width:22px;height:22px;border-radius:50%;font-size:13px;line-height:22px;text-align:center;color:#6b5a00;background:rgba(255,255,255,.45);cursor:nwse-resize;opacity:0;transition:opacity .15s}
+/* tamaño: asa de esquina abajo a la izquierda (como las esquinas de las ventanas), con flechas en diagonal */
+.editor .st-size{position:absolute;left:4px;bottom:4px;width:24px;height:24px;border-radius:7px;font-size:15px;font-weight:700;line-height:24px;text-align:center;background:rgba(255,255,255,.5);box-shadow:0 1px 3px rgba(0,0,0,.18);cursor:nesw-resize;opacity:0;transition:opacity .15s,transform .15s}
 .editor .sticky:hover .st-size{opacity:1}
+.editor .st-size:hover{transform:scale(1.15)}
 .editor .st-x{width:20px;height:20px;border-radius:50%;color:#6b5a00;font-size:15px;line-height:20px;text-align:center;opacity:0;transition:opacity .15s}
 .editor .sticky:hover .st-x{opacity:1}
 .editor .st-x:hover{background:rgba(0,0,0,.1)}
@@ -2505,7 +2507,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     addEventListener('pointermove', move); addEventListener('pointerup', up);
   }
   function stickyHTML(left, top) {
-    return `<div class="sticky" data-col="${lastStickyCol}" contenteditable="false" style="left:${left}px;top:${top}px"><div class="st-bar" title="Arrastra la nota por aquí (puedes sacarla del folio)"><button type="button" class="st-col" title="Color de la nota"></button><button type="button" class="st-x" title="Quitar la nota">×</button></div><div class="st-body" contenteditable="true"><br></div><button type="button" class="st-rot" title="Arrastra para girar la nota">↻</button><button type="button" class="st-size" title="Arrastra para hacer la nota más grande o más pequeña">⤡</button></div>`;
+    return `<div class="sticky" data-col="${lastStickyCol}" contenteditable="false" style="left:${left}px;top:${top}px"><div class="st-bar" title="Arrastra la nota por aquí (puedes sacarla del folio)"><button type="button" class="st-col" title="Color de la nota"></button><button type="button" class="st-x" title="Quitar la nota">×</button></div><div class="st-body" contenteditable="true"><br></div><button type="button" class="st-rot" title="Arrastra para girar la nota">↻</button><button type="button" class="st-size" title="Tamaño: arrastra hacia fuera para agrandar la nota y hacia dentro para hacerla más pequeña">⤢</button></div>`;
   }
   function addSticky() {
     const ed = $('#editor'), n = note(); if (!n) return;
