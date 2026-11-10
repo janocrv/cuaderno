@@ -12,7 +12,7 @@ permissions:
   contents: write
 jobs:
   compilar:
-    runs-on: macos-latest
+    runs-on: macos-15-intel   # los Mac arm64 de GitHub suelen estar saturados; el Intel compila igual los dos .dmg
     timeout-minutes: 60
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
