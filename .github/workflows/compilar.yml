@@ -1,0 +1,60 @@
+name: Compilar y publicar
+# Compila el Cuaderno en un Mac de GitHub (instaladores de Mac arm64/x64 y de Windows) y publica la versión
+# que diga package.json. Se lanza a mano: Actions → «Compilar y publicar» → Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      notas:
+        description: "Qué ha cambiado (lo verán tus compañeros)"
+        required: false
+        default: "Mejoras y correcciones."
+permissions:
+  contents: write
+jobs:
+  compilar:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      GH_TOKEN: ${{ github.token }}
+      NOTAS: ${{ inputs.notas }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Comprobar que la versión no existe ya
+        run: |
+          V=$(node -p "require('./package.json').version")
+          echo "V=$V" >> "$GITHUB_ENV"
+          if gh release view "v$V" >/dev/null 2>&1; then echo "La versión v$V ya existe: sube «version» en package.json"; exit 1; fi
+      - name: Preparar
+        run: |
+          set -e
+          B=build; rm -rf $B; mkdir -p $B/web $B/recursos
+          cp main.js package.json $B/
+          cp cuaderno-apuntes.html aviso.mp3 cuaderno.png $B/web/
+          cp cuaderno-uv.ico $B/recursos/icono.ico
+          T="$(mktemp -d)/icono.iconset"; mkdir -p "$T"
+          for s in 16 32 64 128 256 512; do
+            sips -z $s $s logo-cuaderno-uv.png --out "$T/icon_${s}x${s}.png" >/dev/null
+            d=$((s*2)); sips -z $d $d logo-cuaderno-uv.png --out "$T/icon_${s}x${s}@2x.png" >/dev/null
+          done
+          iconutil -c icns "$T" -o $B/recursos/icono.icns
+          cd $B
+          npm install --no-audit --no-fund --loglevel=error
+          mkdir -p web/ia
+          cp ../ia-worker.js web/ia/worker.js
+          cp node_modules/@huggingface/transformers/dist/transformers.min.js web/ia/
+          cp node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.mjs node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm web/ia/
+          cp node_modules/pdfjs-dist/build/pdf.min.mjs node_modules/pdfjs-dist/build/pdf.worker.min.mjs web/ia/
+          node -p "'Electron ' + require('electron/package.json').version"
+      - name: Compilar
+        working-directory: build
+        run: npx electron-builder --mac --win --publish never
+      - name: Publicar
+        working-directory: build/dist
+        run: |
+          ls -lh
+          gh release create "v$V" Cuaderno-mac-arm64.dmg Cuaderno-mac-x64.dmg Cuaderno-win-x64.exe \
+            --repo "$GITHUB_REPOSITORY" --title "Cuaderno $V" --notes "$NOTAS"
