@@ -61,7 +61,9 @@ html,body{overflow:hidden}
 .rail.open .subj .nm{opacity:1}
 .subj:hover .chip{background:color-mix(in srgb,var(--c) 26%,transparent)}
 /* Efecto Dock: el script cambia --z (tamaño real, no una ampliación) para que las letras sigan nítidas */
-.subj .chip{width:calc(48px * var(--z,1));height:calc(40px * var(--z,1));font-size:calc(.78rem * var(--z,1));
+.subjects{scrollbar-width:none}.subjects::-webkit-scrollbar{display:none}
+.rail:not(.open) .subj .nm{max-height:0}   /* el nombre (oculto) no debe dar altura a los botones con la barra plegada */
+.subj .chip{width:calc(48px * var(--z,1));height:calc(40px * var(--z,1) * var(--fit,1));font-size:calc(.78rem * var(--z,1));
   border-radius:calc(var(--r) * var(--z,1));margin-left:var(--ml,0px);transition:box-shadow .2s}
 /* Los botones de asignatura se separan un poco del fondo */
 .subj .chip{box-shadow:0 1px 2px rgba(16,48,70,.16),0 3px 8px rgba(16,48,70,.10)}
@@ -622,13 +624,13 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
   .brand{padding-bottom:6px;margin-bottom:2px}
   .rail-btn .ic{height:34px}
   .subjects{gap:6px;margin:4px -12px}
-  .subj .chip{height:calc(34px * var(--z,1))}
+  .subj .chip{height:calc(34px * var(--z,1) * var(--fit,1))}
   dialog{max-height:calc(100vh - 24px);overflow:auto}
 }
 @media (max-height:780px){
   .rail-btn .ic{height:29px}
   .subjects{gap:3px}
-  .subj .chip{height:calc(27px * var(--z,1));font-size:calc(.72rem * var(--z,1))}
+  .subj .chip{height:calc(27px * var(--z,1) * var(--fit,1));font-size:calc(.72rem * var(--z,1))}
   .toolbar{margin-bottom:10px;padding:4px}
   .tb{height:28px}
 }
@@ -1687,12 +1689,20 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   (() => {
     const nav = $('#subjects'), MAX = 0.32, RANGE = 125, EASE = 0.16;   // hasta +32 %, alcance ~125 px, suavizado
     if (matchMedia('(prefers-reduced-motion: reduce)').matches || matchMedia('(hover: none)').matches) return;
-    let base = null, cur = [], tgt = [], raf = 0, mouseY = null;
+    let base = null, cur = [], tgt = [], raf = 0, mouseY = null, free = Infinity, chH = 40;
     const chips = () => [...nav.querySelectorAll('.subj .chip')];
-    // Posiciones «en reposo» (todos a tamaño normal): se miden un instante sin efecto y se restauran
+    // Posiciones «en reposo» (todos a tamaño normal): se miden un instante sin efecto y se restauran.
+    // Además: si no caben, los botones se hacen algo más bajos (--fit), y se calcula cuánto pueden crecer sin
+    // que la columna necesite barra de desplazamiento (free).
     const measure = () => {
       const cs = chips(), saved = cs.map(c => c.style.getPropertyValue('--z'));
       cs.forEach(c => c.style.setProperty('--z', '1'));
+      nav.style.setProperty('--fit', '1');
+      const n = cs.length, h1 = n ? cs[0].offsetHeight : 0, rest = nav.scrollHeight, client = nav.clientHeight;
+      let fit = 1;
+      if (n && rest > client) fit = Math.max(.6, (client - (rest - n * h1)) / (n * h1));
+      nav.style.setProperty('--fit', fit.toFixed(3));
+      chH = h1 * fit; free = Math.max(0, client - nav.scrollHeight);
       const top = nav.getBoundingClientRect().top - nav.scrollTop;
       base = cs.map(c => { const r = c.getBoundingClientRect(); return r.top - top + r.height / 2; });
       cs.forEach((c, i) => c.style.setProperty('--z', saved[i] || '1'));
@@ -1708,7 +1718,11 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
         tgt[i] = 1 + MAX * (d < RANGE ? (Math.cos(Math.PI * d / RANGE) + 1) / 2 : 0);
         cur[i] += (tgt[i] - cur[i]) * EASE;                     // se acerca poco a poco: sin temblores
         if (Math.abs(tgt[i] - cur[i]) < 0.002) cur[i] = tgt[i]; else moving = true;
-        const z = cur[i];
+      });
+      // Nunca crecen más de lo que cabe en la barra (así no aparece la barra de desplazamiento)
+      const grow = cur.reduce((a, z) => a + (z - 1) * chH, 0), k = grow > free ? free / grow : 1;
+      cs.forEach((c, i) => {
+        const z = 1 + (cur[i] - 1) * k;
         c.style.setProperty('--z', z.toFixed(4));
         // con la barra plegada crece hacia los dos lados para no salirse por la derecha
         c.style.setProperty('--ml', open ? '0px' : (-(48 * (z - 1)) / 2).toFixed(2) + 'px');
@@ -1720,8 +1734,9 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     nav.addEventListener('mousemove', e => { mouseY = e.clientY; kick(); });
     nav.addEventListener('mouseleave', () => { mouseY = null; kick(); });
     nav.addEventListener('scroll', () => { base = null; kick(); });
-    addEventListener('resize', () => { base = null; });
-    new MutationObserver(() => { base = null; cur = []; }).observe(nav, { childList: true });
+    addEventListener('resize', () => { base = null; kick(); });
+    new MutationObserver(() => { base = null; cur = []; kick(); }).observe(nav, { childList: true });
+    setTimeout(kick, 300);
   })();
 
   function renderSubjects() {
@@ -1924,13 +1939,14 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     const s = subj(); s.notes = s.notes.filter(x => x.id !== n.id);
     state.activeNote = sortedNotes(s)[0]?.id || null; save(); renderNotesList(); renderEditor();
   };
-  function flushEditor() { const n = note(); if (n && state.view === 'notes') n.content = $('#editor').innerHTML; }
+  const edHTML = () => $('#editor').innerHTML.replace(/​/g, '');   // sin las marcas invisibles que usa el subrayado
+  function flushEditor() { const n = note(); if (n && state.view === 'notes') n.content = edHTML(); }
   function touchItem() {
     const n = note(), b = document.querySelector(`.item[data-id="${n.id}"]`);
     if (b) { b.querySelector('.t').textContent = n.title || 'Sin título'; b.querySelector('.d').textContent = fmtDate(n.date); }
   }
   function updateCount() { const w = ($('#editor').innerText.trim().match(/\S+/g) || []).length; $('#wordCount').textContent = w === 1 ? '1 palabra' : w + ' palabras'; }
-  $('#editor').addEventListener('input', () => { const n = note(); if (!n) return; n.content = $('#editor').innerHTML; n.updated = Date.now(); updateCount(); save(); });
+  $('#editor').addEventListener('input', () => { const n = note(); if (!n) return; n.content = edHTML(); n.updated = Date.now(); updateCount(); save(); });
   $('#noteTitle').addEventListener('input', e => { const n = note(); if (!n) return; n.title = e.target.value; n.updated = Date.now(); touchItem(); save(); });
   $('#noteTitle').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#editor').focus(); } });
   $('#noteDate').addEventListener('change', e => { const n = note(); if (!n) return; n.date = e.target.value; save(); renderNotesList(); });
@@ -1960,9 +1976,23 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       document.execCommand('hiliteColor', false, getComputedStyle(document.documentElement).getPropertyValue('--mark').trim() || 'yellow');
       document.execCommand('styleWithCSS', false, false);
     } else if (cmd === 'underline') {
-      const was = document.queryCommandState('underline');
-      document.execCommand('underline');
-      if (was && document.queryCommandState('underline') && !getSelection().isCollapsed) unUnderline();
+      const sel = getSelection();
+      let an = sel.anchorNode; an = an && (an.nodeType === 1 ? an : an.parentElement);
+      const uEl = an && an.closest('u, [style*="underline"]');
+      if (sel.isCollapsed && uEl && ed.contains(uEl)) {
+        // Cursor dentro de un subrayado y sin selección: el navegador no sabe «apagarlo» (lo de dentro hereda la raya),
+        // así que se parte el subrayado en el cursor y se sigue escribiendo fuera de él.
+        const r = document.createRange(); r.setStart(sel.anchorNode, sel.anchorOffset); r.setEnd(uEl, uEl.childNodes.length);
+        const rest = uEl.cloneNode(false); rest.append(r.extractContents());
+        const z = document.createTextNode('​'); uEl.after(z);
+        if (rest.textContent.replace(/​/g, '')) z.after(rest);
+        if (!uEl.textContent.replace(/​/g, '')) uEl.remove();
+        sel.collapse(z, 1);
+      } else {
+        const was = document.queryCommandState('underline');
+        document.execCommand('underline');
+        if (was && document.queryCommandState('underline') && !sel.isCollapsed) unUnderline();
+      }
     } else if (cmd === 'fontName') {
       document.execCommand('styleWithCSS', false, true); document.execCommand('fontName', false, val); document.execCommand('styleWithCSS', false, false);
     } else document.execCommand(cmd, false, val);
@@ -3931,5 +3961,6 @@ Gracias.` },
   renderAll();
 })();
 </script>
+
 </body>
 </html>
