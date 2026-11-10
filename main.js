@@ -531,6 +531,7 @@ async function handle(req) {
   if (M === 'GET') {
     if (p === '/' || p === '/index.html' || p === '/cuaderno-apuntes.html') return fileResponse(path.join(WEB, 'cuaderno-apuntes.html'));
     if (p === '/aviso.mp3') return fileResponse(path.join(WEB, 'aviso.mp3'));
+    if (p === '/esquemas.html') return fileResponse(path.join(WEB, 'esquemas.html'));   // pizarra de esquemas (pestaña «Esquemas»)
     if (p.startsWith('/ia/')) { const f = path.basename(p); if (!/^[\w.-]+$/.test(f)) return json({}, 404); return fileResponse(path.join(WEB, 'ia', f)); }   // IA local (worker, librería y motor)
     if (['/cuaderno.png', '/cuaderno-uv.png', '/favicon.ico'].includes(p)) return fileResponse(path.join(WEB, 'cuaderno.png'), 'image/png');
     if (p === '/api/estado') { const a = ajustes(); return json({ ok: true, app: true, configured: isConfigured(), user: a.user || null, ...status }); }

@@ -134,6 +134,9 @@ html,body{overflow:hidden}
 .tb-font{min-width:92px;padding:0 6px;border:0;background:transparent;cursor:pointer;font:inherit;font-size:.82rem;color:var(--muted)}
 .tb-font option{color:#1d1d1f;background:#fff}
 .tb-color-wrap,.tb-table-wrap{position:relative;display:inline-flex}
+/* pestaña Esquemas: la pizarra ocupa todo el hueco */
+#schemasView:not([hidden]){display:flex;flex-direction:column;min-height:0;height:calc(100vh - 92px);padding:0 14px 14px}
+#schemaFrame{flex:1;width:100%;min-height:420px;border:0;border-radius:18px;background:transparent;box-shadow:0 1px 3px rgba(16,48,70,.08),0 0 0 1px var(--line)}
 /* Tablas */
 .table-pop{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);z-index:20;padding:10px;border-radius:14px;background:var(--surface);box-shadow:0 10px 30px rgba(16,48,70,.22),0 0 0 1px var(--line);display:flex;flex-direction:column;align-items:center;gap:6px}
 .table-pop[hidden]{display:none}
@@ -802,6 +805,7 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
         <button role="tab" id="tabTasks" aria-selected="false">Tareas</button>
         <button role="tab" id="tabFiles" aria-selected="false">Archivos</button>
         <button role="tab" id="tabBiblio" aria-selected="false">Bibliografía</button>
+        <button role="tab" id="tabSchemas" aria-selected="false">Esquemas</button>
       </div>
       <div class="actions">
         <button class="icon-btn" id="shareBtn" title="Compartir"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/></svg><span class="t">Compartir</span></button>
@@ -1035,6 +1039,10 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
           <ul class="files" id="files"></ul>
         </div>
       </div>
+    </section>
+
+    <section class="view" id="schemasView" hidden>
+      <iframe id="schemaFrame" title="Esquemas" src="about:blank"></iframe>
     </section>
 
     <section class="view" id="biblioView" hidden>
@@ -1917,7 +1925,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     });
   }
   setInterval(markLive, 60000);
-  const VIEWS = { notes: ['#tabNotes', '#notesView'], tasks: ['#tabTasks', '#tasksView'], files: ['#tabFiles', '#filesView'], biblio: ['#tabBiblio', '#biblioView'] };
+  const VIEWS = { notes: ['#tabNotes', '#notesView'], tasks: ['#tabTasks', '#tasksView'], files: ['#tabFiles', '#filesView'], biblio: ['#tabBiblio', '#biblioView'], schemas: ['#tabSchemas', '#schemasView'] };
   const SPECIAL = { schedule: { sec: '#scheduleView', btn: '#schedBtn', title: 'Horario de clases' }, mail: { sec: '#mailView', btn: '#mailBtn', title: 'Correo' }, alerts: { sec: '#alertsView', btn: '#alertsBtn', title: 'Avisos' }, cites: { sec: '#citesView', btn: '#citesBtn', title: 'Citas APA' }, ai: { sec: '#aiView', btn: '#aiBtn', title: 'Resumir con IA' } };
   function renderHeader() {
     const s = subj();
@@ -1982,7 +1990,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       ul.appendChild(li);
     });
   }
-  function renderAll() { applyTheme(); applyRail(); renderUser(); renderSubjects(); renderHeader(); renderNotesList(); renderEditor(); renderBiblio(); renderTasks(); renderFiles(); if (state.view === 'schedule') renderSchedule(); if (state.view === 'mail') renderMail(); if (state.view === 'alerts') renderAlerts(); if (state.view === 'cites') renderCites(); if (state.view === 'ai') renderAI(); updateAlertBadge(); }
+  function renderAll() { applyTheme(); applyRail(); renderUser(); renderSubjects(); renderHeader(); renderNotesList(); renderEditor(); renderBiblio(); renderTasks(); renderFiles(); if (state.view === 'schedule') renderSchedule(); if (state.view === 'mail') renderMail(); if (state.view === 'alerts') renderAlerts(); if (state.view === 'cites') renderCites(); if (state.view === 'ai') renderAI(); if (state.view === 'schemas') renderSchemas(); updateAlertBadge(); }
 
   /* ---------- Asignaturas ---------- */
   function selectSubject(id) {
@@ -2047,7 +2055,10 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     // transición suave de colores al cambiar de modo
     document.documentElement.classList.add('theme-anim'); setTimeout(() => document.documentElement.classList.remove('theme-anim'), 450);
     state.theme = isDark() ? 'light' : 'dark'; applyTheme(); save();
+    if (state.view === 'schemas') { flushSchemaThen(renderSchemas); }   // la pizarra se recarga con el modo nuevo
   };
+  // antes de recargar la pizarra, que guarde lo pendiente
+  function flushSchemaThen(fn) { toSchema({ type: 'flush' }); setTimeout(fn, 150); }
   $('#mTheme').onclick = () => { menu.hidden = true; toggleTheme(); };
   const soundLabel = () => { $('#mSoundTxt').textContent = 'Sonido de avisos: ' + (state.soundOff ? 'desactivado' : 'activado'); };
   $('#mSound').onclick = () => {
@@ -2090,8 +2101,63 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   /* ---------- Pestañas ---------- */
   function setView(v) {
     flushEditor(); state.view = v; save(); renderHeader();
-    ({ notes: renderEditor, tasks: renderTasks, files: renderFiles, biblio: renderBiblio, schedule: renderSchedule, mail: renderMail, alerts: renderAlerts, cites: renderCites, ai: renderAI })[v]();
+    ({ notes: renderEditor, tasks: renderTasks, files: renderFiles, biblio: renderBiblio, schemas: renderSchemas, schedule: renderSchedule, mail: renderMail, alerts: renderAlerts, cites: renderCites, ai: renderAI })[v]();
   }
+
+  /* ---------- Esquemas (pizarra en esquemas.html, dentro de un iframe) ----------
+     Cada asignatura guarda sus esquemas en s.esquemas = { docs: [{ id, name, col, data }], cur }.
+     La pizarra pide los datos («ready»), los recibe («load») y avisa de cada cambio («save»). */
+  var schemaReady = false, schemaSid = null, schemaTheme = null;   // var: renderAll puede llamar antes de llegar aquí
+  const effTheme = () => state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const schemaSubjects = () => state.subjects.map(s => ({ id: s.id, short: s.short, name: s.name, notes: sortedNotes(s).map(n => ({ id: n.id, title: n.title || 'Sin título' })) }));
+  const toSchema = m => $('#schemaFrame').contentWindow?.postMessage({ esqApp: true, ...m }, '*');
+  function renderSchemas() {
+    const fr = $('#schemaFrame'), th = effTheme();
+    if (!schemaReady || schemaTheme !== th) {   // primera vez, o ha cambiado el modo día/noche
+      schemaReady = false; schemaTheme = th; schemaSid = null;
+      fr.src = 'esquemas.html?embed=1&theme=' + th; return;   // al cargar avisa con «ready»
+    }
+    if (schemaSid !== subj().id) { schemaSid = subj().id; toSchema({ type: 'load', sid: subj().id, db: subj().esquemas || null, subjects: schemaSubjects(), cur: subj().id }); }
+    else toSchema({ type: 'subjects', subjects: schemaSubjects(), cur: subj().id });
+  }
+  addEventListener('message', async e => {
+    const m = e.data; if (!m || !m.esq || e.source !== $('#schemaFrame').contentWindow) return;
+    if (m.type === 'ready') { schemaReady = true; schemaSid = null; if (state.view === 'schemas') renderSchemas(); return; }
+    if (m.type === 'save') { const s = state.subjects.find(x => x.id === (m.sid || schemaSid)); if (s) { s.esquemas = m.db; save(); } return; }
+    const blob = m.png ? await (await fetch(m.png)).blob() : null;
+    if (m.type === 'png') { download(fileName(m.name || 'Esquema', 'png'), blob, 'image/png'); toast('Imagen del esquema guardada'); return; }
+    if (m.type === 'pdf') {
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(m.name)}</title><style>@page{size:A4 ${m.land ? 'landscape' : 'portrait'};margin:10mm}html,body{margin:0;height:100%}body{display:flex;align-items:center;justify-content:center}img{max-width:100%;max-height:100%;object-fit:contain}</style></head><body><img src="${m.png}"></body></html>`;
+      try {
+        if (!SERVED) throw new Error('sin servidor');
+        const r = await fetch('/api/pdf', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: m.name, html }) });
+        if (!r.ok) throw new Error();
+        download(fileName(m.name || 'Esquema', 'pdf'), await r.blob(), 'application/pdf'); toSchema({ type: 'toast', text: 'PDF guardado' });
+      } catch (err) { const w = open('', '_blank'); if (w) { w.document.write(html.replace('</body>', '<script>setTimeout(()=>print(),300)<\/script></body>')); w.document.close(); } }
+      return;
+    }
+    if (m.type === 'toNote') {
+      // asignatura (o una nueva) y apunte (o uno nuevo); la imagen se guarda como los adjuntos y entra detrás del texto, movible
+      let s = m.sid ? state.subjects.find(x => x.id === m.sid) : null;
+      if (!s && m.newSubj) {
+        s = { id: uid(), name: m.newSubj, short: m.newSubj.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]/g, '').slice(0, 3).toUpperCase() || 'NUE', color: PALETTE[state.subjects.length % PALETTE.length], emails: [], notes: [], biblio: [], tasks: [], files: [] };
+        state.subjects.push(s);
+      }
+      if (!s) return;
+      let n = m.nid ? s.notes.find(x => x.id === m.nid) : null;
+      if (!n) { n = { id: uid(), title: m.newNote || ('Esquema · ' + (m.name || '')), date: today(), content: '', updated: Date.now() }; s.notes.push(n); }
+      const id = uid();
+      try { await idb.put(id, blob); uploadFile(id, blob); } catch (err) { toSchema({ type: 'toast', text: 'No se ha podido guardar la imagen' }); return; }
+      s.files ||= []; s.files.push({ id, name: 'Esquema · ' + (m.name || ''), ext: 'png', mime: 'image/png', size: blob.size, added: Date.now(), desc: 'Esquema para el apunte «' + (n.title || '') + '»' });
+      // debajo de lo que ya hay escrito (aproximado: se puede arrastrar después)
+      const txt = (n.content || '').replace(/<[^>]+>/g, ' ').trim(), blocks = ((n.content || '').match(/<(p|div|h2|h3|li|table|tr)\b/g) || []).length;
+      const top = Math.round(Math.max(blocks, 1) * 34 + txt.length / 80 * 28 + 20);
+      n.content = (n.content || '') + `<img class="att-img bh" data-fid="${id}" alt="Esquema" style="left:6%;top:${top}px;width:70%">`;
+      n.updated = Date.now(); save(); renderSubjects();
+      toSchema({ type: 'toast', text: `Añadido a «${n.title || 'Sin título'}» (${s.short})` });
+      toSchema({ type: 'subjects', subjects: schemaSubjects(), cur: subj().id });
+    }
+  });
   Object.keys(VIEWS).forEach(v => $(VIEWS[v][0]).onclick = () => setView(v));
   $('#listToggle').onclick = e => { e.stopPropagation(); $('#notesCard').classList.toggle('show-list'); };
 
