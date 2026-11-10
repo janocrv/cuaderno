@@ -63,7 +63,7 @@ html,body{overflow:hidden}
 /* Efecto Dock: el script cambia --z (tamaño real, no una ampliación) para que las letras sigan nítidas */
 .subjects{scrollbar-width:none}.subjects::-webkit-scrollbar{display:none}
 .rail:not(.open) .subj .nm{max-height:0}   /* el nombre (oculto) no debe dar altura a los botones con la barra plegada */
-.subj .chip{width:calc(48px * var(--z,1));height:calc(40px * var(--z,1) * var(--fit,1));font-size:calc(.78rem * var(--z,1));
+.subj .chip{width:calc(48px * var(--z,1) * var(--fit,1));height:calc(40px * var(--z,1) * var(--fit,1));font-size:calc(.78rem * var(--z,1) * max(var(--fit,1), .85));
   border-radius:calc(var(--r) * var(--z,1));margin-left:var(--ml,0px);transition:box-shadow .2s}
 /* Los botones de asignatura se separan un poco del fondo */
 .subj .chip{box-shadow:0 1px 2px rgba(16,48,70,.16),0 3px 8px rgba(16,48,70,.10)}
@@ -125,10 +125,23 @@ html,body{overflow:hidden}
 /* Asignatura que tiene clase ahora (según el horario): brillo suave que va y viene */
 .subj.live .chip::after{content:'';position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;box-shadow:0 0 0 1.5px color-mix(in srgb,var(--c) 55%,transparent),0 0 14px 2px color-mix(in srgb,var(--c) 45%,transparent),0 0 26px 6px color-mix(in srgb,var(--c) 20%,transparent);opacity:.15;animation:liveGlow 5.2s cubic-bezier(.45,0,.55,1) infinite}
 @keyframes liveGlow{0%,100%{opacity:.15}50%{opacity:.8}}   /* respira despacio: como un latido muy lento */
+/* retroiluminación: el botón se aclara un poco al ritmo del latido (si no es la asignatura abierta) */
+.subj.live:not([aria-current="true"]) .chip{animation:liveBack 5.2s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes liveBack{0%,100%{background:color-mix(in srgb,var(--c) 16%,transparent)}50%{background:color-mix(in srgb,var(--c) 34%,transparent)}}
+@media (prefers-reduced-motion:reduce){.subj.live:not([aria-current="true"]) .chip{animation:none;background:color-mix(in srgb,var(--c) 28%,transparent)}}
 @media (prefers-reduced-motion:reduce){.subj.live .chip::after{animation:none;opacity:.75}}
 .tb.on{background:color-mix(in srgb,var(--c,#0a84ff) 17%,transparent);color:var(--c,var(--ink));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c,#0a84ff) 35%,transparent)}
 .tb-font{min-width:92px;padding:0 6px;border:0;background:transparent;cursor:pointer;font:inherit;font-size:.82rem;color:var(--muted)}
 .tb-font option{color:#1d1d1f;background:#fff}
+.tb-color-wrap{position:relative;display:inline-flex}
+.tb-color{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.tb-color b{line-height:1;font-size:.9rem}
+.tb-color i{display:block;width:16px;height:3px;border-radius:2px;background:currentColor}
+.color-pop{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);z-index:20;display:grid;grid-template-columns:repeat(6,24px);gap:6px;padding:10px;border-radius:14px;background:var(--surface);box-shadow:0 10px 30px rgba(16,48,70,.22),0 0 0 1px var(--line)}
+.color-pop[hidden]{display:none}
+.color-pop button{width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);transition:transform .12s}
+.color-pop button:hover{transform:scale(1.15)}
+.color-pop .auto{background:var(--surface);color:var(--ink);font-weight:700;font-size:.75rem;box-shadow:inset 0 0 0 1.5px var(--line)}
 .editor blockquote[style*="margin"]{border-left:0;padding:0;color:inherit}
 .editor ul ul{list-style:circle}.editor ul ul ul{list-style:square}
 .editor ol ol{list-style:lower-alpha}.editor ol ol ol{list-style:lower-roman}
@@ -639,7 +652,7 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
 @media (max-height:780px){
   .rail-btn .ic{height:29px}
   .subjects{gap:3px}
-  .subj .chip{height:calc(27px * var(--z,1) * var(--fit,1));font-size:calc(.72rem * var(--z,1))}
+  .subj .chip{height:calc(27px * var(--z,1) * var(--fit,1));font-size:calc(.72rem * var(--z,1) * max(var(--fit,1), .85))}
   .toolbar{margin-bottom:10px;padding:4px}
   .tb{height:28px}
 }
@@ -756,6 +769,22 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
                   <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
                   <option value="'Courier New', Courier, monospace">Courier</option>
                 </select>
+                <span class="tb-color-wrap">
+                  <button class="tb tb-color" data-cmd="color" title="Color de la letra"><b>A</b><i id="tbColorBar"></i></button>
+                  <span class="color-pop" id="colorPop" hidden>
+                    <button type="button" data-color="" class="auto" title="Automático (quitar color)">A</button>
+                    <button type="button" data-color="#e5484d" title="Rojo"></button>
+                    <button type="button" data-color="#f08c00" title="Naranja"></button>
+                    <button type="button" data-color="#e8b100" title="Amarillo"></button>
+                    <button type="button" data-color="#2f9e44" title="Verde"></button>
+                    <button type="button" data-color="#1c9fd6" title="Azul"></button>
+                    <button type="button" data-color="#4c6ef5" title="Añil"></button>
+                    <button type="button" data-color="#845ef7" title="Morado"></button>
+                    <button type="button" data-color="#d6336c" title="Rosa"></button>
+                    <button type="button" data-color="#8a6d5a" title="Marrón"></button>
+                    <button type="button" data-color="#868e96" title="Gris"></button>
+                  </span>
+                </span>
                 <span class="sep"></span>
                 <button class="tb" data-cmd="insertUnorderedList" title="Lista con viñetas (o escribe «- » al empezar una línea)">•</button>
                 <button class="tb" data-cmd="insertOrderedList" title="Lista numerada (o escribe «1. » al empezar una línea)">1.</button>
@@ -1699,7 +1728,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   (() => {
     const nav = $('#subjects'), MAX = 0.32, RANGE = 125, EASE = 0.16;   // hasta +32 %, alcance ~125 px, suavizado
     if (matchMedia('(prefers-reduced-motion: reduce)').matches || matchMedia('(hover: none)').matches) return;
-    let base = null, cur = [], tgt = [], raf = 0, mouseY = null, free = Infinity, chH = 40;
+    let base = null, cur = [], tgt = [], raf = 0, mouseY = null, free = Infinity, chH = 40, curFit = 1;
     const chips = () => [...nav.querySelectorAll('.subj .chip')];
     // Posiciones «en reposo» (todos a tamaño normal): se miden un instante sin efecto y se restauran.
     // Además: si no caben, los botones se hacen algo más bajos (--fit), y se calcula cuánto pueden crecer sin
@@ -1708,11 +1737,16 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       const cs = chips(), saved = cs.map(c => c.style.getPropertyValue('--z'));
       cs.forEach(c => c.style.setProperty('--z', '1'));
       nav.style.setProperty('--fit', '1');
-      const n = cs.length, h1 = n ? cs[0].offsetHeight : 0, rest = nav.scrollHeight, client = nav.clientHeight;
+      // alto real del contenido (scrollHeight nunca baja del alto visible, así que no sirve para saber el hueco libre)
+      const cst = getComputedStyle(nav), pad = parseFloat(cst.paddingTop) + parseFloat(cst.paddingBottom);
+      const contentH = () => { const k = nav.children; return k.length ? k[k.length - 1].getBoundingClientRect().bottom - k[0].getBoundingClientRect().top + pad : 0; };
+      const n = cs.length, h1 = n ? cs[0].offsetHeight : 0, rest = contentH(), client = nav.clientHeight;
       let fit = 1;
-      if (n && rest > client) fit = Math.max(.6, (client - (rest - n * h1)) / (n * h1));
-      nav.style.setProperty('--fit', fit.toFixed(3));
-      chH = h1 * fit; free = Math.max(0, client - nav.scrollHeight);
+      // se deja siempre un hueco para la lupa (≈ lo que crecen el botón señalado y sus vecinos)
+      const reserve = MAX * h1 * 2.2;
+      if (n && rest + reserve > client) fit = Math.max(.6, (client - reserve - (rest - n * h1)) / (n * h1));
+      nav.style.setProperty('--fit', fit.toFixed(3)); curFit = fit;
+      chH = h1 * fit; free = Math.max(0, client - contentH() - 2);
       const top = nav.getBoundingClientRect().top - nav.scrollTop;
       base = cs.map(c => { const r = c.getBoundingClientRect(); return r.top - top + r.height / 2; });
       cs.forEach((c, i) => c.style.setProperty('--z', saved[i] || '1'));
@@ -1735,7 +1769,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
         const z = 1 + (cur[i] - 1) * k;
         c.style.setProperty('--z', z.toFixed(4));
         // con la barra plegada crece hacia los dos lados para no salirse por la derecha
-        c.style.setProperty('--ml', open ? '0px' : (-(48 * (z - 1)) / 2).toFixed(2) + 'px');
+        c.style.setProperty('--ml', open ? '0px' : (-(48 * curFit * (z - 1)) / 2).toFixed(2) + 'px');
       });
       if (moving) raf = requestAnimationFrame(frame);
     };
@@ -2061,6 +2095,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     b.addEventListener('mousedown', e => e.preventDefault());
     b.addEventListener('click', () => {
       if (b.dataset.cmd === 'cite') { openCite(); return; }
+      if (b.dataset.cmd === 'color') { $('#colorPop').hidden = !$('#colorPop').hidden; return; }
       if (b.dataset.block) {
         $('#editor').focus();
         // Volver a pulsar Título/Subtítulo/Cita los quita (vuelve a texto normal)
@@ -2072,6 +2107,27 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     });
   });
   $('#tbFont').addEventListener('change', e => { if (e.target.value) runCmd('fontName', e.target.value); });
+  // Color de la letra: paleta pequeña bajo el botón «A»
+  const colorPop = $('#colorPop');
+  colorPop.querySelectorAll('button').forEach(sw => {
+    if (sw.dataset.color) sw.style.background = sw.dataset.color;
+    sw.addEventListener('mousedown', e => e.preventDefault());   // no perder la selección del texto
+    sw.addEventListener('click', () => {
+      colorPop.hidden = true;
+      const ed = $('#editor'), c = sw.dataset.color; ed.focus();
+      if (c) { document.execCommand('styleWithCSS', false, true); document.execCommand('foreColor', false, c); document.execCommand('styleWithCSS', false, false); }
+      else {
+        const sel = getSelection(); if (!sel.rangeCount) return;
+        const r = sel.getRangeAt(0);
+        const els = [...ed.querySelectorAll('[style*="color"], font[color]')].filter(el => r.intersectsNode(el));
+        let a = sel.anchorNode; a = a && (a.nodeType === 1 ? a : a.parentElement);
+        for (; a && a !== ed; a = a.parentElement) if ((a.style && a.style.color) || a.getAttribute('color')) els.push(a);
+        els.forEach(el => { el.style.color = ''; el.removeAttribute('color'); if (/^(SPAN|FONT)$/.test(el.tagName) && !el.getAttribute('style') && el.attributes.length <= (el.hasAttribute('style') ? 1 : 0)) el.replaceWith(...el.childNodes); });
+      }
+      ed.dispatchEvent(new Event('input')); updateToolbar();
+    });
+  });
+  document.addEventListener('mousedown', e => { if (!colorPop.hidden && !e.target.closest('.tb-color-wrap')) colorPop.hidden = true; });
   // Botones encendidos según el formato donde está el cursor (negrita, subrayado, listas, alineación…)
   const STATE_CMDS = ['bold', 'italic', 'underline', 'insertUnorderedList', 'insertOrderedList', 'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'];
   function updateToolbar() {
@@ -2081,6 +2137,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       let on = false; try { on = document.queryCommandState(c); } catch (e) {}
       document.querySelectorAll(`#toolbar .tb[data-cmd="${c}"]`).forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     });
+    try { const fc = document.queryCommandValue('foreColor'), ink = getComputedStyle(ed).color; $('#tbColorBar').style.background = fc && fc !== ink ? fc : 'currentColor'; } catch (e) {}
     const mk = !!markedAt(); document.querySelectorAll('#toolbar .tb[data-cmd="mark"]').forEach(b => { b.classList.toggle('on', mk); b.setAttribute('aria-pressed', String(mk)); });
     const blk = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
     document.querySelectorAll('#toolbar .tb[data-block]').forEach(b => { const on = b.dataset.block === blk || (b.dataset.block === 'p' && blk === 'div'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
