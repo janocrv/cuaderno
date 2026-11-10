@@ -404,7 +404,8 @@ dialog::backdrop{background:rgba(12,28,44,.26);-webkit-backdrop-filter:blur(5px)
 .top .title h1{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 @media (max-width:900px){.top{flex-wrap:wrap}}
 .topx .icon-btn{position:relative}
-.topx .dot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:#34c759;box-shadow:0 0 0 2px var(--bg)}
+.topx .dot{position:absolute;top:1px;right:0;width:15px;height:15px;border-radius:50%;background:#ff9f0a;box-shadow:0 0 0 2px var(--bg);color:#fff;font:800 .66rem/15px -apple-system,'Segoe UI',sans-serif;font-style:normal;text-align:center}
+.topx .dot::before{content:'!'}   /* aviso: hay una versión nueva */
 .langsw{display:inline-flex;background:var(--soft);border-radius:9px;padding:2px;gap:2px}
 .langsw button{font-size:.74rem;font-weight:650;letter-spacing:.03em;padding:4px 8px;border-radius:7px;color:var(--muted);background:none}
 .langsw button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.14)}
@@ -4002,7 +4003,7 @@ Gracias.` },
       <button type="button" class="btn ${v.available ? 'primary' : ''}" id="updRowBtn">${v.available ? 'Actualizar' : 'Buscar actualizaciones'}</button>`;
     $('#updRowBtn').onclick = () => { $('#setDlg').close(); manualUpdate(); };
   }
-  if (IN_APP) { setTimeout(() => checkVersion(false), 12000); setInterval(() => checkVersion(false), 30 * 60000); }
+  if (IN_APP) { setTimeout(() => checkVersion(false), 12000); setInterval(() => checkVersion(false), 5 * 60000); }   // la app consulta GitHub cada 30 min; aquí se mira su resultado
 
   /* Foto de perfil: se recorta en cuadrado, se reduce a 256 px y se guarda con los datos (se sincroniza) */
   function renderSetPhoto() {

@@ -720,7 +720,7 @@ if (!app.requestSingleInstanceLock()) {
     setTimeout(syncMail, 1500);
     setInterval(syncMail, INTERVAL_MIN * 60 * 1000);
     setTimeout(checkUpdate, 8000);
-    setInterval(checkUpdate, 4 * 3600 * 1000);
+    setInterval(checkUpdate, 30 * 60 * 1000);   // cada media hora mira si hay versión nueva en GitHub
     log('Cuaderno', app.getVersion(), 'iniciado. Datos en', dataDir());
   });
 }
