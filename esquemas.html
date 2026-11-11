@@ -151,7 +151,7 @@ dialog select,dialog input{width:100%;padding:9px;border-radius:10px;border:1px 
 dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:10px}dialog .fl[hidden]{display:none}
 .row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
 .btn{padding:9px 16px;border-radius:11px;background:var(--soft);font-weight:600}.btn.pri{background:var(--c);color:#fff}
-.help{position:fixed;left:16px;bottom:14px;max-width:440px;padding:12px 14px;border-radius:14px;background:var(--surface);box-shadow:0 8px 28px rgba(16,48,70,.14),0 0 0 1px var(--line);font-size:.78rem;color:var(--muted);line-height:1.55;z-index:10}
+.help{position:fixed;left:16px;bottom:64px;max-width:300px;padding:12px 14px;border-radius:14px;background:var(--surface);box-shadow:0 8px 28px rgba(16,48,70,.14),0 0 0 1px var(--line);font-size:.78rem;color:var(--muted);line-height:1.55;z-index:10}
 .help b{color:var(--ink)}.help kbd{font:600 .72rem ui-monospace,monospace;padding:1px 5px;border-radius:5px;background:var(--soft);color:var(--ink)}
 .help .x{float:right;color:var(--muted);font-size:1rem;line-height:1;padding:2px 4px;border-radius:6px}.help .x:hover{background:var(--soft)}
 .help{transform-origin:0 100%;transition:opacity .2s,transform .25s cubic-bezier(.3,1.3,.5,1)}
@@ -163,8 +163,11 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
 #page::after{content:attr(data-label);position:absolute;left:14px;top:-24px;font-size:.72rem;letter-spacing:.04em;color:var(--muted);white-space:nowrap}
 #page.grow{box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 55%,transparent),0 18px 50px rgba(16,48,70,.16)}
 /* esquinas del folio para estirarlo a mano */
-#page .pg-h{position:absolute;width:16px;height:16px;border-radius:5px;background:var(--surface);border:2px solid var(--c);pointer-events:auto;opacity:.55;transition:opacity .15s,transform .15s;z-index:1}
-#page .pg-h:hover{opacity:1;transform:scale(1.2)}
+/* asas de las esquinas: invisibles (el folio conserva sus esquinas redondeadas) hasta que el ratón se acerca;
+   ::before amplía la zona sensible alrededor de cada esquina */
+#page .pg-h{position:absolute;width:16px;height:16px;border-radius:5px;background:var(--surface);border:2px solid var(--c);pointer-events:auto;opacity:0;transform:scale(calc(.6 * var(--ik, 1)));transition:opacity .18s,transform .18s;z-index:1}
+#page .pg-h::before{content:'';position:absolute;inset:-32px;border-radius:50%}
+#page .pg-h:hover,#page.resizing .pg-h.on{opacity:1;transform:scale(calc(1.1 * var(--ik, 1)))}   /* --ik = 1/zoom: mismo tamaño en pantalla con cualquier zoom */
 #page .pg-fit{position:absolute;right:0;top:-34px;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9px;font-size:.74rem;font-weight:600;color:var(--c);background:var(--surface);box-shadow:0 2px 8px rgba(16,48,70,.15),0 0 0 1px var(--line);pointer-events:auto;cursor:pointer}
 #page .pg-ord{right:auto;left:auto;right:170px}
 #page .pg-or{right:330px}
@@ -268,16 +271,11 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
 <button id="helpBtn" title="Cómo se usa" hidden>?</button>
 <div class="help" id="help"><button class="x" id="helpMin" title="Minimizar">–</button>
   <b>Cómo se usa</b><br>
-  • Herramientas arriba: caja, círculo, <b>forma libre</b> (clic punto a punto, cierra en el primero), <b>texto libre</b> e <b>imagen</b>.<br>
-  • <b>Doble clic</b> en una figura → escribir dentro.<br>
-  • Arrastra un <b>punto verde</b> hasta otra figura → flecha. Si lo sueltas en un hueco, nace una figura ya unida.<br>
-  • Figura elegida: <kbd>Tab</kbd> hija a la derecha · <kbd>Intro</kbd> hermana debajo. Imágenes, formas y textos: el círculo de arriba <b>gira</b>, la esquina <b>escala</b>.<br>
-  • <b>Agita</b> una figura mientras la arrastras (de lado a lado, deprisa) para <b>desconectarla</b> de sus flechas.<br>
-  • Clic en una flecha para elegirla: cambia su color o hazla <b>curva o recta</b>.<br>
-  • <b>Punto</b> (<kbd>D</kbd>): un nudo pequeño del que sacar varias flechas. <b>Doble clic en una flecha</b> → nudo en ese sitio.<br>
-  • <kbd>Supr</kbd> (o <kbd>⌫</kbd> en Mac) borra lo elegido.<br>
-  • <b>Elegir varias</b>: arrastra en un hueco para hacer un recuadro · <kbd>Mayús</kbd>+clic añade · <kbd>Ctrl</kbd>+<kbd>A</kbd> todo.<br>
-  • <b>Moverte</b>: rueda o dos dedos · <kbd>Espacio</kbd>+arrastrar · arrastrar con el botón derecho · <kbd>Ctrl</kbd>+rueda acerca.
+  • <b>Doble clic</b> en una figura para escribir.<br>
+  • Arrastra un <b>punto verde</b> para crear una flecha.<br>
+  • Arrastra en un hueco para <b>elegir varias</b>.<br>
+  • <b>Muévete</b> con la rueda o <kbd>Espacio</kbd>+arrastrar.<br>
+  • <kbd>Supr</kbd> borra · <kbd>Ctrl</kbd>+<kbd>Z</kbd> deshace.
 </div>
 <div class="toast" id="toast"></div>
 
@@ -340,6 +338,7 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
   /* ---------- dibujo ---------- */
   function applyView() {
     world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.k})`;
+    world.style.setProperty('--ik', (1 / view.k).toFixed(3));
     board.style.backgroundPosition = `${view.x}px ${view.y}px`; board.style.backgroundSize = `${24 * view.k}px ${24 * view.k}px`;
     $('zfit').textContent = Math.round(view.k * 100) + '%';
   }
@@ -594,7 +593,7 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
       paintPageBox(); save(); toast('Folio ajustado al esquema (las figuras no se mueven)'); return;   // ni se mueve nada ni cambia la vista
     }
     const pgH = e.target.closest('.pg-h');
-    if (pgH) { e.preventDefault(); snap(); drag = { kind: 'page', c: pgH.dataset.c, sx: wx, sy: wy, p0: { ...pg() } }; return; }
+    if (pgH) { e.preventDefault(); snap(); drag = { kind: 'page', c: pgH.dataset.c, sx: wx, sy: wy, p0: { ...pg() } }; pgH.classList.add('on'); document.getElementById('page').classList.add('resizing'); return; }   // el asa sigue visible mientras se estira
     if (hEl && nEl) { e.preventDefault(); drag = { kind: 'link', from: nEl.dataset.id, side: hEl.dataset.s, x: wx, y: wy }; return; }
     if (rz && nEl) { e.preventDefault(); snap(); const n = node(nEl.dataset.id); drag = { kind: 'resize', n, sx: wx, sy: wy, w: n.w, h: n.h, fs: n.fs || 26 }; return; }
     if (ro && nEl) { e.preventDefault(); snap(); const n = node(nEl.dataset.id); drag = { kind: 'rotate', n }; return; }
@@ -667,14 +666,16 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
      0,8 s), se le quitan todas sus flechas, como si se despegara */
   function shakeCheck(x, y) {
     const d = drag, now = performance.now();
-    if (!d.sh) d.sh = { lx: x, ly: y, dir: 0, turns: [], acc: 0 };
-    const s = d.sh, dx = x - s.lx, dy = y - s.ly; s.lx = x; s.ly = y;
-    const major = Math.abs(dx) >= Math.abs(dy) ? dx : dy, dir = Math.sign(major);
-    if (!dir) return;
-    s.acc += Math.abs(major);
-    if (s.dir && dir !== s.dir && s.acc > 18) { s.turns.push(now); s.acc = 0; }
-    s.dir = dir; s.turns = s.turns.filter(t => now - t < 800);
-    if (s.turns.length >= 4 && !s.done) {
+    /* Solo cuenta un meneo de verdad, de lado a lado: cada tramo tiene que recorrer al menos 45 px en horizontal
+       antes de cambiar de sentido, y hacen falta 5 cambios en menos de 1 s. Mover y recolocar normal no lo dispara. */
+    if (!d.sh) d.sh = { lx: x, dir: 0, turns: [], acc: 0 };
+    const s = d.sh, dx = x - s.lx;
+    if (Math.abs(dx) < 2) return;   // temblores pequeños del pulso: no cuentan
+    s.lx = x; const dir = Math.sign(dx);
+    if (s.dir && dir !== s.dir) { if (s.acc >= 45) s.turns.push(now); s.acc = 0; }
+    s.acc += Math.abs(dx); s.dir = dir;
+    s.turns = s.turns.filter(t => now - t < 1000);
+    if (s.turns.length >= 5 && !s.done) {
       const ids = new Set(d.start.map(([n]) => n.id));
       const n0 = S.edges.length; S.edges = S.edges.filter(x => !(ids.has(x.a) && !ids.has(x.b)) && !(ids.has(x.b) && !ids.has(x.a)));
       if (S.edges.length !== n0) {
@@ -687,6 +688,7 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
     if (!drag) return; const d = drag; drag = null; board.classList.remove('panning');
     if (d.kind === 'marquee') { d.el.remove(); render(); if (sel.size > 1) toast(`${sel.size} figuras elegidas: arrástralas, cambia su color o bórralas juntas`); return; }
     if (d.kind === 'move') { if (!d.moved) hist.pop(); save(); }
+    if (d.kind === 'page') { document.getElementById('page').classList.remove('resizing'); document.querySelectorAll('#page .pg-h.on').forEach(h => h.classList.remove('on')); }
     if (d.kind === 'resize' || d.kind === 'rotate' || d.kind === 'page') save();
     if (d.kind === 'link') {
       svg.querySelector('.ghost')?.remove(); world.querySelectorAll('.node.drop').forEach(x => x.classList.remove('drop'));
