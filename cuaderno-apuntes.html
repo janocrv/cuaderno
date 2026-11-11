@@ -281,6 +281,28 @@ html,body{overflow:hidden}
 .b-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
 .b-head h2{font-size:1.2rem;margin:0}
 .hint{color:var(--muted);font-size:.85rem;margin:4px 0 20px}
+/* ---------- Profesorado ---------- */
+.t-card{border:1px solid var(--line);border-radius:14px;padding:14px 16px 12px;margin-bottom:14px;background:color-mix(in srgb,var(--c) 4%,var(--surface));position:relative}
+.t-card .t-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.t-card .t-av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.9rem;color:#fff;background:var(--c);flex-shrink:0}
+.t-card .t-name{flex:1;font-size:1.02rem;font-weight:600;border:0;background:transparent;color:var(--ink);padding:4px 6px;border-radius:8px;min-width:0}
+.t-card .t-name:hover,.t-card .t-name:focus{background:var(--soft);outline:none}
+.t-card .t-del{width:30px;height:30px;border-radius:8px;color:var(--muted);display:grid;place-items:center;opacity:.6}.t-card .t-del:hover{opacity:1;background:var(--soft);color:var(--danger)}
+.t-card .t-del svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+.t-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+.t-grid label{display:flex;flex-direction:column;gap:3px;font-size:.74rem;color:var(--muted)}
+.t-grid label.w2{grid-column:1/-1}
+.t-grid input,.t-grid textarea{font:inherit;font-size:.88rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:7px 9px;resize:vertical}
+.t-grid input:focus,.t-grid textarea:focus{outline:none;border-color:var(--c)}
+.t-mail{display:flex;gap:6px}.t-mail input{flex:1;min-width:0}.t-mail a{display:grid;place-items:center;width:34px;border-radius:9px;border:1px solid var(--line);color:var(--muted)}.t-mail a:hover{color:var(--c);border-color:var(--c)}
+.t-mail a svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+.t-empty{color:var(--muted);font-size:.9rem;padding:18px;border:1.5px dashed var(--line);border-radius:14px;text-align:center;margin-bottom:14px}
+.t-sug{border-radius:14px;padding:12px 14px;margin-bottom:14px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line))}
+.t-sug h3{margin:0 0 8px;font-size:.86rem;font-weight:600}
+.t-sug .row{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid color-mix(in srgb,var(--accent) 15%,transparent)}
+.t-sug .row:first-of-type{border-top:0}.t-sug .row span{flex:1;min-width:0;font-size:.86rem}.t-sug .row small{display:block;color:var(--muted);font-size:.76rem}
+.t-paste textarea{width:100%;font:inherit;font-size:.86rem;border:1px solid var(--line);border-radius:10px;padding:9px;background:var(--surface);color:var(--ink);resize:vertical}
+@media (max-width:640px){.t-grid{grid-template-columns:1fr}}
 details.bform{background:var(--soft);border-radius:14px;margin-bottom:24px}
 details.bform summary{list-style:none;padding:14px 16px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px}
 details.bform summary::-webkit-details-marker{display:none}
@@ -836,6 +858,7 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
         <button role="tab" id="tabFiles" aria-selected="false">Archivos</button>
         <button role="tab" id="tabBiblio" aria-selected="false">Bibliografía</button>
         <button role="tab" id="tabSchemas" aria-selected="false">Esquemas</button>
+        <button role="tab" id="tabTeachers" aria-selected="false">Profesorado</button>
       </div>
       <div class="actions">
         <button class="icon-btn" id="shareBtn" title="Compartir"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/></svg><span class="t">Compartir</span></button>
@@ -1073,6 +1096,23 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
 
     <section class="view" id="schemasView" hidden>
       <iframe id="schemaFrame" title="Esquemas" src="about:blank"></iframe>
+    </section>
+
+    <section class="view" id="teachersView" hidden>
+      <div class="card biblio">
+        <div class="b-inner">
+          <div class="b-head"><h2>Profesorado</h2><button class="icon-btn" id="tAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Añadir profesor/a</button></div>
+          <p class="hint">Nombre, correo, tutorías y despacho de quien imparte la asignatura. Se completa solo con tus correos; todo se puede cambiar.</p>
+          <div id="tSuggest"></div>
+          <div id="tList"></div>
+          <details class="bform t-paste">
+            <summary><svg viewBox="0 0 24 24"><path d="M9 4h6v3H9zM7 5H5v15h14V5h-2M8 11h8M8 15h5"/></svg><span>Pegar la información del Aula Virtual o de la guía docente</span></summary>
+            <p class="hint" style="margin:10px 0 8px">Copia el apartado del profesorado (nombre, correo, tutorías, despacho…), pégalo aquí y lo ordeno en fichas.</p>
+            <textarea id="tPasteTxt" rows="6" placeholder="María García López · mgarcia@uv.es&#10;Tutorías: martes de 10:00 a 12:00 (con cita previa)&#10;Despacho 2.14, Facultat de Magisteri"></textarea>
+            <div class="f-actions"><button type="button" class="btn primary" id="tPasteGo">Rellenar fichas</button></div>
+          </details>
+        </div>
+      </div>
     </section>
 
     <section class="view" id="biblioView" hidden>
@@ -1640,6 +1680,22 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     "Ocultar las asignaturas archivadas": "Amaga les assignatures arxivades", "Eliminar asignatura…": "Elimina l'assignatura…", "Editar asignatura": "Edita l'assignatura",
     // avisos de versión y novedades
     "Las notificaciones de Windows están bloqueadas. Puedes activarlas desde el candado de la barra de la ventana → Notificaciones → Permitir.": "Les notificacions de Windows estan blocades. Pots activar-les des del cadenat de la barra de la finestra → Notificacions → Permet.",
+    // profesorado
+    "Profesorado": "Professorat", "Añadir profesor/a": "Afig professor/a", "Encontrado en tus correos": "Trobat als teus correus",
+    "Nombre, correo, tutorías y despacho de quien imparte la asignatura. Se completa solo con tus correos; todo se puede cambiar.": "Nom, correu, tutories i despatx de qui imparteix l'assignatura. S'omple sol amb els teus correus; tot es pot canviar.",
+    "Pegar la información del Aula Virtual o de la guía docente": "Apega la informació de l'Aula Virtual o de la guia docent",
+    "Copia el apartado del profesorado (nombre, correo, tutorías, despacho…), pégalo aquí y lo ordeno en fichas.": "Copia l'apartat del professorat (nom, correu, tutories, despatx…), apega'l ací i l'ordene en fitxes.",
+    "Rellenar fichas": "Omple les fitxes", "Nombre del profesor o profesora": "Nom del professor o professora", "Quitar esta ficha": "Lleva aquesta fitxa",
+    "Escribir un correo": "Escriu un correu", "Despacho / nº de tutoría": "Despatx / núm. de tutoria", "p. ej. Despacho 2.14": "p. ex. Despatx 2.14",
+    "Horario de tutorías": "Horari de tutories", "p. ej. martes de 10:00 a 12:00, con cita previa": "p. ex. dimarts de 10:00 a 12:00, amb cita prèvia",
+    "Teléfono": "Telèfon", "Extensión o teléfono": "Extensió o telèfon", "Notas": "Notes", "Cómo prefiere que le escribáis, Teams…": "Com prefereix que li escriviu, Teams…",
+    "Aún no hay profesorado en esta asignatura. Añádelo con el botón de arriba, desde tus correos o pegando la información del Aula Virtual.": "Encara no hi ha professorat en aquesta assignatura. Afig-lo amb el botó de dalt, des dels teus correus o apegant la informació de l'Aula Virtual.",
+    "Datos del profesorado completados con tus correos": "Dades del professorat completades amb els teus correus", "Profesor/a añadido": "Professor/a afegit",
+    "No he encontrado ningún correo en el texto: hace falta el correo de cada profesor/a": "No he trobat cap correu al text: cal el correu de cada professor/a",
+    "Ficha rellenada: revísala": "Fitxa omplida: revisa-la", "Correo": "Correu",
+    "Nueva pestaña «Profesorado» en cada asignatura: nombre, correo, tutorías y despacho de cada profesor o profesora.": "Nova pestanya «Professorat» en cada assignatura: nom, correu, tutories i despatx de cada professor o professora.",
+    "Se rellena sola con tus correos de la UV, o pegando la información del Aula Virtual o de la guía docente. Todo se puede editar.": "S'omple sola amb els teus correus de la UV, o apegant la informació de l'Aula Virtual o de la guia docent. Tot es pot editar.",
+    "Al crear un grupo en el dock le pones nombre al momento, y lo cambias cuando quieras con doble clic.": "En crear un grup a la barra li poses nom al moment, i el canvies quan vulgues amb doble clic.",
     "Versión nueva": "Versió nova", "Novedades": "Novetats", "Cuaderno · versión nueva": "Cuaderno · versió nova", "Esquemas": "Esquemes",
     "Novedades de esta versión": "Novetats d'aquesta versió", "Pulsa para ver qué trae": "Prem per a veure què porta", "Lo nuevo de esta versión": "El que porta aquesta versió",
     "Nueva pestaña «Esquemas» en cada asignatura: haz mapas y diagramas, o créalos a partir de un texto.": "Nova pestanya «Esquemes» en cada assignatura: fes mapes i diagrames, o crea'ls a partir d'un text.",
@@ -1649,6 +1705,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     "Cuando hay una versión nueva, el botón de actualizar se ilumina en naranja, y aquí verás qué trae cada actualización.": "Quan hi ha una versió nova, el botó d'actualitzar s'il·lumina en taronja, i ací veuràs què porta cada actualització.",
   };
   const CA_RX = [
+    [/^(\d+) fichas rellenadas: revísalas$/, '$1 fitxes omplides: revisa-les'], [/^¿Quitar la ficha de «(.+)»\?$/, 'Vols llevar la fitxa de «$1»?'],
     [/^Mover a «(.+)»$/, 'Mou a «$1»'], [/^Archivadas \((\d+)\)$/, 'Arxivades ($1)'], [/^Asignaturas archivadas \((\d+)\)$/, 'Assignatures arxivades ($1)'],
     [/^(\d+) asignaturas$/, '$1 assignatures'], [/^(.+) · (\d+) asignaturas( \(clic para abrir\))?$/, (m, g, n, c) => `${g} · ${n} assignatures${c ? ' (clic per a obrir)' : ''}`],
     [/^«(.+)» está ahora en (.+)$/, '«$1» és ara a $2'], [/^«(.+)» vuelve al dock$/, '«$1» torna a la barra'],
@@ -2015,7 +2072,12 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       g.title = `${s.group} · ${members.length} asignaturas` + (open ? '' : ' (clic para abrir)');
       g.innerHTML = `<span class="chip"><span class="mos">${members.slice(0, 4).map(x => `<i style="--mc:${x.color}"></i>`).join('')}</span></span><span class="nm"><b></b><small>${members.length} asignaturas</small></span>`;
       g.querySelector('.nm b').textContent = s.group;
-      g.onclick = () => { openGroup = open ? null : s.group; renderSubjects(); };
+      g.onclick = () => {
+        const now = Date.now(), lc = lastGrpClick;
+        if (lc && lc.name === s.group && now - lc.t < 450) { lastGrpClick = null; openGroup = lc.prev; renderSubjects(); renameGroup(s.group); return; }
+        lastGrpClick = { name: s.group, t: now, prev: openGroup };
+        openGroup = open ? null : s.group; renderSubjects();
+      };
       nav.appendChild(g);
       if (open) members.forEach(m => nav.appendChild(subjButton(m, 'ingrp')));
     });
@@ -2097,7 +2159,8 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
         if (zone === 'into') {            // sobre otra asignatura: se forma un grupo (o entra en el suyo)
           const isNew = !T.group, name = T.group || newGroupName(); T.group = name; S0.group = name; delete S0.archived;
           placeSubjects([S0.id], T.id, true); openGroup = name;
-          toast(isNew ? `«${name}» creado: clic derecho en el grupo para ponerle nombre` : `«${S0.short}» está ahora en ${name}`);
+          if (isNew) setTimeout(() => renameGroup(name), 50);   // como en el iPhone: al crear el grupo se le pone nombre
+          else toast(`«${S0.short}» está ahora en ${name}`);
         } else {
           // antes/después: si la de destino está dentro de un grupo abierto, entra en él; si está suelta, queda suelta
           if (T.group && t.b.classList.contains('ingrp')) S0.group = T.group; else delete S0.group;
@@ -2117,6 +2180,16 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   let grpRename = null;
   function askGroupName(title, value, done) { $('#grpDlgTitle').textContent = title; const f = $('#grpForm'); f.name.value = value || ''; grpRename = done; $('#grpDlg').showModal(); f.name.select(); }
   $('#grpCancel').onclick = () => $('#grpDlg').close();
+  // cambiar el nombre de un grupo (al crearlo, con doble clic o con clic derecho)
+  function renameGroup(name) {
+    askGroupName('Nombre del grupo', name, v => {
+      if (v === name) return;
+      if (groupNames().includes(v)) return toast('Ya hay un grupo con ese nombre');
+      state.subjects.forEach(s => { if (s.group === name) s.group = v; }); if (openGroup === name) openGroup = v;
+      save(); renderSubjects();
+    });
+  }
+  let lastGrpClick = null;   // doble clic en un grupo (se detecta a mano: cada clic vuelve a dibujar el dock)
   $('#grpForm').addEventListener('submit', e => { e.preventDefault(); const v = e.target.name.value.trim(); if (!v) return; $('#grpDlg').close(); grpRename && grpRename(v); });
   $('#subjects').addEventListener('contextmenu', e => {
     const b = e.target.closest('.subj'); if (!b || b.dataset.arch) return; e.preventDefault();
@@ -2124,7 +2197,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     const it = (label, fn) => items.push([label, fn]), sep = () => items.push(null);
     if (b.dataset.group) {
       const name = b.dataset.group, ids = b.dataset.gm.split(',');
-      it('Cambiar el nombre del grupo', () => askGroupName('Nombre del grupo', name, v => { if (groupNames().includes(v) && v !== name) return toast('Ya hay un grupo con ese nombre'); state.subjects.forEach(s => { if (s.group === name) s.group = v; }); if (openGroup === name) openGroup = v; save(); renderSubjects(); }));
+      it('Cambiar el nombre del grupo', () => renameGroup(name));
       it('Deshacer el grupo (las asignaturas vuelven al dock)', () => { ids.forEach(id => { const s = state.subjects.find(x => x.id === id); if (s) delete s.group; }); save(); renderSubjects(); toast('Grupo deshecho: no se ha borrado nada'); });
     } else {
       const s = state.subjects.find(x => x.id === b.dataset.sid); if (!s) return;
@@ -2177,7 +2250,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     });
   }
   setInterval(markLive, 60000);
-  const VIEWS = { notes: ['#tabNotes', '#notesView'], tasks: ['#tabTasks', '#tasksView'], files: ['#tabFiles', '#filesView'], biblio: ['#tabBiblio', '#biblioView'], schemas: ['#tabSchemas', '#schemasView'] };
+  const VIEWS = { notes: ['#tabNotes', '#notesView'], tasks: ['#tabTasks', '#tasksView'], files: ['#tabFiles', '#filesView'], biblio: ['#tabBiblio', '#biblioView'], schemas: ['#tabSchemas', '#schemasView'], teachers: ['#tabTeachers', '#teachersView'] };
   const SPECIAL = { schedule: { sec: '#scheduleView', btn: '#schedBtn', title: 'Horario de clases' }, mail: { sec: '#mailView', btn: '#mailBtn', title: 'Correo' }, alerts: { sec: '#alertsView', btn: '#alertsBtn', title: 'Avisos' }, cites: { sec: '#citesView', btn: '#citesBtn', title: 'Citas APA' }, ai: { sec: '#aiView', btn: '#aiBtn', title: 'Resumir con IA' } };
   function renderHeader() {
     const s = subj();
@@ -2242,7 +2315,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       ul.appendChild(li);
     });
   }
-  function renderAll() { applyTheme(); applyRail(); renderUser(); renderSubjects(); renderHeader(); renderNotesList(); renderEditor(); renderBiblio(); renderTasks(); renderFiles(); if (state.view === 'schedule') renderSchedule(); if (state.view === 'mail') renderMail(); if (state.view === 'alerts') renderAlerts(); if (state.view === 'cites') renderCites(); if (state.view === 'ai') renderAI(); if (state.view === 'schemas') renderSchemas(); updateAlertBadge(); }
+  function renderAll() { applyTheme(); applyRail(); renderUser(); renderSubjects(); renderHeader(); renderNotesList(); renderEditor(); renderBiblio(); renderTasks(); renderFiles(); if (state.view === 'schedule') renderSchedule(); if (state.view === 'mail') renderMail(); if (state.view === 'alerts') renderAlerts(); if (state.view === 'cites') renderCites(); if (state.view === 'ai') renderAI(); if (state.view === 'schemas') renderSchemas(); if (state.view === 'teachers') renderTeachers(); updateAlertBadge(); }
 
   /* ---------- Asignaturas ---------- */
   function selectSubject(id) {
@@ -2354,10 +2427,128 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     e.target.value = '';
   };
 
+  /* ---------- Profesorado de la asignatura ----------
+     s.teachers = [{ id, name, email, hours, room, phone, notes }]. Se guarda con la asignatura (se sincroniza).
+     · Con los correos: quien te escribe desde @uv.es sobre la asignatura sale como sugerencia, y de las firmas de
+       sus correos se sacan tutorías, despacho y teléfono para rellenar SOLO lo que esté vacío.
+     · Del Aula Virtual o la guía docente: se pega el texto y se ordena en fichas.
+     Los correos de las fichas se añaden a s.emails (así sus mensajes cuentan como «del profesorado»). */
+  const mailList = () => { try { return mails || []; } catch (e) { return []; } };   // el correo se carga más tarde
+  const NOT_TEACHER = /no-?reply|aulavirtual|secretar|coordin|biblio|informa|postgrau|postgrado|master|sede|campus|alumni|estudiant|admin|servei|servicio|webmaster|consergeria|conserjer|profesorado|professorat|departament|departamento|facultat|facultad|grupo|grup/i;
+  // «GARCIA LOPEZ, MARIA» → «Maria Garcia Lopez»
+  function niceName(n) {
+    n = String(n || '').replace(/["<>]/g, '').trim(); if (!n) return '';
+    if (n.includes(',')) { const [a, b] = n.split(','); n = (b.trim() + ' ' + a.trim()).trim(); }
+    if (n === n.toUpperCase()) n = n.toLowerCase().replace(/(^|[\s\-'])([a-záéíóúàèòïüçñ])/g, (m, p, c) => p + c.toUpperCase()).replace(/\b(De|Del|La|Las|Los|Y|I)\b/g, w => w.toLowerCase());
+    return n;
+  }
+  // tutorías, despacho y teléfono de un texto (firma de un correo, guía docente…)
+  function extractTeacherInfo(text) {
+    const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const out = { hours: '', room: '', phone: '' };
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      if (!out.hours) {
+        const m = l.match(/tutor[ií](?:as|es|a)\b[^:\n]{0,40}?[:\-–]\s*(.{4,180})/i);
+        const val = m ? m[1] : (/^(horario de )?tutor[ií](as|es)\s*:?\s*$/i.test(l) && lines[i + 1] ? lines[i + 1] : '');
+        if (val && /\d|lunes|martes|mi[eé]rcoles|jueves|viernes|dilluns|dimarts|dimecres|dijous|divendres|cita|online|en l[ií]nea|teams/i.test(val)) out.hours = val.replace(/\s+/g, ' ').trim();
+      }
+      if (!out.room) {
+        const m = l.match(/\b(despacho|despatx|n[ºo°.]?\s*de\s*tutor[ií]a|sala de tutor[ií]as?)\b\s*(?:n[ºo°.]\s*)?[:\-–]?\s*([^\n;|]{1,60})/i);
+        if (m && !/virtual/i.test(m[2])) out.room = (m[1].toLowerCase().startsWith('desp') ? '' : m[1] + ' ') + m[2].replace(/\s+/g, ' ').trim().replace(/[.,]$/, '');
+      }
+      if (!out.phone) { const m = l.match(/\b(tel[eéè]fon[oa]?|tlf\.?|tel\.|ext\.?|extensi[oó]n)\s*[:\-–]?\s*(\+?\d[\d\s.]{3,14}\d)/i); if (m) out.phone = m[2].replace(/\s+/g, ' ').trim(); }
+    }
+    return out;
+  }
+  // quien te ha escrito desde la UV sobre esta asignatura (o con un correo ya marcado como del profesorado)
+  function teacherFromMails(s) {
+    const map = new Map();
+    mailList().forEach(m => {
+      const from = (m.from || '').toLowerCase(); if (!from || NOT_TEACHER.test(from) || NOT_TEACHER.test(m.from_name || '')) return;
+      const known = (s.emails || []).includes(from);
+      if (!known && !(from.endsWith('@uv.es') && mailSubject(m) === s && (m.from_name || '').trim().split(/\s+/).length >= 2)) return;
+      const e = map.get(from) || { email: from, name: niceName(m.from_name), texts: [] };
+      e.texts.push(m.body || ''); map.set(from, e);
+    });
+    return [...map.values()].map(e => ({ ...extractTeacherInfo(e.texts.join('\n')), name: e.name, email: e.email }));
+  }
+  // texto pegado → fichas (una por cada correo que aparezca)
+  function parseTeachersText(txt) {
+    const lines = String(txt || '').split(/\r?\n/), RX = /[\w.+-]+@[\w-]+(\.[\w-]+)+/;
+    const idx = lines.map((l, i) => RX.test(l) ? i : -1).filter(i => i >= 0), out = [];
+    idx.forEach((i, k) => {
+      const email = lines[i].match(RX)[0].toLowerCase(), from = Math.max(0, i - 2), to = k + 1 < idx.length ? idx[k + 1] - 1 : Math.min(lines.length, i + 8);
+      let name = lines[i].slice(0, lines[i].indexOf(lines[i].match(RX)[0])).replace(/(correo|e-?mail|email|mail)\s*(electr[oó]nico)?\s*[:\-–]?/ig, '').replace(/[·•|:<(\-–\s]+$/, '').trim();
+      if (!name || /\d/.test(name)) { for (let j = i - 1; j >= from; j--) { const c = lines[j].replace(/^(nombre|profesor[a]?|profesorado|docente)\s*[:\-–]\s*/i, '').trim(); if (c && !/\d|@|:$/.test(c) && c.split(/\s+/).length >= 2 && c.split(/\s+/).length <= 7) { name = c; break; } } }
+      out.push({ ...extractTeacherInfo(lines.slice(i, to + 1).join('\n')), name: niceName(name), email });
+    });
+    return out;
+  }
+  function addTeacher(s, t) {
+    s.teachers ||= [];
+    const em = (t.email || '').toLowerCase(), ex = em && s.teachers.find(x => (x.email || '').toLowerCase() === em);
+    if (ex) { ['name', 'hours', 'room', 'phone'].forEach(k => { if (!ex[k] && t[k]) ex[k] = t[k]; }); return ex; }
+    const n = { id: uid(), name: t.name || '', email: em, hours: t.hours || '', room: t.room || '', phone: t.phone || '', notes: t.notes || '' };
+    s.teachers.push(n); return n;
+  }
+  const syncTeacherEmails = s => { s.emails ||= []; (s.teachers || []).forEach(t => { const e = (t.email || '').toLowerCase(); if (e.includes('@') && !s.emails.includes(e)) s.emails.push(e); }); };
+  function renderTeachers() {
+    const s = subj(); s.teachers ||= [];
+    // rellenar lo vacío con lo que dicen sus correos (nunca se pisa lo escrito)
+    const found = teacherFromMails(s); let filled = false;
+    s.teachers.forEach(t => { const f = found.find(x => x.email === (t.email || '').toLowerCase()); if (!f) return; ['name', 'hours', 'room', 'phone'].forEach(k => { if (!t[k] && f[k]) { t[k] = f[k]; filled = true; } }); });
+    if (filled) { save(); toast('Datos del profesorado completados con tus correos'); }
+    // sugerencias: quien te ha escrito y aún no tiene ficha
+    const sug = found.filter(f => !s.teachers.some(t => (t.email || '').toLowerCase() === f.email));
+    const box = $('#tSuggest'); box.innerHTML = '';
+    if (sug.length) {
+      box.innerHTML = '<div class="t-sug"><h3>Encontrado en tus correos</h3></div>';
+      sug.forEach(f => {
+        const r = document.createElement('div'); r.className = 'row';
+        r.innerHTML = '<span><b></b><small></small></span><button type="button" class="btn">Añadir</button>';
+        r.querySelector('b').textContent = f.name || f.email; r.querySelector('small').textContent = [f.email, f.hours && 'Tutorías: ' + f.hours, f.room].filter(Boolean).join(' · ');
+        r.querySelector('button').onclick = () => { addTeacher(s, f); syncTeacherEmails(s); save(); renderTeachers(); toast('Profesor/a añadido'); };
+        box.firstChild.appendChild(r);
+      });
+    }
+    const list = $('#tList'); list.innerHTML = '';
+    if (!s.teachers.length) list.innerHTML = '<div class="t-empty">Aún no hay profesorado en esta asignatura. Añádelo con el botón de arriba, desde tus correos o pegando la información del Aula Virtual.</div>';
+    s.teachers.forEach(t => {
+      const c = document.createElement('div'); c.className = 't-card';
+      const ini = (t.name || t.email || '?').split(/[\s@.]+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+      c.innerHTML = `<div class="t-top"><span class="t-av"></span><input class="t-name" data-k="name" placeholder="Nombre del profesor o profesora"><button type="button" class="t-del" title="Quitar esta ficha"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div>
+        <div class="t-grid">
+          <label>Correo<span class="t-mail"><input type="email" data-k="email" placeholder="nombre@uv.es"><a title="Escribir un correo"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></a></span></label>
+          <label>Despacho / nº de tutoría<input data-k="room" placeholder="p. ej. Despacho 2.14"></label>
+          <label class="w2">Horario de tutorías<input data-k="hours" placeholder="p. ej. martes de 10:00 a 12:00, con cita previa"></label>
+          <label>Teléfono<input data-k="phone" placeholder="Extensión o teléfono"></label>
+          <label>Notas<input data-k="notes" placeholder="Cómo prefiere que le escribáis, Teams…"></label>
+        </div>`;
+      c.querySelector('.t-av').textContent = ini || '?';
+      c.querySelectorAll('[data-k]').forEach(inp => {
+        inp.value = t[inp.dataset.k] || '';
+        inp.addEventListener('input', () => { t[inp.dataset.k] = inp.value; if (inp.dataset.k === 'email') { a.href = 'mailto:' + inp.value.trim(); } save(); });
+        inp.addEventListener('change', () => { if (inp.dataset.k === 'email' || inp.dataset.k === 'name') { syncTeacherEmails(s); save(); c.querySelector('.t-av').textContent = (t.name || t.email || '?').split(/[\s@.]+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?'; } });
+      });
+      const a = c.querySelector('.t-mail a'); a.href = 'mailto:' + (t.email || '');
+      c.querySelector('.t-del').onclick = () => { if (!confirm(`¿Quitar la ficha de «${t.name || t.email || 'este profesor/a'}»?`)) return; s.teachers = s.teachers.filter(x => x !== t); save(); renderTeachers(); };
+      list.appendChild(c);
+    });
+  }
+  $('#tAdd').onclick = () => { const s = subj(); s.teachers ||= []; s.teachers.push({ id: uid(), name: '', email: '', hours: '', room: '', phone: '', notes: '' }); save(); renderTeachers(); const all = $('#tList').querySelectorAll('.t-name'); all[all.length - 1]?.focus(); };
+  $('#tPasteGo').onclick = () => {
+    const s = subj(), found = parseTeachersText($('#tPasteTxt').value);
+    if (!found.length) return toast('No he encontrado ningún correo en el texto: hace falta el correo de cada profesor/a');
+    found.forEach(f => addTeacher(s, f)); syncTeacherEmails(s); save();
+    $('#tPasteTxt').value = ''; $('.t-paste').open = false; renderTeachers();
+    toast(found.length === 1 ? 'Ficha rellenada: revísala' : `${found.length} fichas rellenadas: revísalas`);
+  };
+
   /* ---------- Pestañas ---------- */
   function setView(v) {
     flushEditor(); state.view = v; save(); renderHeader();
-    ({ notes: renderEditor, tasks: renderTasks, files: renderFiles, biblio: renderBiblio, schemas: renderSchemas, schedule: renderSchedule, mail: renderMail, alerts: renderAlerts, cites: renderCites, ai: renderAI })[v]();
+    ({ notes: renderEditor, tasks: renderTasks, files: renderFiles, biblio: renderBiblio, schemas: renderSchemas, teachers: renderTeachers, schedule: renderSchedule, mail: renderMail, alerts: renderAlerts, cites: renderCites, ai: renderAI })[v]();
   }
 
   /* ---------- Esquemas (pizarra en esquemas.html, dentro de un iframe) ----------
@@ -4790,12 +4981,10 @@ Gracias.` },
   /* ---------- Novedades de la última versión ----------
      Solo las de la versión instalada (sin historial). Se escriben en castellano y su traducción está en CA,
      así salen en el idioma de la app. Al publicar una versión nueva: cambiar NEWS.v y la lista. */
-  const NEWS = { v: '1.1.13', items: [
-    'Nueva pestaña «Esquemas» en cada asignatura: haz mapas y diagramas, o créalos a partir de un texto.',
-    'Ordena las asignaturas del dock arrastrándolas, y agrúpalas soltando una encima de otra. Con clic derecho: ponerle nombre al grupo, sacarlas, archivarlas o eliminarlas.',
-    'Las asignaturas archivadas salen del dock sin borrarse: están al final, en «Archivadas».',
-    'El Cuaderno guarda dos copias de seguridad que se turnan cada 5 minutos.',
-    'Cuando hay una versión nueva, el botón de actualizar se ilumina en naranja, y aquí verás qué trae cada actualización.',
+  const NEWS = { v: '1.1.14', items: [
+    'Nueva pestaña «Profesorado» en cada asignatura: nombre, correo, tutorías y despacho de cada profesor o profesora.',
+    'Se rellena sola con tus correos de la UV, o pegando la información del Aula Virtual o de la guía docente. Todo se puede editar.',
+    'Al crear un grupo en el dock le pones nombre al momento, y lo cambias cuando quieras con doble clic.',
   ] };
   // en este ordenador: { v: versión, t: cuándo se vio por primera vez, seen: si ya se ha abierto el aviso }
   const newsInfo = () => { try { return JSON.parse(localStorage.getItem('cuaderno-novedades')) || {}; } catch (e) { return {}; } };
