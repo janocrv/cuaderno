@@ -1637,13 +1637,13 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     "Por ejemplo «1.er cuatrimestre», «Optativas» o «Prácticas».": "Per exemple «1r quadrimestre», «Optatives» o «Pràctiques».",
     "Grupo deshecho: no se ha borrado nada": "Grup desfet: no s'ha esborrat res", "Ya hay un grupo con ese nombre": "Ja hi ha un grup amb aquest nom",
     "Tiene que quedar al menos una asignatura en el dock": "Ha de quedar almenys una assignatura a la barra", "Hace falta otra asignatura suelta para formar un grupo": "Cal una altra assignatura solta per a formar un grup",
-    "Ocultar las asignaturas archivadas": "Amaga les assignatures arxivades", "Editar asignatura": "Edita l'assignatura",
+    "Ocultar las asignaturas archivadas": "Amaga les assignatures arxivades", "Eliminar asignatura…": "Elimina l'assignatura…", "Editar asignatura": "Edita l'assignatura",
     // avisos de versión y novedades
     "Las notificaciones de Windows están bloqueadas. Puedes activarlas desde el candado de la barra de la ventana → Notificaciones → Permitir.": "Les notificacions de Windows estan blocades. Pots activar-les des del cadenat de la barra de la finestra → Notificacions → Permet.",
     "Versión nueva": "Versió nova", "Novedades": "Novetats", "Cuaderno · versión nueva": "Cuaderno · versió nova", "Esquemas": "Esquemes",
     "Novedades de esta versión": "Novetats d'aquesta versió", "Pulsa para ver qué trae": "Prem per a veure què porta", "Lo nuevo de esta versión": "El que porta aquesta versió",
     "Nueva pestaña «Esquemas» en cada asignatura: haz mapas y diagramas, o créalos a partir de un texto.": "Nova pestanya «Esquemes» en cada assignatura: fes mapes i diagrames, o crea'ls a partir d'un text.",
-    "Agrupa asignaturas en el dock: arrastra una encima de otra. Con clic derecho puedes ponerle nombre al grupo, sacarlas o archivarlas.": "Agrupa assignatures a la barra lateral: arrossega'n una damunt d'una altra. Amb el clic dret pots posar nom al grup, traure-les o arxivar-les.",
+    "Ordena las asignaturas del dock arrastrándolas, y agrúpalas soltando una encima de otra. Con clic derecho: ponerle nombre al grupo, sacarlas, archivarlas o eliminarlas.": "Ordena les assignatures de la barra arrossegant-les, i agrupa-les deixant-ne una damunt d'una altra. Amb el clic dret: posar nom al grup, traure-les, arxivar-les o eliminar-les.",
     "Las asignaturas archivadas salen del dock sin borrarse: están al final, en «Archivadas».": "Les assignatures arxivades ixen de la barra sense esborrar-se: estan al final, a «Arxivades».",
     "El Cuaderno guarda dos copias de seguridad que se turnan cada 5 minutos.": "El Cuaderno guarda dues còpies de seguretat que s'alternen cada 5 minuts.",
     "Cuando hay una versión nueva, el botón de actualizar se ilumina en naranja, y aquí verás qué trae cada actualización.": "Quan hi ha una versió nova, el botó d'actualitzar s'il·lumina en taronja, i ací veuràs què porta cada actualització.",
@@ -1663,6 +1663,8 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     [/^(1 archivo|\d+ archivos) · (.+?)( · guardados en tu Google Drive)?$/, (m, a, sz) => `${a === '1 archivo' ? '1 fitxer' : a.replace('archivos', 'fitxers')} · ${sz}`],
     [/^No se ha podido guardar «(.*)»\. Puede que no quede espacio\.$/, "No s'ha pogut desar «$1». Potser no hi queda espai."],
     [/^¿Eliminar «([\s\S]*)» con todos sus apuntes y bibliografía\? No se puede deshacer\.$/, 'Vols eliminar «$1» amb tots els seus apunts i la bibliografia? No es pot desfer.'],
+    [/^¿Eliminar «([\s\S]*)» con todos sus apuntes, tareas, archivos y esquemas\? No se puede deshacer\.\n\nSi solo quieres quitarla del dock, mejor archívala \(clic derecho → Archivar\)\.$/, "Vols eliminar «$1» amb tots els seus apunts, tasques, fitxers i esquemes? No es pot desfer.\n\nSi només vols llevar-la de la barra, millor arxiva-la (clic dret → Arxiva)."],
+    [/^«(.+)» eliminada$/, '«$1» eliminada'],
     [/^¿Eliminar la tarea «([\s\S]*)»\?$/, 'Vols eliminar la tasca «$1»?'], [/^¿Eliminar «([\s\S]*)»\?$/, 'Vols eliminar «$1»?'],
     [/^¿Enviar «(.+)» a (.+)\?$/, 'Vols enviar «$1» a $2?'], [/^PDF enviado a (.+)$/, 'PDF enviat a $1'], [/^No se ha enviado: ([\s\S]*)$/, "No s'ha enviat: $1"],
     [/^Atrasada (\d+) días?$/, (m, n) => `Endarrerida ${n} ${n === '1' ? 'dia' : 'dies'}`], [/^En (\d+) días$/, "D'ací a $1 dies"],
@@ -2148,6 +2150,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
         if (state.subjects.filter(x => !x.archived).length < 2) return toast('Tiene que quedar al menos una asignatura en el dock');
         s.archived = true; delete s.group; save(); renderSubjects(); toast(`«${s.short}» archivada: la tienes en «Archivadas», al final del dock`);
       });
+      it('Eliminar asignatura…', () => deleteSubject(s));
     }
     sMenu.innerHTML = ''; items.forEach(x => {
       if (!x) { sMenu.appendChild(document.createElement('hr')); return; }
@@ -2278,14 +2281,17 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     } else Object.assign(subj(), { name, short, color, emails });
     $('#subjDlg').close(); save(); renderAll();
   });
-  $('#delSubj').onclick = () => {
-    if (state.subjects.length === 1) { alert('Necesitas al menos una asignatura.'); return; }
-    const s = subj();
-    if (!confirm(`¿Eliminar «${s.name}» con todos sus apuntes y bibliografía? No se puede deshacer.`)) return;
+  // Eliminar una asignatura (desde «Editar asignatura» o desde el clic derecho del dock); siempre pide confirmación
+  function deleteSubject(s) {
+    if (state.subjects.length === 1) { alert('Necesitas al menos una asignatura.'); return false; }
+    if (!confirm(`¿Eliminar «${s.name}» con todos sus apuntes, tareas, archivos y esquemas? No se puede deshacer.\n\nSi solo quieres quitarla del dock, mejor archívala (clic derecho → Archivar).`)) return false;
+    flushEditor();
     s.files.forEach(f => idb.del(f.id).catch(() => {}));
     state.subjects = state.subjects.filter(x => x.id !== s.id);
-    $('#subjDlg').close(); selectSubject(state.subjects[0].id);
-  };
+    const next = state.active === s.id ? (orderedSubjects().find(x => !x.archived) || state.subjects[0]).id : state.active;
+    selectSubject(next); toast(`«${s.short}» eliminada`); return true;
+  }
+  $('#delSubj').onclick = () => { if (deleteSubject(subj())) $('#subjDlg').close(); };
 
   /* ---------- Menú ⋯ ---------- */
   const menu = $('#menu');
@@ -4786,7 +4792,7 @@ Gracias.` },
      así salen en el idioma de la app. Al publicar una versión nueva: cambiar NEWS.v y la lista. */
   const NEWS = { v: '1.1.13', items: [
     'Nueva pestaña «Esquemas» en cada asignatura: haz mapas y diagramas, o créalos a partir de un texto.',
-    'Agrupa asignaturas en el dock: arrastra una encima de otra. Con clic derecho puedes ponerle nombre al grupo, sacarlas o archivarlas.',
+    'Ordena las asignaturas del dock arrastrándolas, y agrúpalas soltando una encima de otra. Con clic derecho: ponerle nombre al grupo, sacarlas, archivarlas o eliminarlas.',
     'Las asignaturas archivadas salen del dock sin borrarse: están al final, en «Archivadas».',
     'El Cuaderno guarda dos copias de seguridad que se turnan cada 5 minutos.',
     'Cuando hay una versión nueva, el botón de actualizar se ilumina en naranja, y aquí verás qué trae cada actualización.',
