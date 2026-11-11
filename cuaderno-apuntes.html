@@ -71,6 +71,30 @@ html,body{overflow:hidden}
 .subj[aria-current="true"] .chip{box-shadow:0 2px 5px rgba(16,48,70,.22),0 6px 16px color-mix(in srgb,var(--c) 35%,transparent)}
 .subj[aria-current="true"] .chip{background:var(--c);color:#fff}
 .rail.open .subj[aria-current="true"]{background:var(--soft)}
+/* ---------- Grupos de asignaturas (como las carpetas del iPhone) ---------- */
+.subj{position:relative}
+.subj.grp .chip{background:var(--soft);color:var(--muted)}
+.subj.grp .mos{display:grid;grid-template-columns:1fr 1fr;gap:calc(3px * var(--z,1));width:58%;height:64%}
+.subj.grp .mos i{border-radius:calc(3px * var(--z,1));background:var(--mc)}
+.subj.grp.open .chip{background:color-mix(in srgb,var(--accent) 16%,var(--soft))}
+.subj.grp.has-cur:not(.open) .chip{box-shadow:0 0 0 2px var(--cc),0 4px 12px color-mix(in srgb,var(--cc) 30%,transparent)}
+.subj.grp .nm b{font-weight:600}.subj.grp .nm small{display:block;color:var(--muted);font-size:.74rem}
+.subj.ingrp::before{content:'';position:absolute;left:-8px;top:-6px;bottom:-6px;width:3px;border-radius:2px;background:color-mix(in srgb,var(--accent) 45%,transparent)}
+.subj.ingrp{animation:grpIn .24s cubic-bezier(.3,1.2,.5,1)}
+@keyframes grpIn{from{opacity:0;transform:translateY(-8px) scale(.9)}}
+/* arrastrar: dónde caerá (antes, después o dentro de un grupo) */
+.subj.dragging{opacity:.35}
+.subj.drop-before::after,.subj.drop-after::after{content:'';position:absolute;left:0;width:calc(48px * var(--fit,1));height:3px;border-radius:2px;background:var(--accent)}
+.subj.drop-before::after{top:-7px}.subj.drop-after::after{bottom:-7px}
+.subj.drop-into .chip{outline:2.5px solid var(--accent);outline-offset:3px}
+/* archivadas: al final, en un botón propio */
+.subj.arch .chip{background:transparent;border:1.5px dashed var(--line);color:var(--muted);box-shadow:none}
+.subj.arch .chip svg{width:calc(18px * var(--z,1));height:calc(18px * var(--z,1));fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.subj.archived .chip{opacity:.55;filter:grayscale(.35)}
+/* si no cabe todo: desplazamiento con degradado arriba/abajo (sin barra) */
+.subjects.fade-top{-webkit-mask-image:linear-gradient(transparent,#000 26px);mask-image:linear-gradient(transparent,#000 26px)}
+.subjects.fade-bot{-webkit-mask-image:linear-gradient(#000 calc(100% - 26px),transparent);mask-image:linear-gradient(#000 calc(100% - 26px),transparent)}
+.subjects.fade-top.fade-bot{-webkit-mask-image:linear-gradient(transparent,#000 26px,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(transparent,#000 26px,#000 calc(100% - 26px),transparent)}
 
 /* ---------- Zona principal ---------- */
 .main{display:flex;flex-direction:column;min-width:0;min-height:0;background:linear-gradient(180deg,var(--bg) 0%,var(--bg2,var(--bg)) 100%)}
@@ -1113,6 +1137,18 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
   </form>
 </dialog>
 
+<dialog id="grpDlg">
+  <form class="dlg" id="grpForm">
+    <h3 id="grpDlgTitle">Nombre del grupo</h3>
+    <p class="sub">Por ejemplo «1.er cuatrimestre», «Optativas» o «Prácticas».</p>
+    <label class="f">Nombre <input type="text" name="name" maxlength="40" required></label>
+    <div class="d-actions">
+      <button type="button" class="btn" id="grpCancel">Cancelar</button>
+      <button type="submit" class="btn primary">Guardar</button>
+    </div>
+  </form>
+</dialog>
+<div class="menu" id="subjMenu" role="menu" hidden></div>
 <dialog id="shareDlg">
   <div class="dlg">
     <h3>Compartir</h3>
@@ -1902,21 +1938,195 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     setTimeout(kick, 300);
   })();
 
-  function renderSubjects() {
-    const nav = $('#subjects'); nav.innerHTML = '';
-    state.subjects.forEach(s => {
-      const b = document.createElement('button');
-      b.className = 'subj'; b.style.setProperty('--c', s.color);
-      b.setAttribute('aria-current', s.id === state.active && !SPECIAL[state.view]);
-      b.title = s.name;
-      const pend = s.tasks.filter(t => !t.done).length;
-      b.innerHTML = `<span class="chip tint">${esc(s.short)}${pend ? `<span class="count" aria-label="${pend} tareas pendientes">${pend}</span>` : ''}</span><span class="nm">${esc(s.name)}</span>`;
-      b.onclick = () => { selectSubject(s.id); if (matchMedia('(max-width:640px)').matches && state.railOpen) { state.railOpen = false; applyRail(); } };
-      b.dataset.sid = s.id;
-      nav.appendChild(b);
-    });
-    markLive();
+  /* ---------- Dock de asignaturas: orden, grupos y archivadas ----------
+     Todo se guarda en cada asignatura (así se sincroniza entre ordenadores como lo demás):
+     s.pos (orden), s.group (nombre del grupo) y s.archived (no sale en el dock, pero no se borra nada). */
+  let openGroup = null, showArchived = false, dragInfo = null;
+  function orderedSubjects() {
+    return state.subjects.map((s, i) => [s, i]).sort((a, b) => (a[0].pos ?? a[1] * 10) - (b[0].pos ?? b[1] * 10) || a[1] - b[1]).map(x => x[0]);
   }
+  // un grupo con una sola asignatura deja de ser grupo
+  function tidyGroups() {
+    const cnt = {}; state.subjects.forEach(s => { if (s.group && !s.archived) cnt[s.group] = (cnt[s.group] || 0) + 1; });
+    state.subjects.forEach(s => { if (s.group && (s.archived || cnt[s.group] < 2)) delete s.group; });
+    if (openGroup && !cnt[openGroup]) openGroup = null;
+  }
+  const groupNames = () => [...new Set(orderedSubjects().filter(s => s.group && !s.archived).map(s => s.group))];
+  function newGroupName() { const used = new Set(groupNames()); let i = 1; while (used.has('Grupo ' + i)) i++; return 'Grupo ' + i; }
+  function subjButton(s, extra) {
+    const b = document.createElement('button');
+    b.className = 'subj' + (extra ? ' ' + extra : ''); b.style.setProperty('--c', s.color);
+    b.setAttribute('aria-current', s.id === state.active && !SPECIAL[state.view]);
+    b.title = s.name + (s.group ? ` · ${s.group}` : '') + (s.archived ? ' · archivada' : '');
+    const pend = s.tasks.filter(t => !t.done).length;
+    b.innerHTML = `<span class="chip tint">${esc(s.short)}${pend ? `<span class="count" aria-label="${pend} tareas pendientes">${pend}</span>` : ''}</span><span class="nm">${esc(s.name)}</span>`;
+    b.onclick = () => {
+      if (openGroup && s.group !== openGroup) openGroup = null;
+      if (s.group) openGroup = null;   // al elegir una asignatura del grupo, el grupo se pliega
+      selectSubject(s.id); if (matchMedia('(max-width:640px)').matches && state.railOpen) { state.railOpen = false; applyRail(); }
+    };
+    b.dataset.sid = s.id; b.draggable = true;
+    return b;
+  }
+  function renderSubjects() {
+    const nav = $('#subjects'), keep = nav.scrollTop; nav.innerHTML = '';
+    tidyGroups();
+    const list = orderedSubjects(), done = new Set();
+    list.filter(s => !s.archived).forEach(s => {
+      if (!s.group) { nav.appendChild(subjButton(s)); return; }
+      if (done.has(s.group)) return; done.add(s.group);
+      const members = list.filter(x => x.group === s.group && !x.archived), cur = members.find(x => x.id === state.active);
+      const g = document.createElement('button'), open = openGroup === s.group;
+      g.className = 'subj grp' + (open ? ' open' : '') + (cur && !SPECIAL[state.view] ? ' has-cur' : '');
+      if (cur) g.style.setProperty('--cc', cur.color);
+      g.dataset.group = s.group; g.dataset.gm = members.map(x => x.id).join(','); g.draggable = true;
+      g.title = `${s.group} · ${members.length} asignaturas` + (open ? '' : ' (clic para abrir)');
+      g.innerHTML = `<span class="chip"><span class="mos">${members.slice(0, 4).map(x => `<i style="--mc:${x.color}"></i>`).join('')}</span></span><span class="nm"><b></b><small>${members.length} asignaturas</small></span>`;
+      g.querySelector('.nm b').textContent = s.group;
+      g.onclick = () => { openGroup = open ? null : s.group; renderSubjects(); };
+      nav.appendChild(g);
+      if (open) members.forEach(m => nav.appendChild(subjButton(m, 'ingrp')));
+    });
+    const arch = list.filter(s => s.archived);
+    if (arch.length) {
+      const a = document.createElement('button');
+      a.className = 'subj arch'; a.dataset.arch = '1';
+      a.title = showArchived ? 'Ocultar las asignaturas archivadas' : `Asignaturas archivadas (${arch.length})`;
+      a.innerHTML = `<span class="chip"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4"/></svg></span><span class="nm">Archivadas (${arch.length})</span>`;
+      a.onclick = () => { showArchived = !showArchived; renderSubjects(); };
+      nav.appendChild(a);
+      if (showArchived) arch.forEach(s => nav.appendChild(subjButton(s, 'archived')));
+    }
+    nav.scrollTop = keep;
+    markLive(); paintFades();
+  }
+  // degradado arriba/abajo cuando hay más asignaturas de las que caben
+  function paintFades() {
+    const nav = $('#subjects');
+    nav.classList.toggle('fade-top', nav.scrollTop > 2);
+    nav.classList.toggle('fade-bot', nav.scrollTop + nav.clientHeight < nav.scrollHeight - 2);
+  }
+  $('#subjects').addEventListener('scroll', paintFades);
+  addEventListener('resize', paintFades);
+
+  /* Reordenar y agrupar arrastrando (como el Dock y las carpetas del iPhone):
+     · arriba o abajo de un botón → se coloca antes o después (fuera del grupo si el botón está fuera)
+     · en el centro de una asignatura → se forma un grupo con las dos
+     · en el centro de un grupo → entra en el grupo */
+  function placeSubjects(ids, targetId, after) {
+    const list = orderedSubjects().filter(s => !ids.includes(s.id));
+    let i = list.findIndex(s => s.id === targetId); if (i < 0) i = list.length; else if (after) i++;
+    const moving = ids.map(id => state.subjects.find(s => s.id === id)).filter(Boolean);
+    list.splice(i, 0, ...moving);
+    list.forEach((s, k) => s.pos = k * 10);
+  }
+  function dropTarget(e) {
+    const b = e.target.closest('#subjects .subj'); if (!b || b.dataset.arch) return null;
+    const r = b.querySelector('.chip').getBoundingClientRect(), y = (e.clientY - r.top) / r.height;
+    const zone = y < .28 ? 'before' : y > .72 ? 'after' : 'into';
+    return { b, zone };
+  }
+  const clearDrop = () => document.querySelectorAll('#subjects .drop-before,#subjects .drop-after,#subjects .drop-into').forEach(x => x.classList.remove('drop-before', 'drop-after', 'drop-into'));
+  $('#subjects').addEventListener('dragstart', e => {
+    const b = e.target.closest('.subj'); if (!b || b.dataset.arch) return;
+    dragInfo = b.dataset.group ? { group: b.dataset.group } : { id: b.dataset.sid };
+    e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', 'cuaderno-subj'); } catch (err) {}
+    setTimeout(() => b.classList.add('dragging'), 0);
+  });
+  $('#subjects').addEventListener('dragend', () => { dragInfo = null; clearDrop(); document.querySelectorAll('#subjects .dragging').forEach(x => x.classList.remove('dragging')); });
+  $('#subjects').addEventListener('dragover', e => {
+    if (!dragInfo) return; const t = dropTarget(e); clearDrop(); if (!t) return;
+    let zone = t.zone;
+    if (dragInfo.group && zone === 'into') zone = 'after';                  // un grupo no entra en otro
+    if (dragInfo.id && t.b.dataset.sid === dragInfo.id) return;
+    if (dragInfo.group && t.b.dataset.group === dragInfo.group) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    t.b.classList.add('drop-' + zone);
+  });
+  $('#subjects').addEventListener('drop', e => {
+    if (!dragInfo) return; e.preventDefault();
+    const t = dropTarget(e), info = dragInfo; clearDrop(); dragInfo = null; if (!t) return;
+    let zone = t.zone; if (info.group && zone === 'into') zone = 'after';
+    const tSid = t.b.dataset.sid, tGroup = t.b.dataset.group, T = tSid && state.subjects.find(s => s.id === tSid);
+    const groupMembers = name => orderedSubjects().filter(s => s.group === name && !s.archived).map(s => s.id);
+    flushEditor();
+    if (info.group) {   // mover un grupo entero
+      const ids = groupMembers(info.group);
+      const ref = tGroup ? groupMembers(tGroup) : T && T.group && !t.b.classList.contains('ingrp') ? groupMembers(T.group) : [tSid];
+      placeSubjects(ids, zone === 'before' ? ref[0] : ref[ref.length - 1], zone !== 'before');
+      if (T && t.b.classList.contains('ingrp')) ids.forEach(id => { const s = state.subjects.find(x => x.id === id); if (s) s.group = info.group; });
+    } else {
+      const S0 = state.subjects.find(s => s.id === info.id); if (!S0) return;
+      if (tGroup) {                       // sobre un botón de grupo
+        const ids = groupMembers(tGroup);
+        if (zone === 'into') { S0.group = tGroup; placeSubjects([S0.id], ids[ids.length - 1], true); toast(`«${S0.short}» está ahora en ${tGroup}`); }
+        else { delete S0.group; placeSubjects([S0.id], zone === 'before' ? ids[0] : ids[ids.length - 1], zone === 'after'); }
+      } else if (T) {
+        if (zone === 'into') {            // sobre otra asignatura: se forma un grupo (o entra en el suyo)
+          const isNew = !T.group, name = T.group || newGroupName(); T.group = name; S0.group = name; delete S0.archived;
+          placeSubjects([S0.id], T.id, true); openGroup = name;
+          toast(isNew ? `«${name}» creado: clic derecho en el grupo para ponerle nombre` : `«${S0.short}» está ahora en ${name}`);
+        } else {
+          // antes/después: si la de destino está dentro de un grupo abierto, entra en él; si está suelta, queda suelta
+          if (T.group && t.b.classList.contains('ingrp')) S0.group = T.group; else delete S0.group;
+          if (T.archived) S0.archived = true; else delete S0.archived;
+          placeSubjects([S0.id], T.id, zone === 'after');
+        }
+      }
+    }
+    save(); renderSubjects();
+  });
+
+  /* Clic derecho en una asignatura o en un grupo: lo mismo sin arrastrar */
+  const sMenu = $('#subjMenu');
+  const closeSMenu = () => { sMenu.hidden = true; };
+  document.addEventListener('pointerdown', e => { if (!sMenu.hidden && !e.target.closest('#subjMenu')) closeSMenu(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape') closeSMenu(); });
+  let grpRename = null;
+  function askGroupName(title, value, done) { $('#grpDlgTitle').textContent = title; const f = $('#grpForm'); f.name.value = value || ''; grpRename = done; $('#grpDlg').showModal(); f.name.select(); }
+  $('#grpCancel').onclick = () => $('#grpDlg').close();
+  $('#grpForm').addEventListener('submit', e => { e.preventDefault(); const v = e.target.name.value.trim(); if (!v) return; $('#grpDlg').close(); grpRename && grpRename(v); });
+  $('#subjects').addEventListener('contextmenu', e => {
+    const b = e.target.closest('.subj'); if (!b || b.dataset.arch) return; e.preventDefault();
+    const items = [];
+    const it = (label, fn) => items.push([label, fn]), sep = () => items.push(null);
+    if (b.dataset.group) {
+      const name = b.dataset.group, ids = b.dataset.gm.split(',');
+      it('Cambiar el nombre del grupo', () => askGroupName('Nombre del grupo', name, v => { if (groupNames().includes(v) && v !== name) return toast('Ya hay un grupo con ese nombre'); state.subjects.forEach(s => { if (s.group === name) s.group = v; }); if (openGroup === name) openGroup = v; save(); renderSubjects(); }));
+      it('Deshacer el grupo (las asignaturas vuelven al dock)', () => { ids.forEach(id => { const s = state.subjects.find(x => x.id === id); if (s) delete s.group; }); save(); renderSubjects(); toast('Grupo deshecho: no se ha borrado nada'); });
+    } else {
+      const s = state.subjects.find(x => x.id === b.dataset.sid); if (!s) return;
+      it('Editar asignatura', () => { selectSubject(s.id); openSubjDlg('edit'); });
+      sep();
+      const gs = groupNames().filter(g => g !== s.group);
+      gs.forEach(g => it(`Mover a «${g}»`, () => { s.group = g; delete s.archived; const ids = orderedSubjects().filter(x => x.group === g && x.id !== s.id).map(x => x.id); placeSubjects([s.id], ids[ids.length - 1], true); save(); renderSubjects(); toast(`«${s.short}» está ahora en ${g}`); }));
+      it('Mover a un grupo nuevo…', () => askGroupName('Nuevo grupo', newGroupName(), v => {
+        if (groupNames().includes(v)) { s.group = v; } else {
+          // un grupo necesita al menos dos asignaturas: si es nuevo, se forma con la siguiente del dock
+          const loose = orderedSubjects().filter(x => !x.archived && !x.group && x.id !== s.id);
+          const i = orderedSubjects().indexOf(s), next = loose.find(x => orderedSubjects().indexOf(x) > i) || loose[loose.length - 1];
+          if (!next) return toast('Hace falta otra asignatura suelta para formar un grupo');
+          s.group = v; next.group = v; placeSubjects([next.id], s.id, true);
+          toast(`Grupo «${v}» creado con ${s.short} y ${next.short}`);
+        }
+        delete s.archived; openGroup = v; save(); renderSubjects();
+      }));
+      if (s.group) it('Sacar del grupo', () => { const g = s.group, ids = orderedSubjects().filter(x => x.group === g).map(x => x.id); delete s.group; placeSubjects([s.id], ids[ids.length - 1], true); save(); renderSubjects(); toast(`«${s.short}» vuelve al dock`); });
+      sep();
+      if (s.archived) it('Recuperar (vuelve al dock)', () => { delete s.archived; save(); renderSubjects(); toast(`«${s.short}» vuelve al dock`); });
+      else it('Archivar (sale del dock, no se borra nada)', () => {
+        if (state.subjects.filter(x => !x.archived).length < 2) return toast('Tiene que quedar al menos una asignatura en el dock');
+        s.archived = true; delete s.group; save(); renderSubjects(); toast(`«${s.short}» archivada: la tienes en «Archivadas», al final del dock`);
+      });
+    }
+    sMenu.innerHTML = ''; items.forEach(x => {
+      if (!x) { sMenu.appendChild(document.createElement('hr')); return; }
+      const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = x[0]; btn.onclick = () => { closeSMenu(); x[1](); }; sMenu.appendChild(btn);
+    });
+    sMenu.hidden = false;
+    sMenu.style.left = Math.min(innerWidth - sMenu.offsetWidth - 8, e.clientX) + 'px';
+    sMenu.style.top = Math.min(innerHeight - sMenu.offsetHeight - 8, e.clientY) + 'px';
+  });
   // Brillo en la asignatura que tiene clase ahora mismo, según el horario (se puede apagar en el menú ⋯)
   function markLive() {
     const now = new Date(), p2 = n => String(n).padStart(2, '0');
@@ -1925,7 +2135,9 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     const cls = on ? (state.schedule || []).find(c => c.d === day && c.s <= hm && hm < c.e) : null;
     const sub = cls && state.subjects.find(s => String(s.code) === String(cls.code));
     document.querySelectorAll('#subjects .subj').forEach(b => {
-      const live = !!sub && b.dataset.sid === sub.id;
+      // un grupo plegado brilla si dentro está la asignatura que tiene clase ahora
+      const live = !!sub && (b.dataset.sid === sub.id || (!!b.dataset.gm && !b.classList.contains('open') && b.dataset.gm.split(',').includes(sub.id)));
+      if (b.dataset.gm) { if (live) b.style.setProperty('--c', sub.color); else b.style.removeProperty('--c'); }
       b.classList.toggle('live', live);
       const base = b.title.replace(/ · En clase ahora.*$/, '');
       b.title = live ? `${base} · En clase ahora (${cls.s}–${cls.e}${cls.room ? ', ' + cls.room : ''})` : base;
@@ -2031,6 +2243,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     if (subjMode === 'new') {
       flushEditor();
       const s = { id: uid(), name, short, color, emails, notes: [], biblio: [], tasks: [], files: [] };
+      if (state.subjects.some(x => x.pos != null)) s.pos = Math.max(...state.subjects.map((x, i) => x.pos ?? i * 10)) + 10;   // al final del dock
       state.subjects.push(s); state.active = s.id; state.activeNote = null; state.view = 'notes';
     } else Object.assign(subj(), { name, short, color, emails });
     $('#subjDlg').close(); save(); renderAll();
