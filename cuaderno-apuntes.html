@@ -146,6 +146,25 @@ html,body{overflow:hidden}
 :root[data-theme="dark"] .editor{background:color-mix(in srgb,color-mix(in srgb,var(--surface) 88%,#fff 12%) 93%,var(--c,#5b7cfa) 7%);border-color:color-mix(in srgb,#fff 10%,transparent);box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 30px rgba(0,0,0,.25)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .editor{background:color-mix(in srgb,color-mix(in srgb,var(--surface) 88%,#fff 12%) 93%,var(--c,#5b7cfa) 7%);border-color:color-mix(in srgb,#fff 10%,transparent);box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 30px rgba(0,0,0,.25)}}
 @media (max-width:900px){.editor{padding:20px 18px}}
+/* Color de la página (folio) elegido por la persona (state.settings.paper): cada color fija también la tinta
+   para que se lea bien con el tema claro y con el oscuro */
+.editor[data-paper]{--ink:#1d232b;--muted:#5d6876;--line:rgba(0,0,0,.14);--soft:rgba(0,0,0,.05);--surface:var(--pp);--mark:rgba(255,214,0,.45);
+  background:var(--pp)!important;color:var(--ink);border-color:color-mix(in srgb,var(--pp) 80%,#000 20%)!important;color-scheme:light}
+.editor[data-paper="blanco"]{--pp:#ffffff}.editor[data-paper="crema"]{--pp:#fbf6e7}.editor[data-paper="sepia"]{--pp:#f1e5cc}
+.editor[data-paper="gris"]{--pp:#eef0f3}.editor[data-paper="verde"]{--pp:#ecf5e9}.editor[data-paper="azul"]{--pp:#e9f1fb}
+.editor[data-paper="rosa"]{--pp:#fbedf0}.editor[data-paper="lila"]{--pp:#f1ecfb}
+.editor[data-paper="pizarra"]{--pp:#2b3a37;--ink:#e9efe9;--muted:#a9b8b2;--line:rgba(255,255,255,.16);--soft:rgba(255,255,255,.07);--mark:rgba(255,214,0,.3);color-scheme:dark;border-color:#3b4c48!important}
+.editor[data-paper="noche"]{--pp:#171c24;--ink:#e6e9ee;--muted:#9aa6b4;--line:rgba(255,255,255,.14);--soft:rgba(255,255,255,.06);--mark:rgba(255,214,0,.3);color-scheme:dark;border-color:#2a313c!important}
+.editor[data-paper]:empty::before{color:var(--muted)}
+.paper-pop{grid-template-columns:repeat(6,24px)}
+.paper-pop .pp-t{grid-column:1/-1;font-size:.74rem;color:var(--muted);text-align:center;margin-bottom:2px}
+.paper-pop button{border-radius:7px}
+.paper-pop button[data-paper="blanco"]{background:#ffffff}.paper-pop button[data-paper="crema"]{background:#fbf6e7}.paper-pop button[data-paper="sepia"]{background:#f1e5cc}
+.paper-pop button[data-paper="gris"]{background:#eef0f3}.paper-pop button[data-paper="verde"]{background:#ecf5e9}.paper-pop button[data-paper="azul"]{background:#e9f1fb}
+.paper-pop button[data-paper="rosa"]{background:#fbedf0}.paper-pop button[data-paper="lila"]{background:#f1ecfb}
+.paper-pop button[data-paper="pizarra"]{background:#2b3a37}.paper-pop button[data-paper="noche"]{background:#171c24}
+.paper-pop .pp-auto{background:var(--surface);color:var(--ink);font-weight:700;font-size:.75rem;box-shadow:inset 0 0 0 1.5px var(--line)}
+.paper-pop button.sel{outline:2px solid var(--accent);outline-offset:2px}
 /* Asignatura que tiene clase ahora (según el horario): brillo suave que va y viene */
 .subj.live .chip::after{content:'';position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;box-shadow:0 0 0 1.5px color-mix(in srgb,var(--c) 55%,transparent),0 0 14px 2px color-mix(in srgb,var(--c) 45%,transparent),0 0 26px 6px color-mix(in srgb,var(--c) 20%,transparent);opacity:.15;animation:liveGlow 5.2s cubic-bezier(.45,0,.55,1) infinite}
 @keyframes liveGlow{0%,100%{opacity:.15}50%{opacity:.8}}   /* respira despacio: como un latido muy lento */
@@ -938,11 +957,29 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
                     <button type="button" data-color="#868e96" title="Gris"></button>
                   </span>
                 </span>
+                <span class="tb-color-wrap tb-paper-wrap">
+                  <button class="tb" data-cmd="paper" title="Color de la página"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><circle cx="12" cy="14" r="3" fill="currentColor" stroke="none" opacity=".55"/></svg></button>
+                  <span class="color-pop paper-pop" id="paperPop" hidden>
+                    <span class="pp-t">Color de la página</span>
+                    <button type="button" data-paper="" class="pp-auto" title="Automático (como el resto de la app)">A</button>
+                    <button type="button" data-paper="blanco" title="Blanco"></button>
+                    <button type="button" data-paper="crema" title="Crema"></button>
+                    <button type="button" data-paper="sepia" title="Sepia"></button>
+                    <button type="button" data-paper="gris" title="Gris claro"></button>
+                    <button type="button" data-paper="verde" title="Verde suave"></button>
+                    <button type="button" data-paper="azul" title="Azul suave"></button>
+                    <button type="button" data-paper="rosa" title="Rosa suave"></button>
+                    <button type="button" data-paper="lila" title="Lila suave"></button>
+                    <button type="button" data-paper="pizarra" title="Pizarra (oscuro)"></button>
+                    <button type="button" data-paper="noche" title="Noche (oscuro)"></button>
+                  </span>
+                </span>
                 <span class="sep"></span>
                 <button class="tb" data-cmd="insertUnorderedList" title="Lista con viñetas (o escribe «- » al empezar una línea)">•</button>
                 <button class="tb" data-cmd="insertOrderedList" title="Lista numerada (o escribe «1. » al empezar una línea)">1.</button>
                 <button class="tb" data-cmd="outdent" title="Quitar sangría (Mayús+Tab)"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 5h16M11 10h9M11 14h9M4 19h16M8 9l-4 3 4 3"/></svg></button>
                 <button class="tb" data-cmd="indent" title="Sangría (Tab)"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 5h16M11 10h9M11 14h9M4 19h16M4 9l4 3-4 3"/></svg></button>
+                <button class="tb" data-cmd="firstLine" title="Sangría de primera línea (los párrafos siguientes la mantienen)"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M11 6h9M4 10h16M4 14h16M4 18h12M4 3.5v5M4 6h4.5M6.5 4l2 2-2 2"/></svg></button>
                 <span class="sep"></span>
                 <button class="tb" data-cmd="justifyLeft" title="Alinear a la izquierda"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg></button>
                 <button class="tb" data-cmd="justifyCenter" title="Centrar"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></svg></button>
@@ -1481,6 +1518,13 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
      El original se guarda para poder volver al español al momento. Las fechas salen en catalán. */
   const CA = {
     "Poner una foto o imagen": "Posa una foto o imatge",
+    // Editor: alineación, sangrías y color de la página (v2.0)
+    "Alinear a la izquierda": "Alinea a l'esquerra", "Centrar": "Centra", "Alinear a la derecha": "Alinea a la dreta", "Justificar": "Justifica",
+    "Sangría (Tab)": "Sagnia (Tab)", "Quitar sangría (Mayús+Tab)": "Lleva la sagnia (Maj+Tab)",
+    "Sangría de primera línea (los párrafos siguientes la mantienen)": "Sagnia de primera línia (els paràgrafs següents la mantenen)",
+    "Color de la página": "Color de la pàgina", "Automático (como el resto de la app)": "Automàtic (com la resta de l'app)",
+    "Blanco": "Blanc", "Crema": "Crema", "Sepia": "Sèpia", "Gris claro": "Gris clar", "Verde suave": "Verd suau", "Azul suave": "Blau suau",
+    "Rosa suave": "Rosa suau", "Lila suave": "Lila suau", "Pizarra (oscuro)": "Pissarra (fosc)", "Noche (oscuro)": "Nit (fosc)",
     "Guardar en PDF…": "Desa en PDF…", "Guardar en PDF": "Desa en PDF", "Elige dónde guardar el resultado para tenerlo a mano.": "Tria on vols desar el resultat per a tenir-lo a mà.",
     "Nombre del PDF": "Nom del PDF", "En el ordenador": "A l'ordinador", "Eliges la carpeta (Documentos, Escritorio…)": "Tries la carpeta (Documents, Escriptori…)",
     "En los archivos de una asignatura": "Als fitxers d'una assignatura", "Aparecerá en la pestaña Archivos": "Apareixerà a la pestanya Fitxers",
@@ -2315,7 +2359,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       ul.appendChild(li);
     });
   }
-  function renderAll() { applyTheme(); applyRail(); renderUser(); renderSubjects(); renderHeader(); renderNotesList(); renderEditor(); renderBiblio(); renderTasks(); renderFiles(); if (state.view === 'schedule') renderSchedule(); if (state.view === 'mail') renderMail(); if (state.view === 'alerts') renderAlerts(); if (state.view === 'cites') renderCites(); if (state.view === 'ai') renderAI(); if (state.view === 'schemas') renderSchemas(); if (state.view === 'teachers') renderTeachers(); updateAlertBadge(); }
+  function renderAll() { applyTheme(); applyRail(); renderUser(); renderSubjects(); renderHeader(); renderNotesList(); renderEditor(); renderBiblio(); renderTasks(); renderFiles(); if (state.view === 'schedule') renderSchedule(); if (state.view === 'mail') renderMail(); if (state.view === 'alerts') renderAlerts(); if (state.view === 'cites') renderCites(); if (state.view === 'ai') renderAI(); if (state.view === 'schemas') renderSchemas(); if (state.view === 'teachers') renderTeachers(); applyPaper(); updateAlertBadge(); }
 
   /* ---------- Asignaturas ---------- */
   function selectSubject(id) {
@@ -2681,8 +2725,67 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     if (!sel.isCollapsed) { const r = sel.getRangeAt(0); return [...ed.querySelectorAll('[style*="background"]')].find(el => isMark(el) && r.intersectsNode(el)) || null; }
     return null;
   }
+  /* ---------- Alineación y sangrías (propias, sin execCommand) ----------
+     Los comandos del navegador (justify…, indent) metían <div align> y <blockquote> unos dentro de otros: los botones se
+     quedaban «pillados» y dejaban de responder. Aquí se cambia el estilo de cada párrafo seleccionado y nada más. */
+  const ALIGN_CMDS = { justifyLeft: 'left', justifyCenter: 'center', justifyRight: 'right', justifyFull: 'justify' };
+  const LEAF_BLOCKS = 'p,div,h1,h2,h3,h4,li,blockquote,td,th,pre';
+  const INNER_BLOCKS = 'p,div,h1,h2,h3,h4,blockquote,pre,table,ul,ol';
+  function selBlocks() {
+    const ed = $('#editor'), sel = getSelection();
+    if (!sel.rangeCount || !ed.contains(sel.anchorNode)) return [];
+    const find = () => {
+      const r = sel.getRangeAt(0);
+      return [...ed.querySelectorAll(LEAF_BLOCKS)].filter(el => r.intersectsNode(el) && !el.closest('.sticky,.table-bar,.img-bar')
+        && (el.tagName === 'LI' ? !el.querySelector('p,div,blockquote,pre,table') : !el.querySelector(INNER_BLOCKS)));
+    };
+    let bl = find();
+    if (!bl.length) { document.execCommand('formatBlock', false, 'p'); bl = find(); }   // texto suelto: primero se mete en un párrafo
+    return bl;
+  }
+  function alignOf(b) {
+    const t = getComputedStyle(b).textAlign;
+    return t === 'center' ? 'center' : (t === 'right' || t === 'end') ? 'right' : t === 'justify' ? 'justify' : 'left';
+  }
+  const tidyStyle = el => { if (!el.getAttribute('style')) el.removeAttribute('style'); };
+  // Alineaciones antiguas puestas en un contenedor (<div align=…>): pasan a sus hijos y el contenedor queda neutro
+  function liftAlign(b) {
+    const ed = $('#editor');
+    for (let a = b.parentElement; a && a !== ed; a = a.parentElement) {
+      const v = a.style.textAlign || a.getAttribute('align');
+      if (!v) continue;
+      [...a.children].forEach(ch => { if (!ch.style.textAlign && !ch.getAttribute('align')) ch.style.textAlign = v; });
+      a.removeAttribute('align'); a.style.textAlign = ''; tidyStyle(a);
+    }
+  }
+  function setAlign(val) {
+    const bl = selBlocks(); if (!bl.length) return;
+    const again = val !== 'left' && bl.every(b => alignOf(b) === val);   // volver a pulsar el mismo botón → a la izquierda
+    bl.forEach(b => { liftAlign(b); b.removeAttribute('align'); b.style.textAlign = (again || val === 'left') ? '' : val; tidyStyle(b); });
+  }
+  function stepIndent(dir) {
+    const ed = $('#editor'), sel = getSelection();
+    let an = sel.anchorNode; an = an && (an.nodeType === 1 ? an : an.parentElement);
+    if (an && an.closest('li') && ed.contains(an)) { document.execCommand(dir > 0 ? 'indent' : 'outdent'); return; }   // listas: subir/bajar nivel
+    selBlocks().forEach(b => {
+      const cur = /em$/.test(b.style.marginLeft) ? parseFloat(b.style.marginLeft) : 0;
+      // sangrías antiguas hechas con <blockquote style="margin…"> del navegador: se deshacen como antes
+      if (dir < 0 && !cur && b.parentElement && b.parentElement.tagName === 'BLOCKQUOTE' && /margin/.test(b.parentElement.getAttribute('style') || '')) { document.execCommand('outdent'); return; }
+      const n = Math.max(0, Math.min(12, cur + dir * 2));
+      b.style.marginLeft = n ? n + 'em' : ''; tidyStyle(b);
+    });
+  }
+  function toggleFirstLine() {
+    const bl = selBlocks().filter(b => b.tagName !== 'LI'); if (!bl.length) return;
+    const on = bl.every(b => parseFloat(getComputedStyle(b).textIndent) > 0);
+    bl.forEach(b => { b.style.textIndent = on ? '' : '1.25cm'; tidyStyle(b); });
+  }
   function runCmd(cmd, val = null) {
     const ed = $('#editor'); ed.focus();
+    if (ALIGN_CMDS[cmd] || cmd === 'indent' || cmd === 'outdent' || cmd === 'firstLine') {
+      if (ALIGN_CMDS[cmd]) setAlign(ALIGN_CMDS[cmd]); else if (cmd === 'firstLine') toggleFirstLine(); else stepIndent(cmd === 'indent' ? 1 : -1);
+      ed.dispatchEvent(new Event('input')); updateToolbar(); return;
+    }
     if (cmd === 'hr') document.execCommand('insertHTML', false, '<hr class="slide-break"><p><br></p>');
     else if (cmd === 'mark') {
       const sel = getSelection(), hl = markedAt();
@@ -2724,6 +2827,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     b.addEventListener('click', () => {
       if (b.dataset.cmd === 'cite') { openCite(); return; }
       if (b.dataset.cmd === 'color') { $('#colorPop').hidden = !$('#colorPop').hidden; return; }
+      if (b.dataset.cmd === 'paper') { renderPaperPop(); $('#paperPop').hidden = !$('#paperPop').hidden; return; }
       if (b.dataset.cmd === 'table') { $('#tablePop').hidden = !$('#tablePop').hidden; return; }
       if (b.dataset.cmd === 'attach') { saveCaret(); $('#attInput').click(); return; }
       if (b.dataset.cmd === 'sticky') { addSticky(); return; }
@@ -3143,8 +3247,20 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     });
   });
   document.addEventListener('mousedown', e => { if (!colorPop.hidden && !e.target.closest('.tb-color-wrap')) colorPop.hidden = true; });
-  // Botones encendidos según el formato donde está el cursor (negrita, subrayado, listas, alineación…)
-  const STATE_CMDS = ['bold', 'italic', 'underline', 'insertUnorderedList', 'insertOrderedList', 'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'];
+  // Color de la página (folio): se guarda en los ajustes (se sincroniza) y solo cambia el fondo de escritura
+  function applyPaper() { const ed = $('#editor'), p = state.settings.paper || ''; if (p) ed.dataset.paper = p; else delete ed.dataset.paper; }
+  function renderPaperPop() { $('#paperPop').querySelectorAll('button').forEach(b => b.classList.toggle('sel', (b.dataset.paper || '') === (state.settings.paper || ''))); }
+  $('#paperPop').querySelectorAll('button').forEach(sw => {
+    sw.addEventListener('mousedown', e => e.preventDefault());
+    sw.addEventListener('click', () => {
+      state.settings.paper = sw.dataset.paper || ''; if (!state.settings.paper) delete state.settings.paper;
+      applyPaper(); renderPaperPop(); $('#paperPop').hidden = true; save();
+    });
+  });
+  document.addEventListener('mousedown', e => { const pp = $('#paperPop'); if (!pp.hidden && !e.target.closest('.tb-paper-wrap')) pp.hidden = true; });
+  applyPaper();
+  // Botones encendidos según el formato donde está el cursor (negrita, subrayado, listas…)
+  const STATE_CMDS = ['bold', 'italic', 'underline', 'insertUnorderedList', 'insertOrderedList'];
   function updateToolbar() {
     const ed = $('#editor'), sel = getSelection();
     if (!sel.rangeCount || !ed.contains(sel.anchorNode)) return;
@@ -3152,6 +3268,13 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       let on = false; try { on = document.queryCommandState(c); } catch (e) {}
       document.querySelectorAll(`#toolbar .tb[data-cmd="${c}"]`).forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     });
+    // Alineación y sangría de primera línea: se mira el párrafo donde está el cursor (solo se enciende un botón de alineación)
+    let par = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+    par = par && par.closest(LEAF_BLOCKS); if (par && !ed.contains(par)) par = null;
+    const al = par ? alignOf(par) : 'left';
+    Object.entries(ALIGN_CMDS).forEach(([c, v]) => document.querySelectorAll(`#toolbar .tb[data-cmd="${c}"]`).forEach(b => { b.classList.toggle('on', al === v); b.setAttribute('aria-pressed', String(al === v)); }));
+    const fl = !!(par && parseFloat(getComputedStyle(par).textIndent) > 0);
+    document.querySelectorAll('#toolbar .tb[data-cmd="firstLine"]').forEach(b => { b.classList.toggle('on', fl); b.setAttribute('aria-pressed', String(fl)); });
     try { const fc = document.queryCommandValue('foreColor'), ink = getComputedStyle(ed).color; $('#tbColorBar').style.background = fc && fc !== ink ? fc : 'currentColor'; } catch (e) {}
     const mk = !!markedAt(); document.querySelectorAll('#toolbar .tb[data-cmd="mark"]').forEach(b => { b.classList.toggle('on', mk); b.setAttribute('aria-pressed', String(mk)); });
     const blk = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
