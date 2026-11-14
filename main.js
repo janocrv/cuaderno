@@ -13,7 +13,7 @@
     - archivos subidos, abrirlos con su programa, PDF y envío por correo.
   La app sigue funcionando al cerrar la ventana (para avisos y correo) y arranca con el ordenador.
 */
-const { app, BrowserWindow, protocol, shell, dialog, Tray, Menu, safeStorage, nativeImage, session, net, clipboard } = require('electron');
+const { app, BrowserWindow, protocol, shell, dialog, Tray, Menu, safeStorage, nativeImage, session, net, clipboard, ipcMain, systemPreferences } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -26,7 +26,7 @@ const WEB = path.join(__dirname, 'web');
 const UV_IMAP = { host: 'post.uv.es', port: 993 };
 const UV_SMTP = { host: 'post.uv.es', port: 587 };
 const DAYS = 60, MAX_FIRST = 300, MAX_BODY = 30000, INTERVAL_MIN = 5;
-const LOCAL_KEYS = ['active', 'activeNote', 'view', 'railOpen', 'theme', 'soundOff'];
+const LOCAL_KEYS = ['active', 'activeNote', 'view', 'railOpen', 'theme', 'soundOff', 'subjectScope'];
 const LISTS = ['notes', 'tasks', 'biblio', 'files'];
 
 protocol.registerSchemesAsPrivileged([{
@@ -38,6 +38,25 @@ if (process.env.CUADERNO_PRUEBA) app.setPath('userData', process.env.CUADERNO_PR
 app.userAgentFallback = `${app.userAgentFallback} CuadernoApp/${app.getVersion()}`;
 
 let win = null, tray = null, quitting = false;
+let intranetWindow=null,geminiWindow=null;
+function uvOrigin(event,origin) {try{const frame=new URL(event.senderFrame.url);return event.sender===intranetWindow?.webContents&&frame.protocol==='https:'&&['as.uv.es','portal.uv.es'].includes(frame.hostname)&&frame.origin===origin;}catch(_){return false;}}
+ipcMain.handle('cuaderno:uv:read',(event,origin)=>{if(!uvOrigin(event,origin))return null;const saved=(ajustes().intranetLogins||{})[origin];if(!saved?.pw||!safeStorage.isEncryptionAvailable())return null;try{return {user:saved.user,password:safeStorage.decryptString(Buffer.from(saved.pw,'base64'))};}catch(_){return null;}});
+ipcMain.handle('cuaderno:uv:save',(event,d)=>{if(!uvOrigin(event,d?.origin)||!safeStorage.isEncryptionAvailable()||typeof d.user!=='string'||typeof d.password!=='string'||d.user.length>200||d.password.length>1000)return false;const logins=ajustes().intranetLogins||{};logins[d.origin]={user:d.user,pw:safeStorage.encryptString(d.password).toString('base64')};setAjustes({intranetLogins:logins});return true;});
+function openIntranet() {
+  if(intranetWindow&&!intranetWindow.isDestroyed()){intranetWindow.show();intranetWindow.focus();return;}
+  intranetWindow=new BrowserWindow({width:1200,height:850,title:'Intranet UV · Cuaderno',webPreferences:{partition:'persist:cuaderno-intranet',preload:path.join(__dirname,'intranet-preload.js'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
+  intranetWindow.webContents.on('will-navigate',(event,url)=>{try{const u=new URL(url);if(u.protocol==='https:'&&(u.hostname==='uv.es'||u.hostname.endsWith('.uv.es')))return;}catch(_){}event.preventDefault();if(/^https?:/i.test(url))shell.openExternal(url);});
+  intranetWindow.webContents.setWindowOpenHandler(({url})=>{try{const u=new URL(url);if(u.protocol==='https:'&&(u.hostname==='uv.es'||u.hostname.endsWith('.uv.es'))){intranetWindow.loadURL(url);return {action:'deny'};}}catch(_){}if(/^https?:/i.test(url))shell.openExternal(url);return {action:'deny'};});
+  intranetWindow.on('closed',()=>{intranetWindow=null;});intranetWindow.loadURL('https://portal.uv.es/cgi-bin/portal/portal?lang=ca');
+}
+function openGemini(prompt) {
+  if(prompt)clipboard.writeText(String(prompt).slice(0,200000));
+  if(geminiWindow&&!geminiWindow.isDestroyed()){geminiWindow.show();geminiWindow.focus();return;}
+  geminiWindow=new BrowserWindow({width:1050,height:850,title:'Gemini · Cuaderno',webPreferences:{partition:'persist:cuaderno-gemini',nodeIntegration:false,contextIsolation:true,sandbox:true}});
+  geminiWindow.webContents.on('context-menu',(event,p)=>contextMenu(geminiWindow.webContents,p));
+  geminiWindow.webContents.setWindowOpenHandler(({url})=>{if(/^https?:/i.test(url))shell.openExternal(url);return {action:'deny'};});
+  geminiWindow.on('closed',()=>{geminiWindow=null;});geminiWindow.loadURL('https://gemini.google.com/app');
+}
 
 /* ------------------------------------------------------------------ utilidades */
 const USER = () => app.getPath('userData');
@@ -82,6 +101,9 @@ function applyDataDirArg(argv) {
 }
 const STATE_FILE = () => path.join(dataDir(), 'cuaderno-datos.json');
 const FILES_DIR = () => path.join(dataDir(), 'archivos');
+const history = require('./historial')(dataDir);
+let documentWorker=null,documentSequence=0;const documentRequests=new Map();
+function documentJob(type,data){if(!documentWorker){documentWorker=new (require('worker_threads').Worker)(workerFile('documentos-worker.js'));documentWorker.on('message',m=>{const p=documentRequests.get(m.id);if(p){clearTimeout(p.timer);documentRequests.delete(m.id);m.error?p.reject(new Error(m.error)):p.resolve(m.result);}});documentWorker.on('error',e=>{for(const p of documentRequests.values()){clearTimeout(p.timer);p.reject(e);}documentRequests.clear();documentWorker=null;});}const id=++documentSequence;return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{documentRequests.delete(id);reject(new Error('La operación está tardando demasiado. Vuelve a intentarlo.'));},120000);documentRequests.set(id,{resolve,reject,timer});documentWorker.postMessage({id,type,...data});});}
 
 /* ------------------------------------------------- combinar datos (como servidor.py) */
 function mergeList(a, b, deleted) {
@@ -125,6 +147,7 @@ function mergeStates(disk, inc) {
   out.subjects = order.filter(i => i in subs && !(i in deleted && deleted[i] >= (subs[i]._u || 0))).map(i => subs[i]);
   out.deleted = deleted;
   out.library = mergeList(disk.library, inc.library, deleted);
+  out.homeBoard = mergeList(disk.homeBoard, inc.homeBoard, deleted);
   out.mailSeen = { ...(disk.mailSeen || {}), ...(inc.mailSeen || {}) };
   const ad = disk.autoMail || {}, ai = inc.autoMail || {};
   out.autoMail = {
@@ -140,6 +163,14 @@ function mergeStates(disk, inc) {
 /* Corrector ortográfico: idioma según el selector ES/CA. En Mac lo decide el sistema (detecta el idioma solo);
    en Windows se usan los diccionarios de Chromium (se descargan una vez de Google la primera vez). */
 let uiLang = 'es';
+let spellWorker=null,spellSequence=0;
+const workerFile = name => app.isPackaged ? path.join(process.resourcesPath,'app.asar.unpacked',name) : path.join(__dirname,name);
+const spellRequests=new Map();
+function spelling(words,lang=uiLang,suggest=false) {
+  if(!spellWorker){const {Worker}=require('worker_threads');spellWorker=new Worker(workerFile('ortografia-worker.js'));spellWorker.on('message',m=>{const pending=spellRequests.get(m.id);if(pending){clearTimeout(pending.timer);spellRequests.delete(m.id);m.error?pending.reject(new Error(m.error)):pending.resolve(m.results);}});spellWorker.on('error',e=>{for(const pending of spellRequests.values()){clearTimeout(pending.timer);pending.reject(e);}spellRequests.clear();spellWorker=null;});}
+  const id=++spellSequence;
+  return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{spellRequests.delete(id);reject(new Error('El diccionario no responde.'));},15000);spellRequests.set(id,{resolve,reject,timer});spellWorker.postMessage({id,lang,words:[...new Set(words)].slice(0,300),suggest,personal:(ajustes().spellWords||{})[lang]||[]});});
+}
 function setSpellLang(lang) {
   uiLang = lang === 'ca' ? 'ca' : 'es';
   if (IS_MAC) return;
@@ -154,11 +185,14 @@ function setSpellLang(lang) {
   } catch (e) { log('Ortografía:', e.message); }
 }
 // Electron no trae menú con el botón derecho: sin él se subrayaban las faltas pero no había forma de corregirlas.
-function contextMenu(wc, p) {
+async function contextMenu(wc, p) {
   const T = uiLang === 'ca'
     ? { none: 'Sense suggeriments', add: 'Afegeix al diccionari', cut: 'Retalla', copy: 'Copia', paste: 'Enganxa', plain: 'Enganxa sense format', all: 'Selecciona-ho tot', link: 'Copia l’enllaç', open: 'Obri l’enllaç' }
     : { none: 'Sin sugerencias', add: 'Añadir al diccionario', cut: 'Cortar', copy: 'Copiar', paste: 'Pegar', plain: 'Pegar sin formato', all: 'Seleccionar todo', link: 'Copiar enlace', open: 'Abrir enlace' };
   const items = [];
+  let ownWord='';try{ownWord=await wc.executeJavaScript(`window.cuadernoSpellAt ? window.cuadernoSpellAt(${Number(p.x)},${Number(p.y)}) : ''`);}catch(_){}
+  if(ownWord){try{const [result]=await spelling([ownWord],uiLang,true);p={...p,misspelledWord:''};if(result&&!result.correct){for(const suggestion of result.suggestions)items.push({label:suggestion,click:()=>wc.executeJavaScript(`window.cuadernoCorregirPalabra(${JSON.stringify(suggestion)})`).catch(()=>{})});if(!result.suggestions.length)items.push({label:T.none,enabled:false});items.push({label:T.add,click:()=>{const a=ajustes(),personal=a.spellWords||{};personal[uiLang]=[...new Set([...(personal[uiLang]||[]),ownWord])];setAjustes({spellWords:personal});wc.executeJavaScript('window.cuadernoRevisarOrtografia && window.cuadernoRevisarOrtografia(true)').catch(()=>{});}});items.push({type:'separator'});}}catch(_){} }
+  if(p.mediaType==='image')items.push({label:uiLang==='ca'?'Copia la imatge':'Copiar imagen',click:()=>wc.copyImageAt(p.x,p.y)},{type:'separator'});
   if (p.misspelledWord) {
     const sug = (p.dictionarySuggestions || []).slice(0, 6);
     for (const s of sug) items.push({ label: s, click: () => wc.replaceMisspelling(s) });
@@ -186,6 +220,7 @@ function itemIds(st) {
   const ids = new Set();
   for (const s of (st && st.subjects) || []) { ids.add(s.id); for (const k of LISTS) for (const x of s[k] || []) if (x && x.id) ids.add(x.id); }
   for (const x of (st && st.library) || []) if (x && x.id) ids.add(x.id);
+  for (const x of (st && st.homeBoard) || []) if (x && x.id) ids.add(x.id);
   return ids;
 }
 // Copia de seguridad automática antes de cambiar los datos (como mucho una cada 20 minutos; se guardan 60)
@@ -254,6 +289,7 @@ function syncState(inc) {
     const merged = mergeStates(disk, inc);
     if (!disk || canon(merged) !== canon(disk)) {
       backupState();
+      try{history.capture(disk,merged);}catch(e){log('Historial:',e.message);}
       fs.mkdirSync(dataDir(), { recursive: true });
       const tmp = STATE_FILE() + '.tmp';
       fs.writeFileSync(tmp, JSON.stringify(merged), 'utf8');
@@ -340,6 +376,9 @@ async function parseMessage(uid, flags, source) {
     from_name: from.name || '',
     from: String(from.address || '').toLowerCase(),
     to: (m.to && m.to.text) || '',
+    cc: (m.cc && m.cc.text) || '',
+    reply_to: (m.replyTo && m.replyTo.text) || '',
+    message_id: m.messageId || '', references: Array.isArray(m.references) ? m.references.join(' ') : (m.references || ''),
     subject: m.subject || '(sin asunto)',
     date: m.date && !isNaN(m.date) ? m.date.toISOString() : null,
     body,
@@ -349,6 +388,7 @@ async function parseMessage(uid, flags, source) {
   };
 }
 let mailBusy = false;
+const mailSuite = require('./correo-suite')({ settings: ajustes, password: getPassword, client: imapClient, userDir: USER, filesDir: FILES_DIR, parseMessage, smtp: UV_SMTP });
 async function syncMail() {
   const a = ajustes();
   if (!a.user) { status.error = null; return; }
@@ -415,7 +455,7 @@ async function openWithDefaultApp(id, name) {
   const err = await shell.openPath(dst);
   if (err) throw new Error(err);
 }
-async function htmlToPdf(html) {
+async function htmlToPdf(html, regions = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cuaderno-pdf-'));
   const file = path.join(dir, 'doc.html');
   fs.writeFileSync(file, html, 'utf8');
@@ -423,7 +463,9 @@ async function htmlToPdf(html) {
   try {
     await w.loadFile(file);
     await new Promise(r => setTimeout(r, 400));   // tipos de letra e imágenes
-    return await w.webContents.printToPDF({ printBackground: true, preferCSSPageSize: true, pageSize: 'A4' });
+    const escape=s=>String(s||'').slice(0,240).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const template=(text,page=false)=>'<div style="font:10px Arial;color:#666;width:100%;margin:0 20mm;display:flex;justify-content:space-between"><span style="white-space:pre-wrap">'+escape(text)+'</span>'+(page?'<span class="pageNumber"></span>':'')+'</div>';
+    return await w.webContents.printToPDF({ printBackground: true, preferCSSPageSize: true, pageSize: 'A4',displayHeaderFooter:!!(regions.header||regions.footer),headerTemplate:template(regions.header),footerTemplate:template(regions.footer,true) });
   } finally {
     w.destroy();
     fs.rmSync(dir, { recursive: true, force: true });
@@ -444,7 +486,7 @@ async function sendPdfMail(d) {
     from: { name: d.from_name || '', address: sender }, to,
     subject: String(d.subject || title).trim(),
     text: String(d.text || '').trim() || 'Te envío el documento adjunto en PDF.',
-    attachments: [{ filename: fname + '.pdf', content: await htmlToPdf(String(d.html || '')), contentType: 'application/pdf' }],
+    attachments: [{ filename: fname + '.pdf', content: await htmlToPdf(String(d.html || ''),d), contentType: 'application/pdf' }],
   });
 }
 
@@ -572,9 +614,19 @@ async function handle(req) {
   const p = decodeURIComponent(u.pathname);
   const M = req.method;
   if (M === 'GET') {
+    if(p==='/api/historial')return json({versions:history.list(u.searchParams.get('nota'))});
+    if(p==='/api/historial/version')return json(history.get(u.searchParams.get('nota'),u.searchParams.get('version')));
+    if(p==='/api/buscar'){const state=loadJSON(STATE_FILE(),{}),files=[];for(const s of state.subjects||[])for(const f of s.files||[]){const ext=String(f.ext||'').toLowerCase();if(safeId(f.id)&&['pdf','docx','txt','md','csv'].includes(ext))files.push({sid:s.id,id:f.id,name:f.name,ext,path:path.join(FILES_DIR(),f.id+'.bin')});}return json(await documentJob('search',{query:String(u.searchParams.get('q')||'').slice(0,200),files}));}
+    if (p === '/api/correo/carpetas') return json({folders:await mailSuite.folders()});
+    if (p === '/api/correo/mensajes') return json({mails:await mailSuite.messages(u.searchParams.get('carpeta'))});
+    if (p === '/api/correo/borradores') return json({drafts:mailSuite.drafts()});
+    if (p === '/api/correo/adjunto') { const a=await mailSuite.attachment(u.searchParams.get('carpeta'),u.searchParams.get('uid'),u.searchParams.get('indice'));return new Response(a.content,{headers:{'Content-Type':a.mime||'application/octet-stream','Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(a.filename)}`}}); }
     if (p === '/' || p === '/index.html' || p === '/cuaderno-apuntes.html') return fileResponse(path.join(WEB, 'cuaderno-apuntes.html'));
     if (p === '/aviso.mp3') return fileResponse(path.join(WEB, 'aviso.mp3'));
+    if (p === '/avisos.mp3') return fileResponse(path.join(WEB, 'avisos.mp3'));
+    if (p.startsWith('/sonidos/')) {const name=path.basename(p);if(!/^[a-z0-9-]+\.(mp3|wav)$/.test(name))return json({},404);return fileResponse(path.join(WEB,'sonidos',name),name.endsWith('.wav')?'audio/wav':'audio/mpeg');}
     if (p === '/esquemas.html') return fileResponse(path.join(WEB, 'esquemas.html'));   // pizarra de esquemas (pestaña «Esquemas»)
+    if (p === '/correo-analisis.js') return fileResponse(path.join(WEB, 'correo-analisis.js'));
     if (p.startsWith('/ia/')) { const f = path.basename(p); if (!/^[\w.-]+$/.test(f)) return json({}, 404); return fileResponse(path.join(WEB, 'ia', f)); }   // IA local (worker, librería y motor)
     if (['/cuaderno.png', '/cuaderno-uv.png', '/favicon.ico'].includes(p)) return fileResponse(path.join(WEB, 'cuaderno.png'), 'image/png');
     if (p === '/api/estado') { const a = ajustes(); return json({ ok: true, app: true, configured: isConfigured(), user: a.user || null, ...status }); }
@@ -599,6 +651,16 @@ async function handle(req) {
   }
   if (M === 'POST') {
     try {
+      if(p==='/api/word/importar'){const buffer=await req.arrayBuffer();if(buffer.byteLength>25*1024*1024)throw new Error('El documento supera los 25 MB.');return json(await documentJob('import',{buffer}));}
+      if(p==='/api/word/exportar'){const d=await req.json(),result=await documentJob('export',{html:d.html,title:d.title,header:d.header,footer:d.footer});return new Response(result.buffer,{headers:{'Content-Type':'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}});}
+      if(p==='/api/historial/snapshot'){const d=await req.json();if(!d.note?.id)throw new Error('Falta el apunte.');history.snapshot(d.note,d.subject||{},true);return json({ok:true});}
+      if (p === '/api/correo/enviar') return json(await mailSuite.send(await req.json()));
+      if (p === '/api/intranet/abrir') {openIntranet();return json({ok:true});}
+      if (p === '/api/intranet/olvidar') {setAjustes({intranetLogins:undefined});await session.fromPartition('persist:cuaderno-intranet').clearStorageData();if(intranetWindow&&!intranetWindow.isDestroyed())intranetWindow.reload();return json({ok:true});}
+      if (p === '/api/gemini/abrir') {const d=await req.json();openGemini(d.prompt||'');return json({ok:true});}
+      if (p === '/api/ortografia') {const d=await req.json();setSpellLang(d.lang);return json({results:await spelling(Array.isArray(d.words)?d.words:[],d.lang==='ca'?'ca':'es',!!d.suggest)});}
+      if (p === '/api/correo/borradores') return json({draft:mailSuite.saveDraft(await req.json())});
+      if (p === '/api/correo/borradores/borrar') { const d=await req.json();mailSuite.deleteDraft(d.id);return json({ok:true}); }
       if (p === '/api/cuenta') { const d = await req.json(); return json(await configure(d.user, d.password)); }
       if (p === '/api/cuenta/olvidar') { forget(); return json({ ok: true }); }
       if (p === '/api/version') return json(await checkUpdate());
@@ -616,7 +678,7 @@ async function handle(req) {
         return json({ ok: true });
       }
       if (p === '/api/abrir') { const d = await req.json(); try { await openWithDefaultApp(d.id, d.name); } catch (e) { return json({ ok: false, error: e.message }); } return json({ ok: true }); }
-      if (p === '/api/pdf') { const d = await req.json(); return new Response(await htmlToPdf(String(d.html || '')), { headers: { 'Content-Type': 'application/pdf' } }); }
+      if (p === '/api/pdf') { const d = await req.json(); return new Response(await htmlToPdf(String(d.html || ''),d), { headers: { 'Content-Type': 'application/pdf' } }); }
       if (p === '/api/enviar') {
         const d = await req.json();
         try { await sendPdfMail(d); } catch (e) { log('Error al enviar:', e.message); return json({ ok: false, error: e.message }); }
@@ -749,6 +811,9 @@ if (!app.requestSingleInstanceLock()) {
   app.on('window-all-closed', () => {});   // sigue en segundo plano
   applyDataDirArg(process.argv);
   app.whenReady().then(() => {
+    // Solo el dominio de preferencias de Cuaderno; no cambia el teclado del resto del Mac.
+    // Antes de crear ventanas, para que AppKit use repetición y no el selector de acentos.
+    if (IS_MAC) systemPreferences.setUserDefault('ApplePressAndHoldEnabled', 'boolean', false);
     protocol.handle(SCHEME, req => handle(req).catch(e => { log('Error:', e.message); return json({ ok: false, error: e.message }, 500); }));
     try { const st = loadJSON(STATE_FILE(), null); setSpellLang(st && st.settings && st.settings.lang); } catch (e) { setSpellLang('es'); }
     buildMenu();

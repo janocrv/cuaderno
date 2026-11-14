@@ -1,7 +1,7 @@
 {
   "name": "cuaderno",
   "productName": "Cuaderno",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Cuaderno del Máster en Profesor/a de Educación Secundaria (UV)",
   "author": "Cuaderno UV",
   "main": "main.js",
@@ -14,20 +14,28 @@
   "dependencies": {
     "imapflow": "2.9.1",
     "mailparser": "3.12.4",
-    "nodemailer": "10.2.1"
+    "nodemailer": "10.2.1",
+    "hunspell-asm": "4.0.2", "dictionary-es": "4.0.0", "dictionary-ca": "3.0.0",
+    "mammoth": "1.13.0", "html-to-docx": "1.8.0", "sanitize-html": "2.18.2",
+    "pdfjs-dist": "6.4.299", "@thednp/dommatrix": "3.1.2"
   },
   "devDependencies": {
     "electron": "^43.4.0",
     "electron-builder": "26.17.0",
-    "@huggingface/transformers": "4.3.1",
-    "pdfjs-dist": "6.4.299"
+    "@huggingface/transformers": "4.3.1"
   },
   "build": {
+    "asarUnpack": ["ortografia-worker.js", "documentos-worker.js", "node_modules/**"],
     "appId": "es.uv.cuaderno",
     "productName": "Cuaderno",
     "copyright": "Cuaderno UV",
     "files": [
       "main.js",
+      "correo-suite.js",
+      "ortografia-worker.js",
+      "intranet-preload.js",
+      "historial.js",
+      "documentos-worker.js",
       "package.json",
       "web/**"
     ],

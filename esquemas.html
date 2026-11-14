@@ -941,6 +941,14 @@ dialog .fl{display:block;font-size:.78rem;font-weight:600;color:var(--muted);mar
   // mensajes de la app: cargar los esquemas de la asignatura, avisos
   addEventListener('message', e => {
     const m = e.data; if (!m || !m.esqApp) return;
+    if(e.source!==parent)return;
+    if(m.type==='appearance'){
+      document.documentElement.dataset.theme=m.theme==='dark'?'dark':'light';
+      for(const key of ['--bg','--surface','--ink','--muted','--line','--soft'])if(typeof m.palette?.[key]==='string'&&m.palette[key].length<200)document.documentElement.style.setProperty(key,m.palette[key]);
+      if(m.palette?.['--accent'])document.documentElement.style.setProperty('--c',m.palette['--accent']);
+      document.documentElement.style.setProperty('--boarddef','var(--bg)');
+      paintPageBox();paintChips();
+    }
     if (m.type === 'load') {
       stopEdit(); flushSave(); polyPts = null; drawPolyPrev(); SID = m.sid || null;   // lo pendiente se guarda en la asignatura anterior
       DB = m.db && m.db.docs && m.db.docs.length ? m.db : emptyDB();

@@ -1,0 +1,9 @@
+'use strict';
+const fs=require('fs'),path=require('path'),crypto=require('crypto');
+module.exports=dataDir=>{
+  const valid=id=>/^[\w-]{1,100}$/.test(id||'');
+  const folder=id=>{if(!valid(id))throw new Error('Apunte no válido.');return path.join(dataDir(),'historial','apuntes',id);};
+  function list(id){const dir=folder(id);if(!fs.existsSync(dir))return [];return fs.readdirSync(dir).filter(f=>/^[\w-]+\.json$/.test(f)).map(f=>{try{const v=JSON.parse(fs.readFileSync(path.join(dir,f),'utf8'));return {id:f.slice(0,-5),time:v.time,title:v.note.title||'Sin título',words:String(v.note.content||'').replace(/<[^>]*>/g,' ').trim().split(/\s+/).length};}catch(_){return null;}}).filter(Boolean).sort((a,b)=>b.time-a.time);}
+  function snapshot(note,subject,force=false){if(!note||!valid(note.id)||!(note.content||note.header||note.footer))return;const dir=folder(note.id),versions=list(note.id);if(!force&&versions[0]&&Date.now()-versions[0].time<60000)return;const hash=crypto.createHash('sha256').update(JSON.stringify([note.title,note.content,note.date,note.header||'',note.footer||''])).digest('hex').slice(0,12);if(versions.some(v=>v.id.endsWith(hash)))return;fs.mkdirSync(dir,{recursive:true});const time=Date.now(),id=time+'-'+hash;fs.writeFileSync(path.join(dir,id+'.json'),JSON.stringify({time,subject:{id:subject.id,name:subject.name,short:subject.short},note}),{mode:0o600});for(const old of versions.slice(49))fs.unlinkSync(path.join(dir,old.id+'.json'));}
+  return {list,snapshot,get(id,version){if(!valid(version))throw new Error('Versión no válida.');return JSON.parse(fs.readFileSync(path.join(folder(id),version+'.json'),'utf8'));},capture(before,after){for(const s of before?.subjects||[])for(const n of s.notes||[]){const next=after?.subjects?.find(t=>t.id===s.id)?.notes?.find(t=>t.id===n.id);if(!next||next.content!==n.content||next.title!==n.title||next.header!==n.header||next.footer!==n.footer)snapshot(n,s);}}};
+};
