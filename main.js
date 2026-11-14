@@ -499,7 +499,7 @@ async function sendPdfMail(d) {
 const PKG = (() => { try { return require('./package.json'); } catch (e) { return {}; } })();
 const REPO = process.env.CUADERNO_REPO || PKG.cuadernoRepo || '';
 const UPDATE_API = process.env.CUADERNO_UPDATE_API || (REPO ? `https://api.github.com/repos/${REPO}/releases/latest` : '');
-const upd = { current: app.getVersion(), latest: null, notes: '', available: false, state: 'idle', progress: 0, error: null, checked: null, enabled: !!UPDATE_API };
+const upd = { current: app.getVersion(), architecture: process.arch, translated: !!app.runningUnderARM64Translation, platform: process.platform, latest: null, notes: '', available: false, state: 'idle', progress: 0, error: null, checked: null, enabled: !!UPDATE_API };
 let updAsset = null;
 function cmpVer(a, b) {
   const pa = String(a).replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
@@ -507,7 +507,8 @@ function cmpVer(a, b) {
   for (let i = 0; i < 3; i++) if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) - (pb[i] || 0);
   return 0;
 }
-const assetName = () => IS_WIN ? 'Cuaderno-win-x64.exe' : IS_MAC ? `Cuaderno-mac-${process.arch === 'arm64' ? 'arm64' : 'x64'}.dmg` : null;
+// Una copia Intel bajo Rosetta debe actualizarse a Apple Silicon, no perpetuar la emulación.
+const assetName = () => IS_WIN ? 'Cuaderno-win-x64.exe' : IS_MAC ? `Cuaderno-mac-${process.arch === 'arm64' || app.runningUnderARM64Translation ? 'arm64' : 'x64'}.dmg` : null;
 async function checkUpdate() {
   if (!UPDATE_API || ['downloading', 'installing'].includes(upd.state)) return upd;
   try {

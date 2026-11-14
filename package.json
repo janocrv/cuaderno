@@ -1,7 +1,7 @@
 {
   "name": "cuaderno",
   "productName": "Cuaderno",
-  "version": "2.1.0",
+  "version": "3.0.2",
   "description": "Cuaderno del Máster en Profesor/a de Educación Secundaria (UV)",
   "author": "Cuaderno UV",
   "main": "main.js",
