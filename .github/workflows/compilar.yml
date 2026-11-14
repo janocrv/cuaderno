@@ -19,7 +19,8 @@ jobs:
           node-version: 22
       - name: Desplegar paquete completo de fuentes
         run: |
-          if [ -f cuaderno-codigo-2.1.0.zip ]; then unzip -oq cuaderno-codigo-2.1.0.zip -d .; fi
+          SOURCE="cuaderno-codigo-$(node -p "require('./package.json').version").zip"
+          if [ -f "$SOURCE" ]; then unzip -oq "$SOURCE" -d .; fi
       - name: Comprobar versión
         run: |
           V=$(node -p "require('./package.json').version")
