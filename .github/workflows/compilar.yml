@@ -1,60 +1,55 @@
-name: Compilar y publicar
-# Compila el Cuaderno en un Mac de GitHub (instaladores de Mac arm64/x64 y de Windows) y publica la versión
-# que diga package.json. Se lanza a mano: Actions → «Compilar y publicar» → Run workflow.
+name: Compilar instaladores (borrador)
 on:
   workflow_dispatch:
-    inputs:
-      notas:
-        description: "Qué ha cambiado (lo verán tus compañeros)"
-        required: false
-        default: "Mejoras y correcciones."
 permissions:
-  contents: write
+  contents: read
 jobs:
   compilar:
-    runs-on: macos-15-intel   # los Mac arm64 de GitHub suelen estar saturados; el Intel compila igual los dos .dmg
+    runs-on: macos-15-intel
     timeout-minutes: 60
+    permissions:
+      contents: write
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
       GH_TOKEN: ${{ github.token }}
-      NOTAS: ${{ inputs.notas }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - name: Comprobar que la versión no existe ya
+      - name: Desplegar paquete completo de fuentes
+        run: |
+          if [ -f cuaderno-codigo-2.1.0.zip ]; then unzip -oq cuaderno-codigo-2.1.0.zip -d .; fi
+      - name: Comprobar versión
         run: |
           V=$(node -p "require('./package.json').version")
           echo "V=$V" >> "$GITHUB_ENV"
-          if gh release view "v$V" >/dev/null 2>&1; then echo "La versión v$V ya existe: sube «version» en package.json"; exit 1; fi
-      - name: Preparar
+          if gh release view "v$V" >/dev/null 2>&1; then echo "La versión v$V ya existe."; exit 1; fi
+      - name: Preparar aplicación
         run: |
           set -e
-          B=build; rm -rf $B; mkdir -p $B/web $B/recursos
-          cp main.js package.json $B/
-          cp cuaderno-apuntes.html esquemas.html aviso.mp3 cuaderno.png $B/web/
-          cp cuaderno-uv.ico $B/recursos/icono.ico
+          mkdir -p build/web/sonidos build/recursos
+          cp main.js package.json package-lock.json correo-suite.js ortografia-worker.js intranet-preload.js historial.js documentos-worker.js build/
+          cp cuaderno-apuntes.html esquemas.html aviso.mp3 avisos.mp3 cuaderno.png correo-analisis.js build/web/
+          cp sonidos/*.wav sonidos/*.mp3 build/web/sonidos/
+          cp cuaderno-uv.ico build/recursos/icono.ico
           T="$(mktemp -d)/icono.iconset"; mkdir -p "$T"
           for s in 16 32 64 128 256 512; do
-            sips -z $s $s logo-cuaderno-uv.png --out "$T/icon_${s}x${s}.png" >/dev/null
-            d=$((s*2)); sips -z $d $d logo-cuaderno-uv.png --out "$T/icon_${s}x${s}@2x.png" >/dev/null
+            sips -z "$s" "$s" logo-cuaderno-uv.png --out "$T/icon_${s}x${s}.png" >/dev/null
+            d=$((s*2)); sips -z "$d" "$d" logo-cuaderno-uv.png --out "$T/icon_${s}x${s}@2x.png" >/dev/null
           done
-          iconutil -c icns "$T" -o $B/recursos/icono.icns
-          cd $B
-          npm install --no-audit --no-fund --loglevel=error
+          iconutil -c icns "$T" -o build/recursos/icono.icns
+          cd build
+          npm ci --no-audit --no-fund --loglevel=error
           mkdir -p web/ia
           cp ../ia-worker.js web/ia/worker.js
           cp node_modules/@huggingface/transformers/dist/transformers.min.js web/ia/
           cp node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.mjs node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm web/ia/
           cp node_modules/pdfjs-dist/build/pdf.min.mjs node_modules/pdfjs-dist/build/pdf.worker.min.mjs web/ia/
-          node -p "'Electron ' + require('electron/package.json').version"
-      - name: Compilar
+          node -e "if(Number(require('electron/package.json').version.split('.')[0])!==43)throw Error('Se requiere Electron 43 para Monterey')"
+      - name: Compilar Mac y Windows
         working-directory: build
         run: npx electron-builder --mac --win --publish never
-      - name: Publicar
-        working-directory: build/dist
+      - name: Crear borrador para revisar
         run: |
-          ls -lh
-          gh release create "v$V" Cuaderno-mac-arm64.dmg Cuaderno-mac-x64.dmg Cuaderno-win-x64.exe \
-            --repo "$GITHUB_REPOSITORY" --title "Cuaderno $V" --notes "$NOTAS"
+          gh release create "v$V" build/dist/Cuaderno-mac-arm64.dmg build/dist/Cuaderno-mac-x64.dmg build/dist/Cuaderno-win-x64.exe --repo "$GITHUB_REPOSITORY" --title "Cuaderno $V" --notes-file NOTAS-VERSION.md --draft
