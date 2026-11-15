@@ -1,7 +1,7 @@
 {
   "name": "cuaderno",
   "productName": "Cuaderno",
-  "version": "3.0.3",
+  "version": "4.0.0",
   "description": "Cuaderno del Máster en Profesor/a de Educación Secundaria (UV)",
   "author": "Cuaderno UV",
   "main": "main.js",
@@ -12,6 +12,9 @@
     "win": "electron-builder --win"
   },
   "dependencies": {
+    "jszip": "3.10.2",
+    "htmlparser2": "3.10.1",
+    "@xmldom/xmldom": "0.8.15",
     "imapflow": "2.9.1",
     "mailparser": "3.12.4",
     "nodemailer": "10.2.1",
@@ -25,7 +28,7 @@
     "@huggingface/transformers": "4.3.1"
   },
   "build": {
-    "asarUnpack": ["ortografia-worker.js", "documentos-worker.js", "node_modules/**"],
+    "asarUnpack": ["ortografia-worker.js", "documentos-worker.js", "editor-exportar.js", "node_modules/**"],
     "appId": "es.uv.cuaderno",
     "productName": "Cuaderno",
     "copyright": "Cuaderno UV",
@@ -38,6 +41,7 @@
       "aula-lector.js",
       "historial.js",
       "documentos-worker.js",
+      "editor-exportar.js",
       "package.json",
       "web/**"
     ],

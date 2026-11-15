@@ -463,7 +463,7 @@ async function htmlToPdf(html, regions = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cuaderno-pdf-'));
   const file = path.join(dir, 'doc.html');
   fs.writeFileSync(file, html, 'utf8');
-  const w = new BrowserWindow({ show: false, webPreferences: { offscreen: false, javascript: true } });
+  const w = new BrowserWindow({ show: false, webPreferences: { offscreen: false, javascript: false,nodeIntegration:false,contextIsolation:true,sandbox:true } });
   try {
     await w.loadFile(file);
     await new Promise(r => setTimeout(r, 400));   // tipos de letra e imágenes

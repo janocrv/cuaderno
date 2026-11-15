@@ -1,6 +1,6 @@
 # Cuaderno
 
-Aplicación de estudio para Mac y Windows. Versión preparada para revisión, sin publicar.
+Aplicación de estudio para Mac y Windows. El número de versión está en `package.json`.
 
 ## Generar instaladores en GitHub
 
