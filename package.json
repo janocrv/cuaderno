@@ -1,7 +1,7 @@
 {
   "name": "cuaderno",
   "productName": "Cuaderno",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Cuaderno del Máster en Profesor/a de Educación Secundaria (UV)",
   "author": "Cuaderno UV",
   "main": "main.js",
@@ -34,6 +34,8 @@
       "correo-suite.js",
       "ortografia-worker.js",
       "intranet-preload.js",
+      "uv-acceso.js",
+      "aula-lector.js",
       "historial.js",
       "documentos-worker.js",
       "package.json",

@@ -39,16 +39,20 @@ app.userAgentFallback = `${app.userAgentFallback} CuadernoApp/${app.getVersion()
 
 let win = null, tray = null, quitting = false;
 let intranetWindow=null,geminiWindow=null;
-function uvOrigin(event,origin) {try{const frame=new URL(event.senderFrame.url);return event.sender===intranetWindow?.webContents&&frame.protocol==='https:'&&['as.uv.es','portal.uv.es'].includes(frame.hostname)&&frame.origin===origin;}catch(_){return false;}}
-ipcMain.handle('cuaderno:uv:read',(event,origin)=>{if(!uvOrigin(event,origin))return null;const saved=(ajustes().intranetLogins||{})[origin];if(!saved?.pw||!safeStorage.isEncryptionAvailable())return null;try{return {user:saved.user,password:safeStorage.decryptString(Buffer.from(saved.pw,'base64'))};}catch(_){return null;}});
-ipcMain.handle('cuaderno:uv:save',(event,d)=>{if(!uvOrigin(event,d?.origin)||!safeStorage.isEncryptionAvailable()||typeof d.user!=='string'||typeof d.password!=='string'||d.user.length>200||d.password.length>1000)return false;const logins=ajustes().intranetLogins||{};logins[d.origin]={user:d.user,pw:safeStorage.encryptString(d.password).toString('base64')};setAjustes({intranetLogins:logins});return true;});
-function openIntranet() {
-  if(intranetWindow&&!intranetWindow.isDestroyed()){intranetWindow.show();intranetWindow.focus();return;}
+const uvAccess=require('./uv-acceso')({settings:()=>ajustes(),save:setAjustes,safeStorage,contents:()=>intranetWindow?.webContents});
+ipcMain.handle('cuaderno:uv:read',event=>uvAccess.read(event));
+ipcMain.handle('cuaderno:uv:save',(event,data)=>uvAccess.stage(event,data));
+ipcMain.handle('cuaderno:uv:failed',event=>uvAccess.failed(event));
+ipcMain.handle('cuaderno:uv:success',async event=>{const saved=uvAccess.success(event);if(saved)await session.fromPartition('persist:cuaderno-intranet').cookies.flushStore().catch(()=>{});return saved;});
+function openIntranet(target) {
+  if(intranetWindow&&!intranetWindow.isDestroyed()){if(target)intranetWindow.loadURL(target).catch(()=>{});intranetWindow.show();intranetWindow.focus();return intranetWindow;}
   intranetWindow=new BrowserWindow({width:1200,height:850,title:'Intranet UV · Cuaderno',webPreferences:{partition:'persist:cuaderno-intranet',preload:path.join(__dirname,'intranet-preload.js'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
   intranetWindow.webContents.on('will-navigate',(event,url)=>{try{const u=new URL(url);if(u.protocol==='https:'&&(u.hostname==='uv.es'||u.hostname.endsWith('.uv.es')))return;}catch(_){}event.preventDefault();if(/^https?:/i.test(url))shell.openExternal(url);});
   intranetWindow.webContents.setWindowOpenHandler(({url})=>{try{const u=new URL(url);if(u.protocol==='https:'&&(u.hostname==='uv.es'||u.hostname.endsWith('.uv.es'))){intranetWindow.loadURL(url);return {action:'deny'};}}catch(_){}if(/^https?:/i.test(url))shell.openExternal(url);return {action:'deny'};});
-  intranetWindow.on('closed',()=>{intranetWindow=null;});intranetWindow.loadURL('https://portal.uv.es/cgi-bin/portal/portal?lang=ca');
+  const uvWindowId=intranetWindow.webContents.id;
+  intranetWindow.on('closed',()=>{uvAccess.discard(uvWindowId);intranetWindow=null;});intranetWindow.loadURL(target||'https://portal.uv.es/cgi-bin/portal/portal?lang=ca').catch(()=>{});return intranetWindow;
 }
+const aulaLector=require('./aula-lector')({BrowserWindow,web:WEB,open:openIntranet});
 function openGemini(prompt) {
   if(prompt)clipboard.writeText(String(prompt).slice(0,200000));
   if(geminiWindow&&!geminiWindow.isDestroyed()){geminiWindow.show();geminiWindow.focus();return;}
@@ -628,8 +632,10 @@ async function handle(req) {
     if (p.startsWith('/sonidos/')) {const name=path.basename(p);if(!/^[a-z0-9-]+\.(mp3|wav)$/.test(name))return json({},404);return fileResponse(path.join(WEB,'sonidos',name),name.endsWith('.wav')?'audio/wav':'audio/mpeg');}
     if (p === '/esquemas.html') return fileResponse(path.join(WEB, 'esquemas.html'));   // pizarra de esquemas (pestaña «Esquemas»)
     if (p === '/correo-analisis.js') return fileResponse(path.join(WEB, 'correo-analisis.js'));
+    if (p === '/aula-virtual.js') return fileResponse(path.join(WEB, 'aula-virtual.js'));
     if (p.startsWith('/ia/')) { const f = path.basename(p); if (!/^[\w.-]+$/.test(f)) return json({}, 404); return fileResponse(path.join(WEB, 'ia', f)); }   // IA local (worker, librería y motor)
     if (['/cuaderno.png', '/cuaderno-uv.png', '/favicon.ico'].includes(p)) return fileResponse(path.join(WEB, 'cuaderno.png'), 'image/png');
+    if (p === '/api/intranet/estado') return json(uvAccess.status());
     if (p === '/api/estado') { const a = ajustes(); return json({ ok: true, app: true, configured: isConfigured(), user: a.user || null, ...status }); }
     if (p === '/api/correos') {
       const a = ajustes();
@@ -657,7 +663,9 @@ async function handle(req) {
       if(p==='/api/historial/snapshot'){const d=await req.json();if(!d.note?.id)throw new Error('Falta el apunte.');history.snapshot(d.note,d.subject||{},true);return json({ok:true});}
       if (p === '/api/correo/enviar') return json(await mailSuite.send(await req.json()));
       if (p === '/api/intranet/abrir') {openIntranet();return json({ok:true});}
-      if (p === '/api/intranet/olvidar') {setAjustes({intranetLogins:undefined});await session.fromPartition('persist:cuaderno-intranet').clearStorageData();if(intranetWindow&&!intranetWindow.isDestroyed())intranetWindow.reload();return json({ok:true});}
+      if (p === '/api/aula/actividad') {const d=await req.json();return json(await aulaLector.read(d.url));}
+      if (p === '/api/aula/abrir') {const d=await req.json(),u=new URL(d.url||'https://aulavirtual.uv.es/');if(u.protocol!=='https:'||u.hostname!=='aulavirtual.uv.es'||u.port||u.username||u.password||!(/^(\/|\/my\/?|\/mod\/(assign|quiz|resource|folder)\/view\.php|\/pluginfile\.php\/.*)$/.test(u.pathname)))throw new Error('El enlace no pertenece al Aula Virtual de la UV.');openIntranet(u.href);return json({ok:true});}
+      if (p === '/api/intranet/olvidar') {uvAccess.clear();const uvSession=session.fromPartition('persist:cuaderno-intranet');await uvSession.clearStorageData();await uvSession.clearAuthCache();if(intranetWindow&&!intranetWindow.isDestroyed())intranetWindow.reload();return json({ok:true});}
       if (p === '/api/gemini/abrir') {const d=await req.json();openGemini(d.prompt||'');return json({ok:true});}
       if (p === '/api/ortografia') {const d=await req.json();setSpellLang(d.lang);return json({results:await spelling(Array.isArray(d.words)?d.words:[],d.lang==='ca'?'ca':'es',!!d.suggest)});}
       if (p === '/api/correo/borradores') return json({draft:mailSuite.saveDraft(await req.json())});
