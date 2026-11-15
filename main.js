@@ -44,15 +44,34 @@ ipcMain.handle('cuaderno:uv:read',event=>uvAccess.read(event));
 ipcMain.handle('cuaderno:uv:save',(event,data)=>uvAccess.stage(event,data));
 ipcMain.handle('cuaderno:uv:failed',event=>uvAccess.failed(event));
 ipcMain.handle('cuaderno:uv:success',async event=>{const saved=uvAccess.success(event);if(saved)await session.fromPartition('persist:cuaderno-intranet').cookies.flushStore().catch(()=>{});return saved;});
-function openIntranet(target = 'https://portal.uv.es/cgi-bin/portal/portal?lang=ca') {
-  if(intranetWindow&&!intranetWindow.isDestroyed()){if(target)intranetWindow.loadURL(target).catch(()=>{});intranetWindow.show();intranetWindow.focus();return intranetWindow;}
-  intranetWindow=new BrowserWindow({width:1200,height:850,title:'Intranet UV · Cuaderno',webPreferences:{partition:'persist:cuaderno-intranet',preload:path.join(__dirname,'intranet-preload.js'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
+// Página de la UV sin formulario de contraseña = sesión ya iniciada (o página pública).
+async function uvPageReady(wc){try{const u=new URL(wc.getURL());if(u.protocol!=='https:'||!(u.hostname==='uv.es'||u.hostname.endsWith('.uv.es')))return false;if(u.hostname==='as.uv.es'||/^\/(login|auth)\//.test(u.pathname))return false;return !(await wc.executeJavaScriptInIsolatedWorld(1002,[{code:'!!document.querySelector(\'input[type="password"]\')'}]));}catch(_){return false;}}
+function openIntranet(target = 'https://portal.uv.es/cgi-bin/portal/portal?lang=ca', quiet = false) {
+  if(intranetWindow&&!intranetWindow.isDestroyed()){if(target)intranetWindow.loadURL(target).catch(()=>{});if(!quiet){intranetWindow.__reveal?.();intranetWindow.show();intranetWindow.focus();}return intranetWindow;}
+  // Con el acceso ya guardado, la ventana espera oculta a que la sesión se renueve sola:
+  // así no se ve la pantalla de inicio de sesión. Si hace falta escribir algo, aparece.
+  const wait=uvAccess.status().saved;
+  const win=intranetWindow=new BrowserWindow({show:!wait&&!quiet,width:1200,height:850,title:'Intranet UV · Cuaderno',webPreferences:{partition:'persist:cuaderno-intranet',preload:path.join(__dirname,'intranet-preload.js'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
+  win.__quiet=quiet;
+  if(wait||quiet){let timer=null;const reveal=()=>{clearTimeout(timer);win.__reveal=null;if(!win.isDestroyed()&&!win.__quiet&&!win.isVisible()){win.show();win.focus();}};
+    win.__reveal=()=>{win.__quiet=false;reveal();};
+    if(!quiet)timer=setTimeout(reveal,9000);
+    win.webContents.on('did-finish-load',async()=>{if(await uvPageReady(win.webContents)){win.__ready=true;reveal();}});}
   intranetWindow.webContents.on('will-navigate',(event,url)=>{try{const u=new URL(url);if(u.protocol==='https:'&&(u.hostname==='uv.es'||u.hostname.endsWith('.uv.es')))return;}catch(_){}event.preventDefault();if(/^https?:/i.test(url))shell.openExternal(url);});
   intranetWindow.webContents.setWindowOpenHandler(({url})=>{try{const u=new URL(url);if(u.protocol==='https:'&&(u.hostname==='uv.es'||u.hostname.endsWith('.uv.es'))){intranetWindow.loadURL(url);return {action:'deny'};}}catch(_){}if(/^https?:/i.test(url))shell.openExternal(url);return {action:'deny'};});
   const uvWindowId=intranetWindow.webContents.id;
-  intranetWindow.on('closed',()=>{uvAccess.discard(uvWindowId);intranetWindow=null;});intranetWindow.loadURL(target||'https://portal.uv.es/cgi-bin/portal/portal?lang=ca').catch(()=>{});return intranetWindow;
+  intranetWindow.on('closed',()=>{uvAccess.discard(uvWindowId);if(intranetWindow===win)intranetWindow=null;});intranetWindow.loadURL(target||'https://portal.uv.es/cgi-bin/portal/portal?lang=ca').catch(()=>{});return intranetWindow;
 }
-const aulaLector=require('./aula-lector')({BrowserWindow,web:WEB,open:openIntranet});
+// Renueva la sesión del Aula Virtual sin enseñar nada: solo si hay acceso guardado y ninguna ventana UV abierta.
+async function quietAulaLogin(){
+  if(!uvAccess.status().saved||(intranetWindow&&!intranetWindow.isDestroyed()))return false;
+  const win=openIntranet('https://aulavirtual.uv.es/my/',true);let ok=false;
+  for(let i=0;i<50&&!win.isDestroyed()&&win.__quiet;i++){await new Promise(r=>setTimeout(r,500));try{if(win.__ready&&new URL(win.webContents.getURL()).hostname==='aulavirtual.uv.es'){ok=true;break;}}catch(_){}}
+  if(ok)await session.fromPartition('persist:cuaderno-intranet').cookies.flushStore().catch(()=>{});
+  if(!win.isDestroyed()&&win.__quiet)win.destroy();
+  return ok;
+}
+const aulaLector=require('./aula-lector')({BrowserWindow,web:WEB,open:openIntranet,login:quietAulaLogin});
 function openGemini(prompt) {
   if(prompt)clipboard.writeText(String(prompt).slice(0,200000));
   if(geminiWindow&&!geminiWindow.isDestroyed()){geminiWindow.show();geminiWindow.focus();return;}
@@ -468,8 +487,8 @@ async function htmlToPdf(html, regions = {}) {
     await w.loadFile(file);
     await new Promise(r => setTimeout(r, 400));   // tipos de letra e imágenes
     const escape=s=>String(s||'').slice(0,240).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const template=(text,page=false)=>'<div style="font:10px Arial;color:#666;width:100%;margin:0 20mm;display:flex;justify-content:space-between"><span style="white-space:pre-wrap">'+escape(text)+'</span>'+(page?'<span class="pageNumber"></span>':'')+'</div>';
-    return await w.webContents.printToPDF({ printBackground: true, preferCSSPageSize: true, pageSize: 'A4',displayHeaderFooter:!!(regions.header||regions.footer),headerTemplate:template(regions.header),footerTemplate:template(regions.footer,true) });
+    const template=text=>'<div style="font:10px Arial;color:#666;width:100%;margin:0 20mm"><span style="white-space:pre-wrap">'+escape(text)+'</span></div>';
+    return await w.webContents.printToPDF({ printBackground: true, preferCSSPageSize: true, pageSize: 'A4',displayHeaderFooter:!!(regions.header||regions.footer),headerTemplate:template(regions.header),footerTemplate:template(regions.footer) });
   } finally {
     w.destroy();
     fs.rmSync(dir, { recursive: true, force: true });
@@ -663,7 +682,8 @@ async function handle(req) {
       if(p==='/api/historial/snapshot'){const d=await req.json();if(!d.note?.id)throw new Error('Falta el apunte.');history.snapshot(d.note,d.subject||{},true);return json({ok:true});}
       if (p === '/api/correo/enviar') return json(await mailSuite.send(await req.json()));
       if (p === '/api/intranet/abrir') {openIntranet();return json({ok:true});}
-      if (p === '/api/aula/actividad') {const d=await req.json();return json(await aulaLector.read(d.url));}
+      if (p === '/api/aula/actividad') {const d=await req.json();return json(await aulaLector.read(d.url,!!d.quiet));}
+      if (p === '/api/aula/revisar') return json(await aulaLector.scan());
       if (p === '/api/aula/abrir') {const d=await req.json(),u=new URL(d.url||'https://aulavirtual.uv.es/');if(u.protocol!=='https:'||u.hostname!=='aulavirtual.uv.es'||u.port||u.username||u.password||!(/^(\/|\/my\/?|\/mod\/(assign|quiz|resource|folder)\/view\.php|\/pluginfile\.php\/.*)$/.test(u.pathname)))throw new Error('El enlace no pertenece al Aula Virtual de la UV.');openIntranet(u.href);return json({ok:true});}
       if (p === '/api/intranet/olvidar') {uvAccess.clear();const uvSession=session.fromPartition('persist:cuaderno-intranet');await uvSession.clearStorageData();await uvSession.clearAuthCache();if(intranetWindow&&!intranetWindow.isDestroyed())intranetWindow.reload();return json({ok:true});}
       if (p === '/api/gemini/abrir') {const d=await req.json();openGemini(d.prompt||'');return json({ok:true});}

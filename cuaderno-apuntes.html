@@ -393,10 +393,10 @@ details.bform summary::-webkit-details-marker{display:none}
 .fmeta{display:block;font-size:.78rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .f-actions-row{display:flex;gap:0}
 dialog.viewer{width:min(1100px,calc(100vw - 24px));height:calc(100vh - 40px);max-height:none}
-dialog.viewer[open]{display:flex;flex-direction:column}
-.vhead{display:flex;align-items:center;gap:4px;padding:8px 10px 8px 18px;border-bottom:1px solid var(--line)}
+dialog.viewer[open]{display:flex;flex-direction:column;animation:none!important;transform:none!important}
+.vhead{display:flex;align-items:center;gap:4px;padding:8px 10px 8px 18px;border-bottom:1px solid var(--line);flex:none;position:relative;z-index:1}
 .vhead strong{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.95rem}
-#vFrame{flex:1;border:0;width:100%;background:#525659;border-radius:0 0 18px 18px}
+#vFrame{flex:1;min-height:0;border:0;width:100%;background:#525659;border-radius:0 0 18px 18px}
 
 /* Horario */
 .rail-btn[aria-current="true"] .ic{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
@@ -1395,7 +1395,8 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
         <div class="b-inner">
           <div class="b-head"><h2>Profesorado</h2><button class="icon-btn" id="tAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Añadir profesor/a</button></div>
           <p class="hint">Nombre, correo, tutorías y despacho de quien imparte la asignatura. Se completa solo con tus correos; todo se puede cambiar.</p>
-          <div class="teacher-review"><button type="button" class="btn" id="tRescan">Revisar correos</button><span class="hint" id="tScanStatus" role="status">Se revisan automáticamente al sincronizar el correo.</span><button type="button" class="btn" id="tShowAll" hidden>Ver todas las fichas</button></div>
+          <div class="teacher-review"><button type="button" class="btn" id="tRescan">Revisar correos y Aula Virtual</button><span class="hint" id="tScanStatus" role="status">Se revisan automáticamente al sincronizar el correo.</span><button type="button" class="btn" id="tShowAll" hidden>Ver todas las fichas</button></div>
+          <p class="hint" id="tAulaStatus" role="status"></p>
           <div id="tSuggest"></div>
           <div id="tList"></div>
           <details class="bform t-paste">
@@ -1542,7 +1543,7 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
       <label><input type="radio" name="pdfScope" value="tasks"><span>Tareas</span></label>
       <label><input type="radio" name="pdfScope" value="biblio"><span>Bibliografía</span></label>
     </div>
-    <label class="check"><input type="checkbox" id="pdfBiblio" checked> Añadir bibliografía al final</label>
+    <label class="check"><input type="checkbox" id="pdfBiblio"> Añadir bibliografía al final</label>
     <div id="pdfSend" hidden>
       <label class="f">Para <input type="text" id="pdfTo" placeholder="profesor@uv.es, otra@uv.es"></label>
       <label class="f">Tu correo (remitente) <input type="text" id="pdfFrom" placeholder="tu.nombre@alumni.uv.es"></label>
@@ -1693,7 +1694,7 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
     <strong id="vName"></strong>
     <button class="icon-btn" id="vOpen" title="Abrir con el programa del ordenador"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg><span class="t">Abrir con programa</span></button>
     <button class="icon-btn" id="vDown" title="Descargar"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="t">Descargar</span></button>
-    <button class="icon-btn" id="vClose" title="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <button type="button" class="icon-btn" id="vClose" title="Cerrar" aria-label="Cerrar documento"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <iframe id="vFrame" title="Visor de PDF"></iframe>
 </dialog>
@@ -2014,7 +2015,8 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       this.style.animation = 'none'; void this.offsetWidth; this.style.animation = '';   // reinicia la animación
     };
     P.close = function (v) {
-      if (this.open && !reduce()) {
+      // An embedded PDF uses its own native surface: never clone it for a closing animation.
+      if (this.open && !reduce() && !this.classList.contains('viewer')) {
         const r = box(this), ghost = this.cloneNode(true);
         ghost.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); ghost.removeAttribute('id');
         // la copia no debe compartir grupos de opciones ni formularios con la ventana real
@@ -2143,6 +2145,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
      abajo y se cambia. Nunca se toca lo que escribe la persona (editor de apuntes, campos de texto).
      El original se guarda para poder volver al español al momento. Las fechas salen en catalán. */
   const CA = {
+    'Cerrar documento':'Tanca el document',
     'Actualizar pregunta antes de descargar e instalar. Puedes elegir Ahora no y continuar trabajando.':'Actualitzar pregunta abans de baixar i instal·lar. Pots triar Ara no i continuar treballant.',
     'Nuevo acceso directo a Aula Virtual, con la sesión compartida de Intranet y renovación del acceso guardado.':'Nou accés directe a Aula Virtual, amb la sessió compartida d’Intranet i renovació de l’accés guardat.',
     'Profesorado distingue las fichas de la asignatura y el total, con un botón para verlas todas.':'Professorat distingix les fitxes de l’assignatura i el total, amb un botó per a mostrar-les totes.',
@@ -2161,7 +2164,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     'Las credenciales de Intranet y Aula Virtual se guardan cifradas en este ordenador.':'Les credencials d’Intranet i Aula Virtual es guarden xifrades en este ordinador.',
     '¿Olvidar las sesiones y las credenciales de Intranet y Aula Virtual en este ordenador?':'Vols oblidar les sessions i les credencials d’Intranet i Aula Virtual en este ordinador?',
     'Accesos de Intranet y Aula Virtual eliminados':'Accessos d’Intranet i Aula Virtual eliminats',
-    "Revisar correos":"Revisa els correus", "Se revisan automáticamente al sincronizar el correo.":"Es revisen automàticament en sincronitzar el correu.", "Revisando los correos disponibles…":"Revisant els correus disponibles…", "Correo aún no encontrado":"Correu encara no trobat", "Autores del Aula Virtual por revisar":"Autors de l'Aula Virtual per revisar",
+    "Revisar correos":"Revisa els correus", "No se ha podido revisar el correo. ":"No s'ha pogut revisar el correu. ", "El Aula Virtual se revisa sola: crea las fichas del profesorado de cada curso y añade las entregas próximas con su plazo y su enunciado.":"L'Aula Virtual es revisa sola: crea les fitxes del professorat de cada curs i afig els lliuraments pròxims amb el termini i l'enunciat.", "El Aula Virtual se abre directamente, sin pasar por la pantalla de inicio de sesión; usa la misma cuenta del correo.":"L'Aula Virtual s'obri directament, sense passar per la pantalla d'inici de sessió; usa el mateix compte del correu.", "En Profesorado, la lista de todas las fichas se abre y se cierra sin salir de la asignatura.":"En Professorat, la llista de totes les fitxes s'obri i es tanca sense eixir de l'assignatura.", "Los PDF llevan solo lo que has escrito, y el visor de documentos se cierra bien.":"Els PDF porten només el que has escrit, i el visor de documents es tanca bé.", "Desde el Aula Virtual":"Des de l'Aula Virtual", "Revisar correos y Aula Virtual":"Revisa els correus i l'Aula Virtual", "Cerrar la lista completa":"Tanca la llista completa", "Revisando el Aula Virtual…":"Revisant l'Aula Virtual…", "Aula Virtual: hace falta iniciar sesión una vez. Pulsa el botón del Aula Virtual en la barra lateral.":"Aula Virtual: cal iniciar sessió una vegada. Prem el botó de l'Aula Virtual en la barra lateral.", "Aula Virtual: no se ha podido revisar.":"Aula Virtual: no s'ha pogut revisar.", "El Aula Virtual se revisa sola cada pocas horas.":"L'Aula Virtual es revisa sola cada poques hores.", "Aula Virtual revisada:":"Aula Virtual revisada:", "asignaturas reconocidas:":"assignatures reconegudes:", "entregas próximas:":"lliuraments pròxims:", "Docente del curso en el Aula Virtual":"Docent del curs en l'Aula Virtual", "Aula Virtual revisada: no hay novedades":"Aula Virtual revisada: no hi ha novetats", "Se revisan automáticamente al sincronizar el correo.":"Es revisen automàticament en sincronitzar el correu.", "Revisando los correos disponibles…":"Revisant els correus disponibles…", "Correo aún no encontrado":"Correu encara no trobat", "Autores del Aula Virtual por revisar":"Autors de l'Aula Virtual per revisar",
     "Indicaciones del apartado":"Indicacions de l'apartat", "Archivos de la actividad":"Fitxers de l'activitat", "Buscar la actividad en Aula Virtual":"Busca l'activitat a l'Aula Virtual", "Pega el enlace de una tarea o cuestionario del Aula Virtual de la UV.":"Apega l'enllaç d'una tasca o qüestionari de l'Aula Virtual de la UV.", "Abre la app de escritorio para consultar la actividad con tu sesión de la UV. Aquí puedes leer la información ya guardada.":"Obri l'app d'escriptori per consultar l'activitat amb la teua sessió de la UV. Ací pots llegir la informació ja guardada.", "El correo original no está en la copia local. Se conservará aquí cuando vuelva a estar disponible.":"El correu original no està en la còpia local. Es conservarà ací quan torne a estar disponible.",
     "Ver detalles e instrucciones":"Veure detalls i instruccions", "Ocultar detalles":"Amaga els detalls", "Qué hay que hacer":"Què cal fer", "Desde el correo":"Des del correu", "Creada en Cuaderno":"Creada en Cuaderno", "Aula Virtual · Información consultada":"Aula Virtual · Informació consultada", "Aula Virtual · Pendiente de consultar":"Aula Virtual · Pendent de consultar", "Actividad":"Activitat", "Curso del Aula Virtual":"Curs de l'Aula Virtual", "Plazo en el Aula Virtual":"Termini a l'Aula Virtual", "Estado en el Aula Virtual":"Estat a l'Aula Virtual", "Última consulta":"Última consulta", "Abrir actividad original":"Obri l'activitat original", "Consultar Aula Virtual":"Consulta l'Aula Virtual", "Actualizar desde Aula Virtual":"Actualitza des de l'Aula Virtual", "Cambiar enlace de la actividad":"Canvia l'enllaç de l'activitat", "Vincular con una actividad del Aula Virtual":"Vincula amb una activitat de l'Aula Virtual", "Enlace de la actividad":"Enllaç de l'activitat", "Guardar enlace":"Guarda l'enllaç", "Detalles de la tarea":"Detalls de la tasca", "El aviso no incluye instrucciones completas. Consulta la actividad para ver el enunciado del profesor.":"L'avís no inclou instruccions completes. Consulta l'activitat per veure l'enunciat del professor.", "Consultando las instrucciones de la actividad…":"Consultant les instruccions de l'activitat…", "Instrucciones de la actividad actualizadas":"Instruccions de l'activitat actualitzades", "Se ha abierto el Aula Virtual. Inicia sesión allí y pulsa de nuevo para consultar la actividad.":"S'ha obert l'Aula Virtual. Inicia-hi sessió i torna a prémer per consultar l'activitat.",
     "Arrastra la tabla":"Arrossega la taula", "Arrastra la tabla libremente por el folio":"Arrossega la taula lliurement pel full", "Opciones de tabla":"Opcions de taula", "En línea con el texto":"En línia amb el text", "Devolver la tabla al flujo del texto":"Torna la taula al flux del text",
@@ -2428,6 +2431,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     'Entregas cercanas':'Lliuraments pròxims','Próxima clase':'Pròxima classe','Cambiar color':'Canvia el color','Restablecer':'Restableix'
   });
   const CA_RX = [
+    [/^Ver solo (.+)$/, 'Mostra només $1'], [/^Aula Virtual revisada: (.+) · asignaturas reconocidas: (\d+) · entregas próximas: (\d+)$/, 'Aula Virtual revisada: $1 · assignatures reconegudes: $2 · lliuraments pròxims: $3'], [/^Aula Virtual: no se ha podido revisar\. (.*)$/, "Aula Virtual: no s'ha pogut revisar. $1"],
     [/^Correos disponibles: (\d+) · Fichas en esta asignatura: (\d+) · Total: (\d+)\.$/, 'Correus disponibles: $1 · Fitxes en esta assignatura: $2 · Total: $3.'],
     [/^Correos disponibles: (\d+) · Fichas de profesorado en total: (\d+)\.$/, 'Correus disponibles: $1 · Fitxes de professorat en total: $2.'],
     [/^¿Quieres actualizar Cuaderno a la versión (.+)\?$/, 'Vols actualitzar el Cuaderno a la versió $1?'],
@@ -3210,13 +3214,19 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     $('#tScanStatus').textContent = allSubjects()
       ? `Correos disponibles: ${mailList().length} · Fichas de profesorado en total: ${total}.`
       : `Correos disponibles: ${mailList().length} · Fichas en esta asignatura: ${visible} · Total: ${total}.`;
-    $('#tShowAll').hidden = allSubjects() || total <= visible;
+    // Lista completa: se abre y se cierra con el mismo botón, sin salir de la asignatura.
+    const b = $('#tShowAll'), open = teachersAllOpen();
+    b.hidden = !open && !allSubjects() && total <= visible;
+    b.textContent = open ? 'Cerrar la lista completa' : allSubjects() ? 'Ver solo ' + subj().short : 'Ver todas las fichas';
+    const av = $('#tAulaStatus'); if (av) av.textContent = aulaReviewText();
   }
+  let tAllFor = null;   // asignatura desde la que se abrió «Ver todas las fichas»
+  const teachersAllOpen = () => !allSubjects() && tAllFor === state.subjectScope;
   function renderTeachers(subjectOverride, container) {
     if (!subjectOverride) renderTeacherScanStatus();
-    if (!subjectOverride && allSubjects()) {
+    if (!subjectOverride && (allSubjects() || teachersAllOpen())) {
       $('#tSuggest').innerHTML = ''; const list = $('#tList'); list.innerHTML = '';
-      for (const s of scopeSubjects()) {
+      for (const s of (allSubjects() ? scopeSubjects() : orderedSubjects())) {
         if (!(s.teachers || []).length && !teacherFromMails(s).length) continue;
         const section = document.createElement('section'); section.innerHTML = `<h3 class="subj-tag tint" style="--c:${s.color}">${esc(s.short)} · ${esc(s.name)}</h3><div class="tSuggest"></div><div class="tList"></div>`; list.append(section); renderTeachers(s, section);
       }
@@ -3260,6 +3270,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       });
       const a = c.querySelector('.t-mail a');if(t.email)a.href='mailto:'+t.email;else{a.title='Correo aún no encontrado';a.onclick=e=>{if(!t.email)e.preventDefault();};}
       if(t.sources?.length){const origin=document.createElement('details');origin.className='t-sources';const summary=document.createElement('summary');summary.textContent='Información encontrada en '+t.sources.length+(t.sources.length===1?' correo':' correos');origin.append(summary);for(const [field,source] of Object.entries(t.autoFields||{})){if(t.manualFields?.[field]||t[field]!==source.value)continue;const p=document.createElement('p');p.textContent=({name:'Nombre',email:'Correo',hours:'Tutorías',room:'Despacho',phone:'Teléfono',notes:'Notas'})[field]+' · '+source.subject+(source.date?' · '+new Date(source.date).toLocaleDateString():'')+'\n'+source.quote;p.dataset.noi18n='';origin.append(p);}if(origin.children.length===1){const p=document.createElement('p');p.textContent=t.sourceMeta?.[0]?.subject||'Identificado por el remitente del mensaje';p.dataset.noi18n='';origin.append(p);}c.append(origin);}
+      if(t.aulaCourse&&!t.sources?.length){const p=document.createElement('p');p.className='hint t-sources';p.textContent='Docente del curso en el Aula Virtual';c.append(p);}
       c.querySelector('.t-del').onclick = () => { if (!confirm(`¿Quitar la ficha de «${t.name || t.email || 'este profesor/a'}»?`)) return;s.teacherDismissed ||= {};for(const key of CuadernoCorreoAnalisis.teacherKeys(t))s.teacherDismissed[key]=Date.now();s.teachers = s.teachers.filter(x => x !== t); save(); renderTeachers(); };
       list.appendChild(c);
     });
@@ -3272,8 +3283,8 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     $('#tPasteTxt').value = ''; $('.t-paste').open = false; renderTeachers();
     toast(found.length === 1 ? 'Ficha rellenada: revísala' : `${found.length} fichas rellenadas: revísalas`);
   };
-  $('#tShowAll').onclick = () => { state.subjectScope = 'all'; save(); renderHeader(); renderTeachers(); };
-  $('#tRescan').onclick=async()=>{const button=$('#tRescan'),status=$('#tScanStatus');button.disabled=true;status.textContent='Revisando los correos disponibles…';try{if(SERVED){await mailRequest('/api/sincronizar',{});await fetchMails();}const result=completeTeachersFromMail();if(result.changed)save();renderTeachers();button.disabled=false;renderTeacherScanStatus();}catch(e){status.textContent='No se ha podido completar la revisión. '+e.message;}finally{button.disabled=false;}};
+  $('#tShowAll').onclick = () => { if (allSubjects()) { state.subjectScope = state.active; tAllFor = null; save(); renderAll(); return; } tAllFor = teachersAllOpen() ? null : state.subjectScope; renderTeachers(); };
+  $('#tRescan').onclick=async()=>{const button=$('#tRescan'),status=$('#tScanStatus');button.disabled=true;status.textContent='Revisando los correos disponibles…';let mailError='';try{try{if(SERVED){await mailRequest('/api/sincronizar',{});await fetchMails();}}catch(e){mailError=e.message;}const result=completeTeachersFromMail();if(result.changed)save();if(IN_APP){status.textContent='Revisando el Aula Virtual…';await reviewAula(true);}renderTeachers();button.disabled=false;renderTeacherScanStatus();if(mailError)status.textContent='No se ha podido revisar el correo. '+mailError;}catch(e){status.textContent='No se ha podido completar la revisión. '+e.message;}finally{button.disabled=false;}};
 
   /* ---------- Pestañas ---------- */
   function setView(v) {
@@ -3444,14 +3455,14 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   // Para el PDF: las notas adhesivas pueden estar en cualquier sitio de la pantalla, así que no se dibujan donde
   // están: se sacan del texto y se ponen al final del apunte, en un recuadro «Notas», cada una con su color.
   const NOTE_PDF = Object.fromEntries(['amarillo','rosa','rojo','celeste','verde','azul'].map(key=>[key,getComputedStyle($('#editor')).getPropertyValue('--sticky-'+key).trim()]));
-  function notesToEnd(html) {
+  function notesToEnd(html, withHeading = true) {
     const s = window.CuadernoEditor.safeHTML(html); if (!s.includes('sticky')) return s;
     const d = document.createElement('div'); d.innerHTML = s;
     const notes = [...d.querySelectorAll('.sticky')].map(st => { const b = st.querySelector('.st-body'); const t = b ? b.innerHTML : ''; st.remove(); return { t, c: st.dataset.col || 'amarillo', txt: b ? b.textContent.trim() : '' }; }).filter(n => n.txt);
     if (!notes.length) return d.innerHTML;
-    return d.innerHTML + `<div class="pa-notes"><div class="pa-notes-h">Notas</div>${notes.map(n => `<div class="pa-note-st" style="background:${NOTE_PDF[n.c] || NOTE_PDF.amarillo}">${n.t}</div>`).join('')}</div>`;
+    return d.innerHTML + `<div class="pa-notes">${withHeading?'<div class="pa-notes-h">Notas</div>':''}${notes.map(n => `<div class="pa-note-st" style="background:${NOTE_PDF[n.c] || NOTE_PDF.amarillo}">${n.t}</div>`).join('')}</div>`;
   }
-  const withAttData = html => notesToEnd(html).replace(/<img([^>]*?)data-fid="([^"]+)"([^>]*)>/g, (m, a, id, b) => attData[id] ? `<img${a}data-fid="${id}"${b} src="${attData[id]}">` : m);
+  const withAttData = (html, withHeading = true) => notesToEnd(html, withHeading).replace(/<img([^>]*?)data-fid="([^"]+)"([^>]*)>/g, (m, a, id, b) => attData[id] ? `<img${a}data-fid="${id}"${b} src="${attData[id]}">` : m);
   // Al arrancar se preparan las imágenes de todos los apuntes, para que salgan en los PDF
   setTimeout(() => state.subjects.forEach(s => s.notes.forEach(n => (String(n.content || '').match(/data-fid="([^"]+)"/g) || []).forEach(x => attBlob(x.slice(10, -1))))), 4000);
   async function attachFiles(files) {
@@ -4049,10 +4060,10 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     document.body.appendChild(d); const t = d.innerText; d.remove();
     return t.replace(/\n{3,}/g, '\n\n').trim();
   }
-  function buildDocHTML(notes, s, withBiblio, onlyBiblio = false) {
+  function buildDocHTML(notes, s, withBiblio, onlyBiblio = false, contentOnly = false) {
     const head = t => `<div class="pa-head"><div class="pa-subj">${esc(s.short)} · ${esc(s.name)}</div><h1>${esc(t)}</h1>`;
     let body = '';
-    if (!onlyBiblio) notes.forEach(n => body += `<section class="pa-note">${n.header?'<div class="pa-header">'+esc(n.header)+'</div>':''}${head(n.title || 'Sin título')}<div class="pa-date">${esc(fmtLong(n.date))}</div></div>${withAttData(n.content)}${n.footer?'<div class="pa-footer">'+esc(n.footer)+'</div>':''}</section>`);
+    if (!onlyBiblio) notes.forEach(n => body += `<section class="pa-note">${n.header?'<div class="pa-header">'+esc(n.header)+'</div>':''}${contentOnly?'':head(n.title || 'Sin título')+'<div class="pa-date">'+esc(fmtLong(n.date))+'</div></div>'}${withAttData(n.content,!contentOnly)}${n.footer?'<div class="pa-footer">'+esc(n.footer)+'</div>':''}</section>`);
     if ((withBiblio || onlyBiblio) && s.biblio.length) body += `<section class="pa-note">${head('Bibliografía')}</div>${sortedRefs(s).map(r => `<p class="pa-ref">${apaHTML(r)}</p>`).join('')}</section>`;
     return body;
   }
@@ -4143,21 +4154,11 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
   pdfDlg.querySelectorAll('[name=pdfScope]').forEach(r => r.onchange = () => { $('#pdfBiblio').disabled = r.value === 'biblio' || r.value === 'tasks'; });
   // Documento de tareas: cada tarea con su fecha y, si la has hecho aquí, su documento
   function buildTasksHTML(subjects) {
-    let body = '';
-    subjects.forEach(s => {
-      const pend = s.tasks.filter(t => !t.done).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999'));
-      const done = s.tasks.filter(t => t.done);
-      if (!pend.length && !done.length) return;
-      body += `<section class="pa-note"><div class="pa-head"><div class="pa-subj">${esc(s.short)} · ${esc(s.name)}</div><h1>Tareas</h1></div>`;
-      const item = t => {
-        const n = t.noteId && s.notes.find(x => x.id === t.noteId);
-        return `<div class="pa-task"><h2>${t.done ? '☑' : '☐'} ${esc(t.title)}</h2><div class="pa-date">${t.due ? 'Entrega: ' + esc(fmtLong(t.due)) : 'Sin fecha'}${t.info ? ' · ' + esc(t.info) : ''}</div>${n ? n.content : ''}</div>`;
-      };
-      body += pend.map(item).join('');
-      if (done.length) body += `<h3 class="pa-done">Completadas</h3>` + done.map(item).join('');
-      body += '</section>';
-    });
-    return body || '<p>No hay tareas.</p>';
+    return subjects.map(s => {
+      const tasks=[...s.tasks.filter(t=>!t.done).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999')),...s.tasks.filter(t=>t.done)];
+      const notes=tasks.map(t=>t.noteId&&s.notes.find(n=>n.id===t.noteId)).filter(Boolean);
+      return buildDocHTML(notes,s,false,false,true);
+    }).join('');
   }
   function pdfContent() {
     flushEditor();
@@ -4172,7 +4173,7 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
     return {
       title: scope === 'note' ? `${s.short} - ${note().title || 'Apunte'}` : scope === 'biblio' ? `${s.short} - Bibliografía` : `${s.short} - Apuntes`,
       header:scope==='note'?note().header||'':'',footer:scope==='note'?note().footer||'':'',
-      html: buildDocHTML(notes, s, $('#pdfBiblio').checked && !$('#pdfBiblio').closest('label').hidden, scope === 'biblio')
+      html: buildDocHTML(notes, s, $('#pdfBiblio').checked && !$('#pdfBiblio').closest('label').hidden, scope === 'biblio', true)
     };
   }
   const PDF_CSS = '@page{size:A4;margin:22mm 20mm}body{max-width:none;margin:0;padding:0;font-size:11.5pt}h1{font-size:20pt}h2{font-size:14pt}.pa-note{break-after:page}.pa-note:last-child{break-after:auto}.pa-head:first-child{margin-top:0}.pa-task{margin:0 0 22px;padding-bottom:12px;border-bottom:1px solid #ddd}.pa-task h2{margin:0 0 4px}.pa-done{color:#7a8494;margin-top:28px}mark{background:#fff3a0}img{max-width:100%}';
@@ -4427,18 +4428,27 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
   drop.addEventListener('dragleave', () => drop.classList.remove('over'));
   drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files]); });
 
-  let vUrl = null, vFile = null;
+  let vUrl = null, vFile = null, vRequest = 0;
+  function releaseViewer() {
+    ++vRequest;const url=vUrl;vUrl=null;vFile=null;
+    $('#vFrame').src='about:blank';
+    if(url)setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
   async function openViewer(f) {
+    const request=++vRequest;
     const b = await getFile(f.id);
+    if(request!==vRequest)return;
     if (!b) { toast('No se encuentra el archivo en este navegador'); return; }
+    const oldUrl=vUrl;if(oldUrl)URL.revokeObjectURL(oldUrl);
     vFile = f; vUrl = URL.createObjectURL(new Blob([b], { type: mimeOf(f) }));
     // Solo los PDF se muestran sin aislar (el visor de PDF lo necesita); el resto, en un marco sin scripts
     const fr = $('#vFrame');
     if (extOf(f) === 'pdf') fr.removeAttribute('sandbox'); else fr.setAttribute('sandbox', '');
     $('#vName').textContent = f.name; fr.src = vUrl; $('#viewer').showModal();
   }
-  $('#viewer').addEventListener('close', () => { $('#vFrame').src = 'about:blank'; if (vUrl) setTimeout(() => URL.revokeObjectURL(vUrl), 1000); });
-  $('#vClose').onclick = () => $('#viewer').close();
+  $('#viewer').addEventListener('cancel', releaseViewer);
+  $('#viewer').addEventListener('close', () => { if(!$('#viewer').open && (vUrl || vFile))releaseViewer(); });
+  $('#vClose').onclick = () => { releaseViewer(); $('#viewer').close(); };
   $('#vOpen').onclick = () => openLocal(vFile);
   $('#vDown').onclick = async () => { const b = await getFile(vFile.id); download(fileName(vFile.name, extOf(vFile)), b, mimeOf(vFile)); };
 
@@ -4641,7 +4651,7 @@ Gracias.` },
       const ids = new Set(mails.map(m => m.uid));
       Object.keys(state.mailSeen).forEach(k => { if (!ids.has(k)) delete state.mailSeen[k]; });
       try { chimeOnNewMail(); } catch (e) {}
-      if (syncReady) try { processMailTasks(); enrichFromMail(); } catch (e) { console.error('Tareas desde el correo:', e); }
+      if (syncReady) try { processMailTasks(); enrichFromMail(); reviewAula(); } catch (e) { console.error('Tareas desde el correo:', e); }
       try { notifyAlerts(); } catch (e) { console.error('Avisos:', e); }
     } catch { mailServer = false; }
     updateMailBadge();
@@ -4803,6 +4813,86 @@ Gracias.` },
     const k = keyT(p.title);
     return s.tasks.find(t => (p.av && t.av === p.av) || (k && k === keyT(t.sourceTitle || t.title)));
   }
+  /* ---------- Revisión automática del Aula Virtual (profesorado y entregas) ---------- */
+  const AULA_EVERY = 3 * 3600e3;   // como mucho una revisión automática cada 3 h
+  let aulaBusy = false, aulaLast = (() => { try { return JSON.parse(localStorage.getItem('cuaderno-aula-revision')) || {}; } catch { return {}; } })();
+  function aulaReviewText() {
+    if (!IN_APP) return '';
+    if (aulaBusy) return ('Revisando el Aula Virtual…');
+    if (aulaLast.needsLogin) return ('Aula Virtual: hace falta iniciar sesión una vez. Pulsa el botón del Aula Virtual en la barra lateral.');
+    if (aulaLast.error) return 'Aula Virtual: no se ha podido revisar. ' + aulaLast.error;
+    if (!aulaLast.at) return ('El Aula Virtual se revisa sola cada pocas horas.');
+    return `Aula Virtual revisada: ${new Date(aulaLast.at).toLocaleString()} · asignaturas reconocidas: ${aulaLast.courses || 0} · entregas próximas: ${aulaLast.events || 0}`;
+  }
+  // curso del Aula Virtual → asignatura (por código; si no, por el nombre completo)
+  function aulaSubject(c) {
+    const hay = [c.fullname, c.shortname, c.idnumber].join(' '), k = keyT(c.fullname);
+    const byCode = state.subjects.filter(s => s.code && new RegExp('(^|\\D)' + String(s.code).replace(/\D/g, '') + '(\\D|$)').test(hay) && String(s.code).replace(/\D/g, '').length >= 4);
+    if (byCode.length === 1) return byCode[0];
+    const byName = state.subjects.filter(s => s.name && keyT(s.name).length > 8 && k.includes(keyT(s.name)));
+    return byName.length === 1 ? byName[0] : null;
+  }
+  function applyAulaScan(data) {
+    let changed = false, teachers = 0, tasks = 0, dates = 0, known = 0; const bySubject = new Map(), t0 = today();
+    for (const c of data.courses || []) {
+      const s = aulaSubject(c); if (!s) continue; known++; bySubject.set(c.id, s);
+      for (const full of c.contacts || []) {
+        const name = niceName(full), key = CuadernoCorreoAnalisis.personKey(name); if (!key || key.split(' ').length < 2) continue;
+        if (s.teacherDismissed?.['name:' + key]) continue;
+        const had = (s.teachers || []).some(t => CuadernoCorreoAnalisis.personKey(t.name) === key || (t.mailNames || []).includes(key));
+        const before = (s.teachers || []).length, t = addTeacher(s, { name }, true);
+        if (state.deleted[t.id]) { s.teachers = s.teachers.filter(x => x !== t); continue; }
+        if (!t.aulaCourse) { t.aulaCourse = c.fullname; changed = true; }
+        if (!had && s.teachers.length > before) { teachers++; changed = true; }
+      }
+    }
+    for (const e of data.events || []) {
+      const s = bySubject.get(e.courseId); if (!s) continue;
+      const av = (e.url.match(/[?&]id=(\d+)/) || [])[1], isAssign = /\/mod\/assign\//.test(e.url), title = nice(e.title);
+      let t = s.tasks.find(x => CuadernoAulaVirtual.taskURL(x) === e.url) || (isAssign ? findTask(s, { av, title }) : s.tasks.find(x => keyT(x.sourceTitle || x.title) === keyT(title)));
+      if (t) {
+        if (!CuadernoAulaVirtual.taskURL(t)) { t.activityUrl = e.url; if (isAssign && !t.av) t.av = av; changed = true; }
+        // la fecha del Aula Virtual manda cuando cambia allí; no pisa una fecha que hayas tocado después
+        if (t.aulaScanDue !== e.due) { if (!t.done && t.due !== e.due) { t.due = e.due; dates++; } t.aulaScanDue = e.due; changed = true; }
+        continue;
+      }
+      const id = 'aula-task-' + (isAssign ? '' : 'q') + av, dk = isAssign ? 'av:' + av : 'avq:' + av;
+      if (e.due < t0 || state.deleted[id] || state.autoMail.dismissed[dk]) continue;
+      state.autoMail.dismissed[dk] = true;   // si la borras, no vuelve a aparecer
+      const shortTitle = title.length > 85 ? title.slice(0, 82).replace(/\s+\S*$/, '') + '…' : title;
+      s.tasks.push({ id, title: shortTitle, sourceTitle: title, due: e.due, aulaScanDue: e.due, done: false, created: Date.now(), ...(isAssign ? { av } : {}), activityUrl: e.url, auto: true, info: ['Desde el Aula Virtual', e.time && e.time !== '00:00' ? 'cierra a las ' + e.time : ''].filter(Boolean).join(' · ') });
+      tasks++; changed = true;
+    }
+    return { changed, teachers, tasks, dates, known };
+  }
+  // enunciado y archivos de las tareas que aún no se han consultado (pocas cada vez, sin abrir ventanas)
+  async function fillAulaTasks() {
+    let n = 0;
+    for (const s of state.subjects) for (const t of s.tasks) {
+      const url = CuadernoAulaVirtual.taskURL(t); if (!url || t.aula?.checkedAt || t.done || n >= 4) continue;
+      try { const r = await mailRequest('/api/aula/actividad', { url, quiet: true }); if (r.needsLogin) return n; const cur = state.subjects.find(x => x.id === s.id)?.tasks.find(x => x.id === t.id); if (cur && CuadernoAulaVirtual.taskURL(cur) === url) { CuadernoAulaVirtual.apply(cur, r); n++; save(); } } catch (e) { console.warn('Aula Virtual:', e.message); }
+    }
+    return n;
+  }
+  async function reviewAula(manual = false) {
+    if (!IN_APP || aulaBusy || !syncReady) return;
+    if (!manual && Date.now() - (aulaLast.tried || 0) < AULA_EVERY) return;
+    aulaBusy = true; aulaLast.tried = Date.now(); if (state.view === 'teachers') renderTeacherScanStatus();
+    try {
+      const data = await mailRequest('/api/aula/revisar', {});
+      if (data.needsLogin) aulaLast = { tried: Date.now(), at: aulaLast.at, needsLogin: true };
+      else {
+        const r = applyAulaScan(data); if (r.changed) save();
+        aulaLast = { tried: Date.now(), at: Date.now(), courses: r.known, events: (data.events || []).length };
+        const filled = await fillAulaTasks();
+        if (r.changed || filled) { renderSubjects(); if (state.view === 'tasks') renderTasks(); }
+        const news = [r.teachers && (r.teachers === 1 ? '1 ficha de profesorado' : r.teachers + ' fichas de profesorado'), r.tasks && (r.tasks === 1 ? '1 tarea nueva' : r.tasks + ' tareas nuevas'), r.dates && (r.dates === 1 ? '1 plazo actualizado' : r.dates + ' plazos actualizados')].filter(Boolean);
+        if (news.length) toast('Aula Virtual: ' + news.join(', ')); else if (manual) toast('Aula Virtual revisada: no hay novedades');
+      }
+    } catch (e) { aulaLast = { tried: Date.now(), at: aulaLast.at, error: e.message }; }
+    finally { aulaBusy = false; try { localStorage.setItem('cuaderno-aula-revision', JSON.stringify(aulaLast)); } catch {} if (state.view === 'teachers') renderTeachers(); }
+  }
+  if (IN_APP) { setTimeout(() => reviewAula(), 25000); setInterval(() => reviewAula(), 20 * 60e3); }
   function enrichFromMail(){
     if(!window.CuadernoCorreoAnalisis)return;
     let changed=completeTeachersFromMail().changed;
@@ -5778,7 +5868,11 @@ Gracias.` },
   /* ---------- Novedades de la última versión ----------
      Solo las de la versión instalada (sin historial). Se escriben en castellano y su traducción está en CA,
      así salen en el idioma de la app. Al publicar una versión nueva: cambiar NEWS.v y la lista. */
-  const NEWS = { v: '4.0.1', items: [
+  const NEWS = { v: '4.0.2', items: [
+    'El Aula Virtual se revisa sola: crea las fichas del profesorado de cada curso y añade las entregas próximas con su plazo y su enunciado.',
+    'El Aula Virtual se abre directamente, sin pasar por la pantalla de inicio de sesión; usa la misma cuenta del correo.',
+    'En Profesorado, la lista de todas las fichas se abre y se cierra sin salir de la asignatura.',
+    'Los PDF llevan solo lo que has escrito, y el visor de documentos se cierra bien.',
     'Actualizar pregunta antes de descargar e instalar. Puedes elegir Ahora no y continuar trabajando.',
     'Nuevo acceso directo a Aula Virtual, con la sesión compartida de Intranet y renovación del acceso guardado.',
     'Profesorado distingue las fichas de la asignatura y el total, con un botón para verlas todas.',

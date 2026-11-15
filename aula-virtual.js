@@ -35,5 +35,23 @@
     const materials=[...section.querySelectorAll('a[href]')].filter(a=>{try{const u=new URL(a.href);return u.protocol==='https:'&&u.hostname==='aulavirtual.uv.es'&&/^\/mod\/(resource|folder)\/view\.php$/.test(u.pathname)&&/^\d+$/.test(u.searchParams.get('id')||'');}catch(_){return false;}}).map(a=>({name:text(a).replace(/\s+(Archivo|File|Carpeta|Folder)\s*$/i,'').trim(),url:a.href})).filter((a,i,all)=>a.name&&all.findIndex(b=>b.url===a.url)===i).slice(0,40);
     return {section:name,context,materials};
   }
-  const api={activityURL,materialURL,fromMail,taskURL,apply,extractDocument,extractCourseContext};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CuadernoAulaVirtual=api;
+  // Revisión general: cursos, profesorado de cada curso y entregas próximas. Función autocontenida
+  // para el mundo aislado; usa el servicio interno de Moodle con la sesión ya abierta (solo lectura).
+  async function scanSite(){
+    if(location.protocol!=='https:'||location.hostname!=='aulavirtual.uv.es'||/^\/(login|auth)\//.test(location.pathname)||document.querySelector('input[type="password"]'))return {needsLogin:true};
+    let sesskey='';for(const a of document.querySelectorAll('a[href*="sesskey="]')){const m=a.href.match(/[?&]sesskey=([A-Za-z0-9]+)/);if(m){sesskey=m[1];break;}}
+    if(!sesskey)sesskey=document.querySelector('input[name="sesskey"]')?.value||'';
+    if(!/^[A-Za-z0-9]+$/.test(sesskey))return {needsLogin:true};
+    const call=async(methodname,args)=>{const r=await fetch('/lib/ajax/service.php?sesskey='+sesskey+'&info='+methodname,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify([{index:0,methodname,args}])});const j=await r.json();if(!Array.isArray(j)||j[0]?.error)throw new Error(j?.[0]?.exception?.message||j?.error||'Respuesta no reconocida');return j[0].data;};
+    const text=v=>{const d=document.createElement('textarea');d.innerHTML=String(v||'');return d.value.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();};
+    const out={ok:true,courses:[],events:[],warnings:[]};
+    try{const data=await call('core_course_get_enrolled_courses_by_timeline_classification',{offset:0,limit:0,classification:'all',sort:'fullname'});out.courses=(data.courses||[]).map(c=>({id:+c.id,fullname:text(c.fullname),shortname:text(c.shortname),idnumber:text(c.idnumber),contacts:[]}));}catch(e){out.warnings.push('cursos: '+e.message);}
+    if(out.courses.length)try{const data=await call('core_course_get_courses_by_field',{field:'ids',value:out.courses.map(c=>c.id).join(',')});for(const c of data.courses||[]){const mine=out.courses.find(x=>x.id===+c.id);if(mine)mine.contacts=(c.contacts||[]).map(p=>text(p.fullname)).filter(Boolean).slice(0,20);}}catch(e){out.warnings.push('profesorado: '+e.message);}
+    try{const from=Math.floor(Date.now()/1000)-86400,data=await call('core_calendar_get_action_events_by_timesort',{limitnum:50,timesortfrom:from,limittononsuspendedevents:true});
+      for(const e of data.events||[]){if(!/^(assign|quiz)$/.test(e.modulename||'')||!e.timesort)continue;const d=new Date(e.timesort*1000),pad=n=>String(n).padStart(2,'0');out.events.push({url:String(e.url||e.action?.url||''),title:text(e.activityname||e.name),due:d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),time:pad(d.getHours())+':'+pad(d.getMinutes()),courseId:+(e.course?.id||0),course:text(e.course?.fullname)});}
+    }catch(e){out.warnings.push('entregas: '+e.message);}
+    if(!out.courses.length&&!out.events.length&&out.warnings.length)return {ok:false,error:out.warnings.join(' · ')};
+    return out;
+  }
+  const api={activityURL,materialURL,fromMail,taskURL,apply,extractDocument,extractCourseContext,scanSite};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CuadernoAulaVirtual=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
