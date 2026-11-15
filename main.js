@@ -44,7 +44,7 @@ ipcMain.handle('cuaderno:uv:read',event=>uvAccess.read(event));
 ipcMain.handle('cuaderno:uv:save',(event,data)=>uvAccess.stage(event,data));
 ipcMain.handle('cuaderno:uv:failed',event=>uvAccess.failed(event));
 ipcMain.handle('cuaderno:uv:success',async event=>{const saved=uvAccess.success(event);if(saved)await session.fromPartition('persist:cuaderno-intranet').cookies.flushStore().catch(()=>{});return saved;});
-function openIntranet(target) {
+function openIntranet(target = 'https://portal.uv.es/cgi-bin/portal/portal?lang=ca') {
   if(intranetWindow&&!intranetWindow.isDestroyed()){if(target)intranetWindow.loadURL(target).catch(()=>{});intranetWindow.show();intranetWindow.focus();return intranetWindow;}
   intranetWindow=new BrowserWindow({width:1200,height:850,title:'Intranet UV · Cuaderno',webPreferences:{partition:'persist:cuaderno-intranet',preload:path.join(__dirname,'intranet-preload.js'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
   intranetWindow.webContents.on('will-navigate',(event,url)=>{try{const u=new URL(url);if(u.protocol==='https:'&&(u.hostname==='uv.es'||u.hostname.endsWith('.uv.es')))return;}catch(_){}event.preventDefault();if(/^https?:/i.test(url))shell.openExternal(url);});

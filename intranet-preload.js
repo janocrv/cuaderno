@@ -3,7 +3,7 @@
 const {ipcRenderer}=require('electron');
 if(window.top===window&&location.protocol==='https:'&&['as.uv.es','portal.uv.es','aulavirtual.uv.es'].includes(location.hostname)) {
   const loginPage=(location.hostname==='as.uv.es'&&location.pathname==='/cgi-bin/AuthServer')||(location.hostname==='portal.uv.es'&&location.pathname==='/cgi-bin/portal/portal')||(location.hostname==='aulavirtual.uv.es'&&location.pathname==='/login/index.php');
-  let savedPromise,scheduled=false,reported=false,routed=false,gestureAt=0;
+  let savedPromise,scheduled=false,reported=false,routed=false,gestureAt=0,loginError=false,autoAttempted=false;
   const filled=new WeakSet(),errors=new WeakSet();
   const visible=el=>el&&!el.disabled&&el.getClientRects().length>0;
   function fields(){
@@ -17,16 +17,24 @@ if(window.top===window&&location.protocol==='https:'&&['as.uv.es','portal.uv.es'
   }
   async function fill(){
     if(!loginPage)return;
-    for(const el of document.querySelectorAll('.loginerrors,.loginerror,.alert-danger,[role="alert"],.error'))if(!errors.has(el)&&/incorrect|inv.lid|err.n|fall|failed/i.test(el.textContent)){errors.add(el);ipcRenderer.invoke('cuaderno:uv:failed').catch(()=>{});}
-    const f=fields();if(!f)return;
+    for(const el of document.querySelectorAll('.loginerrors,.loginerror,.alert-danger,[role="alert"],.error'))if(!errors.has(el)&&/incorrect|inv.lid|err.n|fall|failed/i.test(el.textContent)){loginError=true;errors.add(el);ipcRenderer.invoke('cuaderno:uv:failed').catch(()=>{});}
     const saved=await(savedPromise||=(ipcRenderer.invoke('cuaderno:uv:read').catch(()=>null)));
     if(location.hostname==='aulavirtual.uv.es'&&!saved&&!gestureAt&&!routed){
       const link=[...document.querySelectorAll('a[href]')].find(a=>{try{const u=new URL(a.href);return u.protocol==='https:'&&u.hostname==='aulavirtual.uv.es'&&!u.port&&u.pathname==='/auth/saml2/login.php'&&/universitat|universidad|university|usuaris|usuarios/i.test(a.textContent);}catch(_){return false;}});
       if(link){routed=true;location.assign(link.href);return;}
     }
+    const f=fields();if(!f)return;
     if(!saved||filled.has(f.pw)||!f.pw.isConnected||f.user.value&&f.user.value.trim().toLowerCase()!==saved.user.toLowerCase())return;
+    const canAuto=!gestureAt&&!f.pw.value&&!loginError&&!autoAttempted;
     filled.add(f.pw);if(!f.user.value)f.user.value=saved.user;if(!f.pw.value)f.pw.value=saved.password;
     for(const el of [f.user,f.pw]){el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}
+    // A stored, previously validated login may renew its session once. Stop at
+    // errors, manual edits or challenges, and never loop on a redirect to login.
+    if(!canAuto||f.form.querySelector('input[autocomplete="one-time-code"],input[name*="otp" i],input[name*="captcha" i],iframe[src*="recaptcha"],iframe[src*="hcaptcha"]'))return;
+    try{const last=Number(sessionStorage.getItem('cuaderno-uv-auto-login')||0);if(Date.now()-last<60000)return;sessionStorage.setItem('cuaderno-uv-auto-login',String(Date.now()));}catch(_){return;}
+    autoAttempted=true;
+    const submit=[...f.form.querySelectorAll('button:not([type]),button[type="submit"],input[type="submit"]')].find(visible);
+    if(submit)f.form.requestSubmit(submit);else f.form.requestSubmit();
   }
   function remember(e){
     if(!loginPage||!e.isTrusted||Date.now()-gestureAt>2000)return;const f=fields();if(!f||!f.user.value.trim()||!f.pw.value)return;
