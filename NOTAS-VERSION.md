@@ -1,10 +1,11 @@
-# Cuaderno 4.0.3
+# Cuaderno 4.0.4
 
-- **Tareas más claras:** la lista se agrupa en «Atrasadas», «Próximos 7 días», «Más adelante» y «Sin fecha». Cada tarea muestra una sola fecha, que se cambia con un clic, y de dónde viene (Aula Virtual o correo). Las completadas quedan recogidas al final y se abren al marcar una. «Hacer aquí» pasa a llamarse «Escribir mi trabajo», y «Detalles» abre el enunciado y los archivos. Las tareas que creas tú ya no muestran avisos del Aula Virtual.
-- **Atrás y adelante en la ventana de la UV:** la ventana de Intranet y Aula Virtual tiene botones flotantes (abajo a la izquierda) para ir atrás, adelante y recargar. También con Cmd/Ctrl+[ y ].
-- **Profesorado desde el Aula Virtual:** una vez al día, y al pulsar «Revisar correos y Aula Virtual», la app lee el apartado de información de cada curso y sus PDF para completar correo, tutorías, despacho y teléfono de cada docente. No pisa lo que hayas escrito.
+- **Revisión del Aula Virtual más completa:** el profesorado de cada asignatura se toma de la lista de participantes del curso. Además se leen la guía docente, el programa, el temario y la presentación para completar el correo, las tutorías y el despacho de cada docente, sin mezclar los datos cuando hay varios.
+- **Más tareas:** se añaden también las entregas y cuestionarios que están en la página del curso aunque no aparezcan en el calendario, con su plazo y su enunciado. Las ya cerradas o entregadas no se añaden.
+- **Recordatorios con varias tareas:** el aviso «Tiene tareas con fecha de entrega en 7 días» crea una tarea por cada una, con su nombre, asignatura, fecha y hora. Los que estaban como una sola duda se convierten solos.
+- **Fichas de profesorado:** ya no se duplican por un «Prof. Dr.» ni toman como nombre el de una facultad o un departamento. Las que quedaron así se corrigen al actualizar.
 
-Incluye todas las mejoras de la versión 4.0.2. Los datos guardados se conservan al actualizar.
+Incluye todas las mejoras de la versión 4.0.3. Los datos guardados se conservan al actualizar.
 
 ## Descargas
 
@@ -12,4 +13,4 @@ Incluye todas las mejoras de la versión 4.0.2. Los datos guardados se conservan
 - **Mac Intel:** Cuaderno-mac-x64.dmg.
 - **Windows de 64 bits:** Cuaderno-win-x64.exe.
 
-Pruebas con perfiles, correos y páginas UV ficticios. La lectura de los PDF reales de cada asignatura y Windows físico quedan pendientes de comprobación.
+La lectura de cursos se comprobó contra un Aula Virtual real; el resto, con datos ficticios. Windows físico queda pendiente de comprobación.
