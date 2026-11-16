@@ -31,7 +31,7 @@ jobs:
           set -e
           mkdir -p build/web/sonidos build/recursos
           cp main.js package.json package-lock.json correo-suite.js ortografia-worker.js intranet-preload.js uv-acceso.js historial.js documentos-worker.js editor-exportar.js build/
-          cp aula-lector.js build/
+          cp aula-lector.js trabajos.js build/
           cp cuaderno-apuntes.html esquemas.html aviso.mp3 avisos.mp3 cuaderno.png correo-analisis.js build/web/
           cp aula-virtual.js build/web/
           cp sonidos/*.wav sonidos/*.mp3 build/web/sonidos/
