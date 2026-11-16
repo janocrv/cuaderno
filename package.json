@@ -1,7 +1,7 @@
 {
   "name": "cuaderno",
   "productName": "Cuaderno",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Cuaderno del Máster en Profesor/a de Educación Secundaria (UV)",
   "author": "Cuaderno UV",
   "main": "main.js",
@@ -115,5 +115,6 @@
       "deleteAppDataOnUninstall": false
     }
   },
-  "cuadernoRepo": "janocrv/cuaderno"
+  "cuadernoRepo": "janocrv/cuaderno",
+  "cuadernoBuzon": "https://cuaderno-buzon.janodrivebox.workers.dev"
 }
