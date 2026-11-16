@@ -44,6 +44,39 @@ ipcMain.handle('cuaderno:uv:read',event=>uvAccess.read(event));
 ipcMain.handle('cuaderno:uv:save',(event,data)=>uvAccess.stage(event,data));
 ipcMain.handle('cuaderno:uv:failed',event=>uvAccess.failed(event));
 ipcMain.handle('cuaderno:uv:success',async event=>{const saved=uvAccess.success(event);if(saved)await session.fromPartition('persist:cuaderno-intranet').cookies.flushStore().catch(()=>{});return saved;});
+// Botones flotantes de atrás / adelante / recargar para la ventana de la UV (abajo a la izquierda).
+// Van en una vista aparte, encima de la página: funcionan también cuando lo abierto es un PDF.
+let uvNavHTML='';
+function addUvNav(win){
+  try{
+    const {WebContentsView}=require('electron');
+    const bar=new WebContentsView({webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true}});
+    bar.setBackgroundColor('#00000000');try{bar.setBorderRadius(22);}catch(_){}
+    win.contentView.addChildView(bar);
+    const place=()=>{if(win.isDestroyed())return;const [,h]=win.getContentSize();bar.setBounds({x:16,y:Math.max(0,h-44-16),width:148,height:44});};
+    place();win.on('resize',place);
+    const ca=(typeof uiLang!=='undefined'&&uiLang==='ca'),T=ca?['Arrere','Avant','Torna a carregar']:['Atrás','Adelante','Recargar'];
+    uvNavHTML='<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:transparent;overflow:hidden;-webkit-user-select:none;cursor:default}'+
+      'div{box-sizing:border-box;height:44px;display:flex;align-items:center;justify-content:space-evenly;padding:0 6px;border-radius:22px;background:rgba(28,32,38,.86);border:1px solid rgba(255,255,255,.16)}'+
+      'button{all:unset;width:38px;height:34px;border-radius:17px;display:grid;place-items:center;color:#fff}button:hover{background:rgba(255,255,255,.16)}button:active{background:rgba(255,255,255,.28)}button[disabled]{opacity:.32;pointer-events:none}'+
+      'svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}</style>'+
+      '<div><button id="back" title="'+T[0]+'" aria-label="'+T[0]+'" disabled><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>'+
+      '<button id="forward" title="'+T[1]+'" aria-label="'+T[1]+'" disabled><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>'+
+      '<button id="reload" title="'+T[2]+'" aria-label="'+T[2]+'"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5"/></svg></button></div>'+
+      '<script>const B=id=>document.getElementById(id);function set(a,b){B("back").disabled=!a;B("forward").disabled=!b}const ask=a=>fetch("/api/intranet/nav",{method:"POST",body:JSON.stringify({a})}).then(r=>r.json()).then(j=>set(j.back,j.forward)).catch(()=>{});for(const b of document.querySelectorAll("button"))b.onclick=()=>ask(b.id);setInterval(()=>ask(""),800);ask("");</script>';
+    const history=()=>win.webContents.navigationHistory;
+    const act=name=>{if(win.isDestroyed())return;const h=history();if(name==='back'&&h.canGoBack())h.goBack();else if(name==='forward'&&h.canGoForward())h.goForward();else if(name==='reload')win.webContents.reload();};
+    const sync=()=>{if(win.isDestroyed()||bar.webContents.isDestroyed())return;const h=history();bar.webContents.executeJavaScript('typeof set==="function"&&set('+h.canGoBack()+','+h.canGoForward()+')').catch(()=>{});};
+    bar.webContents.on('will-navigate',e=>e.preventDefault());bar.webContents.setWindowOpenHandler(()=>({action:'deny'}));
+    for(const ev of ['did-navigate','did-navigate-in-page','did-finish-load','did-frame-finish-load'])win.webContents.on(ev,sync);
+    // Atajos habituales: Cmd/Ctrl+[ y ], Alt+flechas, Cmd/Ctrl+R
+    win.webContents.on('before-input-event',(e,input)=>{if(input.type!=='keyDown')return;const mod=process.platform==='darwin'?input.meta:input.control;
+      const name=(mod&&input.key==='[')||(input.alt&&input.key==='ArrowLeft')?'back':(mod&&input.key===']')||(input.alt&&input.key==='ArrowRight')?'forward':'';
+      if(name){e.preventDefault();act(name);}});
+    bar.webContents.loadURL('cuaderno://app/uv-nav.html').then(sync).catch(()=>{});
+    win.__uvNav={act,bar};
+  }catch(e){log('Navegación UV:',e.message);}
+}
 // Página de la UV sin formulario de contraseña = sesión ya iniciada (o página pública).
 async function uvPageReady(wc){try{const u=new URL(wc.getURL());if(u.protocol!=='https:'||!(u.hostname==='uv.es'||u.hostname.endsWith('.uv.es')))return false;if(u.hostname==='as.uv.es'||/^\/(login|auth)\//.test(u.pathname))return false;return !(await wc.executeJavaScriptInIsolatedWorld(1002,[{code:'!!document.querySelector(\'input[type="password"]\')'}]));}catch(_){return false;}}
 function openIntranet(target = 'https://portal.uv.es/cgi-bin/portal/portal?lang=ca', quiet = false) {
@@ -53,8 +86,9 @@ function openIntranet(target = 'https://portal.uv.es/cgi-bin/portal/portal?lang=
   const wait=uvAccess.status().saved;
   const win=intranetWindow=new BrowserWindow({show:!wait&&!quiet,width:1200,height:850,title:'Intranet UV · Cuaderno',webPreferences:{partition:'persist:cuaderno-intranet',preload:path.join(__dirname,'intranet-preload.js'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
   win.__quiet=quiet;
+  if(!quiet)addUvNav(win);
   if(wait||quiet){let timer=null;const reveal=()=>{clearTimeout(timer);win.__reveal=null;if(!win.isDestroyed()&&!win.__quiet&&!win.isVisible()){win.show();win.focus();}};
-    win.__reveal=()=>{win.__quiet=false;reveal();};
+    win.__reveal=()=>{win.__quiet=false;if(!win.__uvNav)addUvNav(win);reveal();};
     if(!quiet)timer=setTimeout(reveal,9000);
     win.webContents.on('did-finish-load',async()=>{if(await uvPageReady(win.webContents)){win.__ready=true;reveal();}});}
   intranetWindow.webContents.on('will-navigate',(event,url)=>{try{const u=new URL(url);if(u.protocol==='https:'&&(u.hostname==='uv.es'||u.hostname.endsWith('.uv.es')))return;}catch(_){}event.preventDefault();if(/^https?:/i.test(url))shell.openExternal(url);});
@@ -651,6 +685,7 @@ async function handle(req) {
     if (p.startsWith('/sonidos/')) {const name=path.basename(p);if(!/^[a-z0-9-]+\.(mp3|wav)$/.test(name))return json({},404);return fileResponse(path.join(WEB,'sonidos',name),name.endsWith('.wav')?'audio/wav':'audio/mpeg');}
     if (p === '/esquemas.html') return fileResponse(path.join(WEB, 'esquemas.html'));   // pizarra de esquemas (pestaña «Esquemas»)
     if (p === '/correo-analisis.js') return fileResponse(path.join(WEB, 'correo-analisis.js'));
+    if (p === '/uv-nav.html') return new Response(uvNavHTML, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
     if (p === '/aula-virtual.js') return fileResponse(path.join(WEB, 'aula-virtual.js'));
     if (p.startsWith('/ia/')) { const f = path.basename(p); if (!/^[\w.-]+$/.test(f)) return json({}, 404); return fileResponse(path.join(WEB, 'ia', f)); }   // IA local (worker, librería y motor)
     if (['/cuaderno.png', '/cuaderno-uv.png', '/favicon.ico'].includes(p)) return fileResponse(path.join(WEB, 'cuaderno.png'), 'image/png');
@@ -682,8 +717,9 @@ async function handle(req) {
       if(p==='/api/historial/snapshot'){const d=await req.json();if(!d.note?.id)throw new Error('Falta el apunte.');history.snapshot(d.note,d.subject||{},true);return json({ok:true});}
       if (p === '/api/correo/enviar') return json(await mailSuite.send(await req.json()));
       if (p === '/api/intranet/abrir') {openIntranet();return json({ok:true});}
+      if (p === '/api/intranet/nav') {const d=await req.json();if(intranetWindow&&!intranetWindow.isDestroyed()&&['back','forward','reload'].includes(d.a))intranetWindow.__uvNav?.act(d.a);const h=intranetWindow&&!intranetWindow.isDestroyed()?intranetWindow.webContents.navigationHistory:null;return json({ok:true,back:!!h?.canGoBack(),forward:!!h?.canGoForward()});}
       if (p === '/api/aula/actividad') {const d=await req.json();return json(await aulaLector.read(d.url,!!d.quiet));}
-      if (p === '/api/aula/revisar') return json(await aulaLector.scan());
+      if (p === '/api/aula/revisar') {const d=await req.json().catch(()=>({}));return json(await aulaLector.scan(d||{}));}
       if (p === '/api/aula/abrir') {const d=await req.json(),u=new URL(d.url||'https://aulavirtual.uv.es/');if(u.protocol!=='https:'||u.hostname!=='aulavirtual.uv.es'||u.port||u.username||u.password||!(/^(\/|\/my\/?|\/mod\/(assign|quiz|resource|folder)\/view\.php|\/pluginfile\.php\/.*)$/.test(u.pathname)))throw new Error('El enlace no pertenece al Aula Virtual de la UV.');openIntranet(u.href);return json({ok:true});}
       if (p === '/api/intranet/olvidar') {uvAccess.clear();const uvSession=session.fromPartition('persist:cuaderno-intranet');await uvSession.clearStorageData();await uvSession.clearAuthCache();if(intranetWindow&&!intranetWindow.isDestroyed())intranetWindow.reload();return json({ok:true});}
       if (p === '/api/gemini/abrir') {const d=await req.json();openGemini(d.prompt||'');return json({ok:true});}

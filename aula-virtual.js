@@ -53,5 +53,30 @@
     if(!out.courses.length&&!out.events.length&&out.warnings.length)return {ok:false,error:out.warnings.join(' · ')};
     return out;
   }
-  const api={activityURL,materialURL,fromMail,taskURL,apply,extractDocument,extractCourseContext,scanSite};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CuadernoAulaVirtual=api;
+  // Página de un curso: texto del apartado de información y sus PDF (guía, profesorado…). Autocontenida, solo lectura.
+  async function scanCourse(skip){
+    const here=new URL(location.href);
+    if(here.protocol!=='https:'||here.hostname!=='aulavirtual.uv.es'||here.pathname!=='/course/view.php'||document.querySelector('input[type="password"]'))return {needsLogin:true};
+    const text=el=>(el?.innerText||el?.textContent||'').replace(/\u00a0/g,' ').trim(),norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    const INFO=/informaci|general|presentaci|professorat|profesorado|docent|guia|contact/,DOC=/informaci|profes|docent|tutor|contact|guia|presentaci|equip/;
+    const sections=[...document.querySelectorAll('#region-main [data-for="section"],#region-main li.section,#region-main section.section,#region-main .course-section')].filter((el,i,all)=>!all.some(o=>o!==el&&o.contains(el)));
+    const chosen=sections.filter((el,i)=>i===0||INFO.test(norm(text(el.querySelector('.sectionname,.section-title,h3,h4'))))).slice(0,3);
+    const fileLink=a=>{try{const u=new URL(a.href);if(u.protocol!=='https:'||u.hostname!=='aulavirtual.uv.es'||u.port)return '';if(u.pathname==='/mod/resource/view.php'&&/^\d+$/.test(u.searchParams.get('id')||''))return u.origin+u.pathname+'?id='+u.searchParams.get('id');if(/^\/pluginfile\.php\/.+\.pdf$/i.test(u.pathname))return u.origin+u.pathname;}catch(_){}return '';};
+    const found=[];const add=(a,priority)=>{const url=fileLink(a);if(!url||found.some(f=>f.url===url))return;const name=text(a).replace(/\s+(Archivo|Fitxer|File)\s*$/i,'').trim().slice(0,300);found.push({url,name,priority:priority+(DOC.test(norm(name))?2:0)});};
+    for(const el of chosen)for(const a of el.querySelectorAll('a[href]'))add(a,1);
+    for(const a of document.querySelectorAll('#region-main a[href]'))if(DOC.test(norm(text(a))))add(a,0);
+    const wanted=found.filter(f=>f.priority>=2||chosen.length&&f.priority>=1).sort((a,b)=>b.priority-a.priority).slice(0,4),docs=[];
+    const b64=buf=>{const bytes=new Uint8Array(buf);let out='';for(let i=0;i<bytes.length;i+=0x8000)out+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(out);};
+    for(const f of wanted){
+      if((skip||[]).includes(f.url)){docs.push({url:f.url,name:f.name,skipped:true});continue;}
+      try{let r=await fetch(f.url+(f.url.includes('?')?'&redirect=1':''),{credentials:'same-origin'});
+        if(/text\/html/i.test(r.headers.get('content-type')||'')){const m=(await r.text()).match(/https:\/\/aulavirtual\.uv\.es\/pluginfile\.php\/[^"'<>\s]+?\.pdf/i);if(!m)continue;r=await fetch(m[0].replace(/&amp;/g,'&'),{credentials:'same-origin'});}
+        if(!r.ok||new URL(r.url).hostname!=='aulavirtual.uv.es'||!/pdf/i.test(r.headers.get('content-type')||''))continue;
+        const buf=await r.arrayBuffer();if(buf.byteLength>6*1024*1024||buf.byteLength<200)continue;
+        docs.push({url:f.url,name:f.name,data:b64(buf)});
+      }catch(_){}
+    }
+    return {ok:true,text:chosen.map(text).join('\n').slice(0,8000),docs};
+  }
+  const api={activityURL,materialURL,fromMail,taskURL,apply,extractDocument,extractCourseContext,scanSite,scanCourse};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CuadernoAulaVirtual=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

@@ -21,7 +21,7 @@ module.exports=({BrowserWindow,web,open,login})=>{
   // Revisión general silenciosa (cursos, profesorado y entregas). Nunca abre ventanas a la vista.
   const HOME='https://aulavirtual.uv.es/my/';
   const clean=(v,n)=>String(v||'').slice(0,n);
-  async function scanOnce(){
+  async function scanOnce(options={}){
     let reader,timer;
     try{
       reader=new BrowserWindow({show:false,width:1100,height:850,webPreferences:{partition:'persist:cuaderno-intranet',nodeIntegration:false,contextIsolation:true,sandbox:true}});
@@ -29,19 +29,26 @@ module.exports=({BrowserWindow,web,open,login})=>{
       reader.webContents.on('will-navigate',(event,u)=>{if(!allowed(u))event.preventDefault();});reader.webContents.on('will-redirect',(event,u)=>{if(!allowed(u))event.preventDefault();});reader.webContents.setWindowOpenHandler(()=>({action:'deny'}));
       return await Promise.race([(async()=>{await reader.loadURL(HOME).catch(()=>{});let u;try{u=new URL(reader.webContents.getURL());}catch(_){return {needsLogin:true};}
         if(u.hostname!=='aulavirtual.uv.es'||/^\/(login|auth)\//.test(u.pathname))return {needsLogin:true};
-        return await reader.webContents.executeJavaScriptInIsolatedWorld(1001,[{code:'('+api.scanSite.toString()+')()'}]);})(),
-        new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('El Aula Virtual tarda demasiado en responder.')),30000);})]);
+        const data=await reader.webContents.executeJavaScriptInIsolatedWorld(1001,[{code:'('+api.scanSite.toString()+')()'}]);
+        // Revisión a fondo: la página de cada curso, con el texto y los PDF de su apartado de información.
+        if(options.deep&&data?.ok)for(const c of (data.courses||[]).slice(0,14)){if(!/^\d+$/.test(String(c.id)))continue;
+          try{await reader.loadURL('https://aulavirtual.uv.es/course/view.php?id='+c.id).catch(()=>{});const u=new URL(reader.webContents.getURL());if(u.hostname!=='aulavirtual.uv.es'||u.pathname!=='/course/view.php')continue;
+            const info=await reader.webContents.executeJavaScriptInIsolatedWorld(1001,[{code:'('+api.scanCourse.toString()+')('+JSON.stringify((options.skip||[]).slice(0,400))+')'}]);if(info?.ok)c.info=info;}catch(_){}}
+        if(options.deep&&data?.ok)data.deep=true;
+        return data;})(),
+        new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('El Aula Virtual tarda demasiado en responder.')),options.deep?150000:30000);})]);
     }finally{clearTimeout(timer);if(reader&&!reader.isDestroyed())reader.destroy();}
   }
-  async function scan(){
+  async function scan(options={}){
+    options={deep:!!options.deep,skip:Array.isArray(options.skip)?options.skip.filter(x=>typeof x==='string'):[]};
     if(busy)throw new Error('Ya se está consultando el Aula Virtual. Espera a que termine.');busy=true;
     try{
-      let data=await scanOnce();
-      if(data?.needsLogin&&login&&await login())data=await scanOnce();
+      let data=await scanOnce(options);
+      if(data?.needsLogin&&login&&await login())data=await scanOnce(options);
       if(!data||data.needsLogin)return {ok:true,needsLogin:true};
       if(data.ok===false)throw new Error('El Aula Virtual no ha devuelto la información: '+clean(data.error,300));
       return {ok:true,checkedAt:Date.now(),warnings:(data.warnings||[]).slice(0,5).map(w=>clean(w,200)),
-        courses:(data.courses||[]).slice(0,80).map(c=>({id:+c.id||0,fullname:clean(c.fullname,300),shortname:clean(c.shortname,120),idnumber:clean(c.idnumber,120),contacts:(c.contacts||[]).slice(0,20).map(n=>clean(n,160)).filter(Boolean)})),
+        deep:!!data.deep,courses:(data.courses||[]).slice(0,80).map(c=>({id:+c.id||0,fullname:clean(c.fullname,300),shortname:clean(c.shortname,120),idnumber:clean(c.idnumber,120),contacts:(c.contacts||[]).slice(0,20).map(n=>clean(n,160)).filter(Boolean),...(c.info?{info:{text:clean(c.info.text,8000),docs:(c.info.docs||[]).slice(0,4).filter(d=>api.materialURL(d.url)||/^https:\/\/aulavirtual\.uv\.es\/mod\/resource\/view\.php\?id=\d+$/.test(d.url||'')).map(d=>({url:d.url,name:clean(d.name,300),skipped:!!d.skipped,data:typeof d.data==='string'&&d.data.length<9e6&&/^[A-Za-z0-9+/=]*$/.test(d.data)?d.data:''}))}}:{})})),
         events:(data.events||[]).slice(0,80).map(e=>({url:api.activityURL(e.url),title:clean(e.title,300),due:/^\d{4}-\d{2}-\d{2}$/.test(e.due)?e.due:'',time:/^\d{2}:\d{2}$/.test(e.time)?e.time:'',courseId:+e.courseId||0,course:clean(e.course,300)})).filter(e=>e.url&&e.title&&e.due)};
     }finally{busy=false;}
   }

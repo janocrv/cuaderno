@@ -364,7 +364,12 @@ details.bform summary::-webkit-details-marker{display:none}
 .task-doc{display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:.8rem;font-weight:500;padding:6px 10px;border-radius:9px;background:var(--soft);color:var(--accent);white-space:nowrap}
 .task-doc:hover{background:color-mix(in srgb,var(--accent) 14%,var(--soft))}
 .task-context{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:.74rem;color:var(--muted)}
-.task-more{color:var(--accent);font-weight:600;padding:5px 8px;border-radius:8px;background:var(--soft);text-align:left}
+.task-more{display:inline-flex;align-items:center;gap:3px;color:var(--muted);font-size:.76rem;font-weight:600;padding:4px 8px;border-radius:8px;margin-left:auto}.task-more:hover{background:var(--soft);color:var(--accent)}.task-more svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}.task-more[aria-expanded="true"] svg{transform:rotate(180deg)}
+.task-meta{position:relative}.task-when{display:inline-flex;align-items:center;gap:6px;padding:3px 9px 3px 7px;border-radius:9px;font-size:.78rem;color:var(--muted);background:color-mix(in srgb,var(--surface) 70%,transparent);border:1px solid var(--line)}.task-when:hover{border-color:var(--accent);color:var(--accent)}.task-when>svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.task-when .due{margin:0}.task-when.none{border-style:dashed}.task.done .task-when{border-color:transparent;background:none;padding-left:0}
+.task .task-date{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;padding:0;border:0}
+.task-origin{font-size:.7rem;font-weight:600;color:var(--muted);padding:2px 7px;border-radius:7px;background:var(--soft)}
+.task-group{display:flex;align-items:center;gap:8px;margin:20px 4px 6px;font-size:.78rem;font-weight:700;letter-spacing:.02em;color:var(--muted);text-transform:uppercase}.task-group:first-child{margin-top:4px}.task-group b{font-weight:700;font-size:.7rem;min-width:20px;text-align:center;padding:1px 6px;border-radius:9px;background:var(--soft)}.task-group.late{color:#c2543b}.task-group.late b{background:color-mix(in srgb,#d76a50 18%,var(--surface))}.task-group.soon{color:var(--ink)}
+.done-sep button{display:inline-flex;align-items:center;gap:5px;font:inherit;color:inherit;padding:4px 8px;margin-left:-8px;border-radius:8px}.done-sep button:hover{background:var(--soft)}.done-sep svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}.done-sep button[aria-expanded="true"] svg{transform:rotate(180deg)}
 .task-details{margin:12px 0 4px;padding:16px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface) 65%,var(--soft));color:var(--ink);font-size:.84rem}
 .task-details[hidden]{display:none}.task-details h4{font-size:.9rem;margin:0 0 8px}.task-instructions{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;max-height:460px;overflow-y:auto;font-size:.84rem;color:var(--ink)}
 .task-details .task-instructions{font-size:.86rem;color:var(--ink)}
@@ -2164,7 +2169,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     'Las credenciales de Intranet y Aula Virtual se guardan cifradas en este ordenador.':'Les credencials d’Intranet i Aula Virtual es guarden xifrades en este ordinador.',
     '¿Olvidar las sesiones y las credenciales de Intranet y Aula Virtual en este ordenador?':'Vols oblidar les sessions i les credencials d’Intranet i Aula Virtual en este ordinador?',
     'Accesos de Intranet y Aula Virtual eliminados':'Accessos d’Intranet i Aula Virtual eliminats',
-    "Revisar correos":"Revisa els correus", "No se ha podido revisar el correo. ":"No s'ha pogut revisar el correu. ", "El Aula Virtual se revisa sola: crea las fichas del profesorado de cada curso y añade las entregas próximas con su plazo y su enunciado.":"L'Aula Virtual es revisa sola: crea les fitxes del professorat de cada curs i afig els lliuraments pròxims amb el termini i l'enunciat.", "El Aula Virtual se abre directamente, sin pasar por la pantalla de inicio de sesión; usa la misma cuenta del correo.":"L'Aula Virtual s'obri directament, sense passar per la pantalla d'inici de sessió; usa el mateix compte del correu.", "En Profesorado, la lista de todas las fichas se abre y se cierra sin salir de la asignatura.":"En Professorat, la llista de totes les fitxes s'obri i es tanca sense eixir de l'assignatura.", "Los PDF llevan solo lo que has escrito, y el visor de documentos se cierra bien.":"Els PDF porten només el que has escrit, i el visor de documents es tanca bé.", "Desde el Aula Virtual":"Des de l'Aula Virtual", "Revisar correos y Aula Virtual":"Revisa els correus i l'Aula Virtual", "Cerrar la lista completa":"Tanca la llista completa", "Revisando el Aula Virtual…":"Revisant l'Aula Virtual…", "Aula Virtual: hace falta iniciar sesión una vez. Pulsa el botón del Aula Virtual en la barra lateral.":"Aula Virtual: cal iniciar sessió una vegada. Prem el botó de l'Aula Virtual en la barra lateral.", "Aula Virtual: no se ha podido revisar.":"Aula Virtual: no s'ha pogut revisar.", "El Aula Virtual se revisa sola cada pocas horas.":"L'Aula Virtual es revisa sola cada poques hores.", "Aula Virtual revisada:":"Aula Virtual revisada:", "asignaturas reconocidas:":"assignatures reconegudes:", "entregas próximas:":"lliuraments pròxims:", "Docente del curso en el Aula Virtual":"Docent del curs en l'Aula Virtual", "Aula Virtual revisada: no hay novedades":"Aula Virtual revisada: no hi ha novetats", "Se revisan automáticamente al sincronizar el correo.":"Es revisen automàticament en sincronitzar el correu.", "Revisando los correos disponibles…":"Revisant els correus disponibles…", "Correo aún no encontrado":"Correu encara no trobat", "Autores del Aula Virtual por revisar":"Autors de l'Aula Virtual per revisar",
+    "Revisar correos":"Revisa els correus", "No se ha podido revisar el correo. ":"No s'ha pogut revisar el correu. ", "El Aula Virtual se revisa sola: crea las fichas del profesorado de cada curso y añade las entregas próximas con su plazo y su enunciado.":"L'Aula Virtual es revisa sola: crea les fitxes del professorat de cada curs i afig els lliuraments pròxims amb el termini i l'enunciat.", "El Aula Virtual se abre directamente, sin pasar por la pantalla de inicio de sesión; usa la misma cuenta del correo.":"L'Aula Virtual s'obri directament, sense passar per la pantalla d'inici de sessió; usa el mateix compte del correu.", "En Profesorado, la lista de todas las fichas se abre y se cierra sin salir de la asignatura.":"En Professorat, la llista de totes les fitxes s'obri i es tanca sense eixir de l'assignatura.", "Los PDF llevan solo lo que has escrito, y el visor de documentos se cierra bien.":"Els PDF porten només el que has escrit, i el visor de documents es tanca bé.", "Desde el Aula Virtual":"Des de l'Aula Virtual", "Tareas más claras: agrupadas en Atrasadas, Próximos 7 días, Más adelante y Sin fecha; una sola fecha que se cambia con un clic y las completadas recogidas al final.":"Tasques més clares: agrupades en Endarrerides, Pròxims 7 dies, Més avant i Sense data; una sola data que es canvia amb un clic i les completades recollides al final.", "La ventana de Intranet y Aula Virtual tiene botones para ir atrás, adelante y recargar.":"La finestra d'Intranet i Aula Virtual té botons per a anar arrere, avant i tornar a carregar.", "El Aula Virtual lee el apartado de información de cada curso y sus PDF para completar correo, tutorías y despacho del profesorado.":"L'Aula Virtual llig l'apartat d'informació de cada curs i els seus PDF per a completar correu, tutories i despatx del professorat.", "Detalles":"Detalls", "Poner fecha":"Posa data", "Del correo":"Del correu", "Escribir mi trabajo":"Escriu el meu treball", "Abrir mi trabajo":"Obri el meu treball", "Atrasadas":"Endarrerides", "Próximos 7 días":"Pròxims 7 dies", "Más adelante":"Més avant", "Sin fecha":"Sense data", "Ver qué hay que hacer, el enunciado y los archivos":"Mira què cal fer, l'enunciat i els arxius", "Esta tarea la has creado tú. Con «Escribir mi trabajo» puedes hacerla dentro del Cuaderno.":"Esta tasca l'has creada tu. Amb «Escriu el meu treball» pots fer-la dins del Cuaderno.", "Revisar correos y Aula Virtual":"Revisa els correus i l'Aula Virtual", "Cerrar la lista completa":"Tanca la llista completa", "Revisando el Aula Virtual…":"Revisant l'Aula Virtual…", "Aula Virtual: hace falta iniciar sesión una vez. Pulsa el botón del Aula Virtual en la barra lateral.":"Aula Virtual: cal iniciar sessió una vegada. Prem el botó de l'Aula Virtual en la barra lateral.", "Aula Virtual: no se ha podido revisar.":"Aula Virtual: no s'ha pogut revisar.", "El Aula Virtual se revisa sola cada pocas horas.":"L'Aula Virtual es revisa sola cada poques hores.", "Aula Virtual revisada:":"Aula Virtual revisada:", "asignaturas reconocidas:":"assignatures reconegudes:", "entregas próximas:":"lliuraments pròxims:", "Docente del curso en el Aula Virtual":"Docent del curs en l'Aula Virtual", "Aula Virtual revisada: no hay novedades":"Aula Virtual revisada: no hi ha novetats", "Se revisan automáticamente al sincronizar el correo.":"Es revisen automàticament en sincronitzar el correu.", "Revisando los correos disponibles…":"Revisant els correus disponibles…", "Correo aún no encontrado":"Correu encara no trobat", "Autores del Aula Virtual por revisar":"Autors de l'Aula Virtual per revisar",
     "Indicaciones del apartado":"Indicacions de l'apartat", "Archivos de la actividad":"Fitxers de l'activitat", "Buscar la actividad en Aula Virtual":"Busca l'activitat a l'Aula Virtual", "Pega el enlace de una tarea o cuestionario del Aula Virtual de la UV.":"Apega l'enllaç d'una tasca o qüestionari de l'Aula Virtual de la UV.", "Abre la app de escritorio para consultar la actividad con tu sesión de la UV. Aquí puedes leer la información ya guardada.":"Obri l'app d'escriptori per consultar l'activitat amb la teua sessió de la UV. Ací pots llegir la informació ja guardada.", "El correo original no está en la copia local. Se conservará aquí cuando vuelva a estar disponible.":"El correu original no està en la còpia local. Es conservarà ací quan torne a estar disponible.",
     "Ver detalles e instrucciones":"Veure detalls i instruccions", "Ocultar detalles":"Amaga els detalls", "Qué hay que hacer":"Què cal fer", "Desde el correo":"Des del correu", "Creada en Cuaderno":"Creada en Cuaderno", "Aula Virtual · Información consultada":"Aula Virtual · Informació consultada", "Aula Virtual · Pendiente de consultar":"Aula Virtual · Pendent de consultar", "Actividad":"Activitat", "Curso del Aula Virtual":"Curs de l'Aula Virtual", "Plazo en el Aula Virtual":"Termini a l'Aula Virtual", "Estado en el Aula Virtual":"Estat a l'Aula Virtual", "Última consulta":"Última consulta", "Abrir actividad original":"Obri l'activitat original", "Consultar Aula Virtual":"Consulta l'Aula Virtual", "Actualizar desde Aula Virtual":"Actualitza des de l'Aula Virtual", "Cambiar enlace de la actividad":"Canvia l'enllaç de l'activitat", "Vincular con una actividad del Aula Virtual":"Vincula amb una activitat de l'Aula Virtual", "Enlace de la actividad":"Enllaç de l'activitat", "Guardar enlace":"Guarda l'enllaç", "Detalles de la tarea":"Detalls de la tasca", "El aviso no incluye instrucciones completas. Consulta la actividad para ver el enunciado del profesor.":"L'avís no inclou instruccions completes. Consulta l'activitat per veure l'enunciat del professor.", "Consultando las instrucciones de la actividad…":"Consultant les instruccions de l'activitat…", "Instrucciones de la actividad actualizadas":"Instruccions de l'activitat actualitzades", "Se ha abierto el Aula Virtual. Inicia sesión allí y pulsa de nuevo para consultar la actividad.":"S'ha obert l'Aula Virtual. Inicia-hi sessió i torna a prémer per consultar l'activitat.",
     "Arrastra la tabla":"Arrossega la taula", "Arrastra la tabla libremente por el folio":"Arrossega la taula lliurement pel full", "Opciones de tabla":"Opcions de taula", "En línea con el texto":"En línia amb el text", "Devolver la tabla al flujo del texto":"Torna la taula al flux del text",
@@ -2447,6 +2452,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     [/^Disponible desde hace (\d+) días · tienes la (.+)\. Tus datos no se tocan al actualizar\.$/, 'Disponible des de fa $1 dies · tens la $2. Les teues dades no es toquen en actualitzar.'],
     [/^Novedades del Cuaderno (.+)$/, 'Novetats del Cuaderno $1'], [/^Hay una versión nueva del Cuaderno \((.+)\)\. Pulsa para actualizar\.$/, 'Hi ha una versió nova del Cuaderno ($1). Prem per a actualitzar.'],
     [/^Sincronizado (.+)$/, 'Sincronitzat $1'], [/^Guardado (\d.*)$/, 'Desat $1'], [/^(\d+) palabras$/, '$1 paraules'],
+    [/^(\d+) tareas? pendientes?( en total)? · (\d+) atrasadas?$/, (m, n, t, l) => `${n} ${n === '1' ? 'tasca pendent' : 'tasques pendents'}${t ? ' en total' : ''} · ${l} ${l === '1' ? 'endarrerida' : 'endarrerides'}`],
     [/^(\d+) tareas pendientes( en total)?$/, (m, n, t) => `${n} tasques pendents${t ? ' en total' : ''}`], [/^Completadas \((\d+)\)$/, 'Completades ($1)'],
     [/^(\d+) archivos añadidos$/, '$1 fitxers afegits'], [/^Abriendo «(.*)»(…?)$/, 'Obrint «$1»$2'],
     [/^(1 archivo|\d+ archivos) · (.+?)( · guardados en tu Google Drive)?$/, (m, a, sz) => `${a === '1 archivo' ? '1 fitxer' : a.replace('archivos', 'fitxers')} · ${sz}`],
@@ -3270,7 +3276,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       });
       const a = c.querySelector('.t-mail a');if(t.email)a.href='mailto:'+t.email;else{a.title='Correo aún no encontrado';a.onclick=e=>{if(!t.email)e.preventDefault();};}
       if(t.sources?.length){const origin=document.createElement('details');origin.className='t-sources';const summary=document.createElement('summary');summary.textContent='Información encontrada en '+t.sources.length+(t.sources.length===1?' correo':' correos');origin.append(summary);for(const [field,source] of Object.entries(t.autoFields||{})){if(t.manualFields?.[field]||t[field]!==source.value)continue;const p=document.createElement('p');p.textContent=({name:'Nombre',email:'Correo',hours:'Tutorías',room:'Despacho',phone:'Teléfono',notes:'Notas'})[field]+' · '+source.subject+(source.date?' · '+new Date(source.date).toLocaleDateString():'')+'\n'+source.quote;p.dataset.noi18n='';origin.append(p);}if(origin.children.length===1){const p=document.createElement('p');p.textContent=t.sourceMeta?.[0]?.subject||'Identificado por el remitente del mensaje';p.dataset.noi18n='';origin.append(p);}c.append(origin);}
-      if(t.aulaCourse&&!t.sources?.length){const p=document.createElement('p');p.className='hint t-sources';p.textContent='Docente del curso en el Aula Virtual';c.append(p);}
+      if(t.aulaCourse&&!t.sources?.length){const p=document.createElement('p');p.className='hint t-sources';const docs=[...new Set(Object.values(t.autoFields||{}).map(a=>a.subject).filter(x=>/^Aula Virtual · /.test(x||'')).map(x=>x.slice(15)))];p.textContent='Docente del curso en el Aula Virtual';if(docs.length){const b=document.createElement('span');b.dataset.noi18n='';b.textContent=' · '+docs.join(', ');p.append(b);}c.append(p);}
       c.querySelector('.t-del').onclick = () => { if (!confirm(`¿Quitar la ficha de «${t.name || t.email || 'este profesor/a'}»?`)) return;s.teacherDismissed ||= {};for(const key of CuadernoCorreoAnalisis.teacherKeys(t))s.teacherDismissed[key]=Date.now();s.teachers = s.teachers.filter(x => x !== t); save(); renderTeachers(); };
       list.appendChild(c);
     });
@@ -4260,28 +4266,31 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
     const li = document.createElement('li'), di = dueInfo(t.due);
     const doc = t.noteId && s.notes.some(n => n.id === t.noteId);
     const att = (t.attach || []).map(id => (s.files || []).find(f => f.id === id)).filter(Boolean);   // PDF unidos a la tarea
+    const origin = CuadernoAulaVirtual.taskURL(t) ? 'Aula Virtual' : t.fromMail ? 'Del correo' : '';
     li.className = 'task' + (t.done ? ' done' : t.due && daysTo(t.due)<0 ? ' overdue' : ' pending'); li.style.setProperty('--c', s.color);
     li.innerHTML = `<input type="checkbox" class="tcheck" ${t.done ? 'checked' : ''} aria-label="Marcar como hecha">
       <div class="task-body">
         <input class="task-title" value="${esc(t.title)}" aria-label="Tarea">
         <div class="task-meta">
           ${all ? `<span class="subj-tag tint">${esc(s.short)}</span>` : ''}
-          ${di && !t.done ? `<span class="due ${di.cls}">${esc(di.txt)}</span>` : ''}
-          <input type="date" class="task-date" value="${esc(t.due || '')}" aria-label="Fecha de entrega" title="Cambiar fecha de entrega">
+          <button type="button" class="task-when${t.due ? '' : ' none'}" title="Cambiar fecha de entrega">${CAL_ICON}${di && !t.done && di.cls ? `<span class="due ${di.cls}">${esc(di.txt)}</span>` : ''}<span class="when-date">${t.due ? esc(fmtDate(t.due)) : 'Poner fecha'}</span></button>
+          <input type="date" class="task-date" value="${esc(t.due || '')}" aria-label="Fecha de entrega" tabindex="-1">
+          ${origin ? `<span class="task-origin">${origin}</span>` : ''}
         </div>
         ${att.length ? `<div class="task-att">${att.map(f => `<button type="button" class="att" data-f="${esc(f.id)}" title="Abrir"><svg viewBox="0 0 24 24"><path d="M21 11.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l9-9a3.3 3.3 0 0 1 4.7 4.7l-9 9a1.7 1.7 0 0 1-2.4-2.4l8.3-8.3"/></svg><span>${esc(f.name)}.${esc(extOf(f))}</span></button>`).join('')}</div>` : ''}
       </div>
-      <button class="task-doc" title="${doc ? 'Abrir el documento de esta tarea' : 'Escribir la tarea en un documento dentro del Cuaderno'}">${doc ? DOC_ICON : PEN_ICON}<span class="t">${doc ? 'Abrir documento' : 'Hacer aquí'}</span></button>
+      <button class="task-doc" title="${doc ? 'Abrir el documento de esta tarea' : 'Escribir la tarea en un documento dentro del Cuaderno'}">${doc ? DOC_ICON : PEN_ICON}<span class="t">${doc ? 'Abrir mi trabajo' : 'Escribir mi trabajo'}</span></button>
       ${doc ? `<button class="task-doc task-pdf" title="Crear el PDF del documento de esta tarea">PDF</button>` : ''}
       <button class="icon-btn" title="Eliminar tarea">${TRASH}</button>`;
     li.querySelector('.task-doc').onclick = () => openTaskDoc(t, s);
-    let details=makeTaskDetails(t,s);const more=document.createElement('button');more.type='button';more.className='task-more';more.setAttribute('aria-expanded',String(expandedTasks.has(t.id)));more.textContent=expandedTasks.has(t.id)?'Ocultar detalles':'Ver detalles e instrucciones';
-    const toggleDetails=()=>{if(details.hidden&&!details.dataset.ready){const full=makeTaskDetails(t,s,true);details.replaceWith(full);details=full;}details.hidden=!details.hidden;more.setAttribute('aria-expanded',String(!details.hidden));more.textContent=details.hidden?'Ver detalles e instrucciones':'Ocultar detalles';details.hidden?expandedTasks.delete(t.id):expandedTasks.add(t.id);};
+    let details=makeTaskDetails(t,s);const more=document.createElement('button');more.type='button';more.className='task-more';more.setAttribute('aria-expanded',String(expandedTasks.has(t.id)));more.title='Ver qué hay que hacer, el enunciado y los archivos';more.innerHTML='<span></span>'+CHEV_ICON;const moreText=()=>{more.firstChild.textContent=more.getAttribute('aria-expanded')==='true'?'Ocultar detalles':'Detalles';};moreText();
+    const toggleDetails=()=>{if(details.hidden&&!details.dataset.ready){const full=makeTaskDetails(t,s,true);details.replaceWith(full);details=full;}details.hidden=!details.hidden;more.setAttribute('aria-expanded',String(!details.hidden));moreText();details.hidden?expandedTasks.delete(t.id):expandedTasks.add(t.id);};
     more.onclick=toggleDetails;li.querySelector('.task-title').ondblclick=toggleDetails;
-    const context=document.createElement('div');context.className='task-context';const origin=document.createElement('span');origin.textContent=CuadernoAulaVirtual.taskURL(t)?'Aula Virtual'+(t.aula?.checkedAt?' · Información consultada':' · Pendiente de consultar'):t.fromMail?'Desde el correo':'Creada en Cuaderno';context.append(origin,more);li.querySelector('.task-meta').after(context,details);
+    li.querySelector('.task-meta').append(more);li.querySelector('.task-meta').after(details);
+    const dateInput=li.querySelector('.task-date');li.querySelector('.task-when').onclick=()=>{try{dateInput.showPicker();}catch(_){dateInput.focus();}};
     li.querySelectorAll('.att').forEach(b => b.onclick = () => { const f = (s.files || []).find(x => x.id === b.dataset.f); if (f) (canPreview(f) ? openViewer(f) : openLocal(f)); });
     const tp = li.querySelector('.task-pdf'); if (tp) tp.onclick = () => { openTaskDoc(t, s); openPdfDlg(false, true); };
-    li.querySelector('.tcheck').onchange = e => { t.done = e.target.checked; t.doneAt = Date.now(); save(); renderTasks(); renderSubjects(); if (t.done) toast('¡Tarea hecha!'); };
+    li.querySelector('.tcheck').onchange = e => { t.done = e.target.checked; t.doneAt = Date.now(); if (t.done) showDone = true; save(); renderTasks(); renderSubjects(); if (t.done) toast('¡Tarea hecha!'); };
     li.querySelector('.task-title').oninput = e => { t.title = e.target.value; save(); };
     li.querySelector('.task-date').onchange = e => { t.due = e.target.value; save(); renderTasks(); };
     li.querySelector('.icon-btn').onclick = () => { if (confirm(`¿Eliminar la tarea «${t.title}»?`)) { s.tasks = s.tasks.filter(x => x.id !== t.id); save(); renderTasks(); renderSubjects(); } };
@@ -4291,17 +4300,17 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
     const panel=document.createElement('section');panel.className='task-details';panel.hidden=!expandedTasks.has(t.id);panel.setAttribute('aria-label','Detalles de la tarea');
     if(panel.hidden&&!force)return panel;panel.dataset.ready='true';
     const source=t.sourceMail||((mails||[]).find(m=>String(m.uid)===String(t.fromMail))?CuadernoAulaVirtual.fromMail(mails.find(m=>String(m.uid)===String(t.fromMail))):null),url=CuadernoAulaVirtual.taskURL({...t,sourceMail:source}),a=t.aula;
-    const instructions=a?.instructions||(!source?t.info:'')||'';
-    panel.innerHTML=`<h4>Qué hay que hacer</h4>${instructions?'<div class="task-instructions t-info">'+esc(instructions)+'</div>':'<p class="hint">'+(a?.checkedAt?'La actividad no incluye un enunciado de texto. Consulta sus archivos y los materiales del apartado.':'El aviso no incluye instrucciones completas. Consulta la actividad para ver el enunciado del profesor.')+'</p>'}
+    const instructions=a?.instructions||(!source?t.info:'')||'',own=!url&&!source&&!t.fromMail&&!t.auto;
+    panel.innerHTML=`<h4>Qué hay que hacer</h4>${instructions?'<div class="task-instructions t-info">'+esc(instructions)+'</div>':'<p class="hint">'+(a?.checkedAt?'La actividad no incluye un enunciado de texto. Consulta sus archivos y los materiales del apartado.':own?'Esta tarea la has creado tú. Con «Escribir mi trabajo» puedes hacerla dentro del Cuaderno.':'El aviso no incluye instrucciones completas. Consulta la actividad para ver el enunciado del profesor.')+'</p>'}
       <dl class="task-facts"><dt>Asignatura</dt><dd>${esc(s.name)}</dd>${a?.title||t.sourceTitle?'<dt>Actividad</dt><dd>'+esc(a?.title||t.sourceTitle)+'</dd>':''}${a?.course?'<dt>Curso del Aula Virtual</dt><dd>'+esc(a.course)+'</dd>':''}${a?.dueText?'<dt>Plazo en el Aula Virtual</dt><dd>'+esc(a.dueText)+'</dd>':''}${a?.submission?'<dt>Estado en el Aula Virtual</dt><dd>'+esc(a.submission)+'</dd>':''}${a?.checkedAt?'<dt>Última consulta</dt><dd>'+esc(new Date(a.checkedAt).toLocaleString())+'</dd>':''}</dl>
       ${a?.context&&a.context!==a.instructions?'<h4>Indicaciones del apartado</h4><div class="task-instructions" data-noi18n>'+esc(a.context)+'</div>':''}
       ${a?.attachments?.length?'<h4>Archivos de la actividad</h4><div class="task-aula-files"></div>':''}
       ${a?.materials?.length?'<h4>Materiales del apartado'+(a.section?' · '+esc(a.section):'')+'</h4><div class="task-course-files"></div>':''}
       ${source?'<details class="task-mail-source"><summary>Correo original · '+esc(source.subject||'Aviso recibido')+'</summary><p class="hint">'+esc([source.fromName||source.from,source.date?new Date(source.date).toLocaleString():''].filter(Boolean).join(' · '))+'</p><div class="task-instructions t-info">'+esc(source.body||'El mensaje no contiene texto.')+'</div></details>':t.fromMail?'<p class="hint">El correo original no está en la copia local. Se conservará aquí cuando vuelva a estar disponible.</p>':''}
-      <div class="task-source-actions"></div><details class="task-link-edit" ${url?'':'open'}><summary>${url?'Cambiar enlace de la actividad':'Vincular con una actividad del Aula Virtual'}</summary><label class="f">Enlace de la actividad<input type="url" class="task-activity-url" placeholder="https://aulavirtual.uv.es/mod/assign/view.php?id=…" value="${esc(url)}"></label><button type="button" class="btn task-link-save">Guardar enlace</button></details><p class="hint task-source-status" role="status"></p>`;
+      <div class="task-source-actions"></div><details class="task-link-edit" ${url||own?'':'open'}><summary>${url?'Cambiar enlace de la actividad':'Vincular con una actividad del Aula Virtual'}</summary><label class="f">Enlace de la actividad<input type="url" class="task-activity-url" placeholder="https://aulavirtual.uv.es/mod/assign/view.php?id=…" value="${esc(url)}"></label><button type="button" class="btn task-link-save">Guardar enlace</button></details><p class="hint task-source-status" role="status"></p>`;
     const actions=panel.querySelector('.task-source-actions'),status=panel.querySelector('.task-source-status');
     const open=async target=>{const safe=CuadernoAulaVirtual.activityURL(target)||CuadernoAulaVirtual.materialURL(target)||(target==='https://aulavirtual.uv.es/'?target:'');if(!safe){status.textContent='El enlace no pertenece al Aula Virtual de la UV.';return;}try{if(IN_APP)await mailRequest('/api/aula/abrir',{url:safe});else window.open(safe,'_blank','noopener');}catch(e){status.textContent=e.message;}};
-    if(!url){const browse=document.createElement('button');browse.type='button';browse.className='btn';browse.textContent='Buscar la actividad en Aula Virtual';browse.onclick=()=>open('https://aulavirtual.uv.es/');actions.append(browse);}
+    if(!url&&!own){const browse=document.createElement('button');browse.type='button';browse.className='btn';browse.textContent='Buscar la actividad en Aula Virtual';browse.onclick=()=>open('https://aulavirtual.uv.es/');actions.append(browse);}
     if(url){const original=document.createElement('button');original.type='button';original.className='btn';original.textContent='Abrir actividad original';original.onclick=()=>open(url);actions.append(original);
       if(IN_APP){const read=document.createElement('button');read.type='button';read.className='btn primary';read.textContent=a?'Actualizar desde Aula Virtual':'Consultar Aula Virtual';read.onclick=async()=>{read.disabled=true;status.textContent='Consultando las instrucciones de la actividad…';try{const result=await mailRequest('/api/aula/actividad',{url});if(result.needsLogin){status.textContent='Se ha abierto el Aula Virtual. Inicia sesión allí y pulsa de nuevo para consultar la actividad.';return;}const current=state.subjects.find(x=>x.id===s.id)?.tasks.find(x=>x.id===t.id);if(!current||CuadernoAulaVirtual.taskURL({...current,sourceMail:source})!==url)return;if(!current.sourceMail&&source)current.sourceMail=source;CuadernoAulaVirtual.apply(current,result);expandedTasks.add(t.id);save();renderTasks();renderSubjects();toast('Instrucciones de la actividad actualizadas');}catch(e){status.textContent=e.message;}finally{read.disabled=false;}};actions.append(read);}
       else status.textContent='Abre la app de escritorio para consultar la actividad con tu sesión de la UV. Aquí puedes leer la información ya guardada.';
@@ -4312,6 +4321,7 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
     panel.querySelector('.task-link-save').onclick=()=>{const next=CuadernoAulaVirtual.activityURL(panel.querySelector('.task-activity-url').value);if(!next){status.textContent='Pega el enlace de una tarea o cuestionario del Aula Virtual de la UV.';return;}t.activityUrl=next;if(t.aula?.url!==next)delete t.aula;expandedTasks.add(t.id);save();renderTasks();};
     return panel;
   }
+  const CAL_ICON = '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>', CHEV_ICON = '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
   const PEN_ICON = '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>';
   const DOC_ICON = '<svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg>';
   // Cada tarea puede tener su propio documento: un apunte de la asignatura enlazado a la tarea,
@@ -4338,14 +4348,23 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
     const pend = items.filter(x => !x.t.done).sort((a, b) => (a.t.due || '9999').localeCompare(b.t.due || '9999') || a.t.created - b.t.created);
     const done = items.filter(x => x.t.done).sort((a, b) => (b.t.doneAt || 0) - (a.t.doneAt || 0));
     renderReview();
-    $('#taskCount').textContent = pend.length ? (pend.length === 1 ? '1 tarea pendiente' : pend.length + ' tareas pendientes') + (all ? ' en total' : '') : (items.length ? 'Todo hecho por ahora.' : '');
+    const lateN = pend.filter(x => x.t.due && daysTo(x.t.due) < 0).length;
+    $('#taskCount').textContent = pend.length ? (pend.length === 1 ? '1 tarea pendiente' : pend.length + ' tareas pendientes') + (all ? ' en total' : '') + (lateN ? (lateN === 1 ? ' · 1 atrasada' : ` · ${lateN} atrasadas`) : '') : (items.length ? 'Todo hecho por ahora.' : '');
     ul.innerHTML = items.length ? '' : '<li class="empty" style="padding-left:4px">No hay tareas. Escribe una arriba, ponle fecha si quieres y pulsa Añadir.</li>';
-    pend.forEach(x => ul.appendChild(taskEl(x, all)));
+    // Grupos por urgencia: lo atrasado arriba, luego la semana, lo lejano y lo que no tiene fecha
+    const groups = [['Atrasadas', 'late', x => x.t.due && daysTo(x.t.due) < 0], ['Próximos 7 días', 'soon', x => x.t.due && daysTo(x.t.due) >= 0 && daysTo(x.t.due) <= 7], ['Más adelante', '', x => x.t.due && daysTo(x.t.due) > 7], ['Sin fecha', '', x => !x.t.due]];
+    for (const [name, cls, test] of groups) {
+      const list = pend.filter(test); if (!list.length) continue;
+      const sep = document.createElement('li'); sep.className = 'task-group ' + cls; sep.innerHTML = `<span>${name}</span><b>${list.length}</b>`; ul.appendChild(sep);
+      list.forEach(x => ul.appendChild(taskEl(x, all)));
+    }
     if (done.length) {
-      const sep = document.createElement('li'); sep.className = 'done-sep'; sep.textContent = `Completadas (${done.length})`; ul.appendChild(sep);
-      done.forEach(x => ul.appendChild(taskEl(x, all)));
+      const sep = document.createElement('li'); sep.className = 'done-sep'; const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-expanded', String(showDone));
+      b.innerHTML = `<span>Completadas (${done.length})</span>` + CHEV_ICON; b.onclick = () => { showDone = !showDone; renderTasks(); }; sep.append(b); ul.appendChild(sep);
+      if (showDone) done.forEach(x => ul.appendChild(taskEl(x, all)));
     }
   }
+  let showDone = false;
   document.querySelectorAll('[name=taskScope]').forEach(r => r.onchange = renderTasks);
   document.querySelector('[name=taskScope]').closest('.pick').hidden = true;
   $('#taskForm').addEventListener('submit', e => {
@@ -4865,6 +4884,46 @@ Gracias.` },
     }
     return { changed, teachers, tasks, dates, known };
   }
+  // Texto de un PDF respetando los saltos de línea (los datos de contacto van línea a línea)
+  async function pdfBytesText(bytes) {
+    const pdfjs = await import('/ia/pdf.min.mjs'); pdfjs.GlobalWorkerOptions.workerSrc = '/ia/pdf.worker.min.mjs';
+    const doc = await pdfjs.getDocument({ data: bytes }).promise; let out = '';
+    for (let i = 1; i <= Math.min(doc.numPages, 15); i++) { const tc = await (await doc.getPage(i)).getTextContent(); for (const it of tc.items) if ('str' in it) { out += it.str; if (it.hasEOL) out += '\n'; } out += '\n'; }
+    try { doc.destroy(); } catch {}
+    return out;
+  }
+  const aulaDocsDone = () => { try { return JSON.parse(localStorage.getItem('cuaderno-aula-docs')) || {}; } catch { return {}; } };
+  // Apartado de información de cada curso (texto y PDF): correo, tutorías, despacho y teléfono del profesorado.
+  async function applyAulaInfo(data) {
+    let changed = false, filled = 0; const done = aulaDocsDone(), words = n => CuadernoCorreoAnalisis.personKey(n).split(' ').filter(w => w.length > 2), RX = /[\w.+-]+@[\w-]+(\.[\w-]+)+/;
+    for (const c of data.courses || []) {
+      const s = aulaSubject(c); if (!s || !c.info) continue;
+      const texts = [{ name: 'Información del curso', text: c.info.text || '' }];
+      for (const d of c.info.docs || []) { if (!d.data) continue; try { texts.push({ name: d.name || 'PDF del curso', text: await pdfBytesText(Uint8Array.from(atob(d.data), ch => ch.charCodeAt(0))) }); done[d.url] = Date.now(); } catch (e) { console.warn('PDF del Aula Virtual:', e.message); } }
+      for (const src of texts) {
+        if (!src.text.trim()) continue;
+        const cands = parseTeachersText(src.text).filter(f => /(^|[.@])uv\.es$/i.test(f.email.split('@')[1] || '') && !/alumni\.uv\.es$/i.test(f.email) && !/^(no-?reply|aulavirtual|info|secretari|consergeri|biblioteca)/i.test(f.email));
+        // quien ya tiene ficha: buscar su nombre en el texto y leer las líneas siguientes
+        const lines = src.text.split(/\r?\n/), nl = lines.map(l => norm(l));
+        for (const t of s.teachers || []) { const w = words(t.name).map(x => norm(x)); if (w.length < 2) continue; const i = nl.findIndex(l => w.filter(x => l.includes(x)).length >= Math.min(2, w.length)); if (i < 0) continue;
+          const block = lines.slice(i, i + 10).join('\n'), em = (block.match(RX) || [''])[0].toLowerCase(); cands.push({ ...extractTeacherInfo(block), name: t.name, email: /uv\.es$/i.test(em) && !/alumni/i.test(em) ? em : '' }); }
+        for (const f of cands) {
+          const fw = words(f.name), ex = (s.teachers || []).find(t => f.email && (t.email || '').toLowerCase() === f.email) || (fw.length >= 2 ? (s.teachers || []).find(t => { const tw = words(t.name); return tw.length >= 2 && (fw.every(x => tw.includes(x)) || tw.every(x => fw.includes(x))); }) : null);
+          if (!ex && (!f.email || fw.length < 2)) continue;   // sin ficha previa hace falta nombre y correo de la UV
+          if (ex) f.name = ex.name;
+          if (CuadernoCorreoAnalisis.teacherKeys(f).some(k => s.teacherDismissed?.[k])) continue;
+          const date = new Date().toISOString(); f.fieldSources = {}; for (const k of ['email', 'hours', 'room', 'phone']) if (f[k]) f.fieldSources[k] = { subject: 'Aula Virtual · ' + src.name, date, quote: f[k] };
+          const before = JSON.stringify(ex || null), t = addTeacher(s, f, true);
+          if (state.deleted[t.id]) { s.teachers = s.teachers.filter(x => x !== t); continue; }
+          if (!t.aulaCourse) t.aulaCourse = c.fullname;
+          if (JSON.stringify(t) !== before) { changed = true; filled++; }
+        }
+      }
+      syncTeacherEmails(s);
+    }
+    try { localStorage.setItem('cuaderno-aula-docs', JSON.stringify(done)); } catch {}
+    return { changed, filled };
+  }
   // enunciado y archivos de las tareas que aún no se han consultado (pocas cada vez, sin abrir ventanas)
   async function fillAulaTasks() {
     let n = 0;
@@ -4879,17 +4938,19 @@ Gracias.` },
     if (!manual && Date.now() - (aulaLast.tried || 0) < AULA_EVERY) return;
     aulaBusy = true; aulaLast.tried = Date.now(); if (state.view === 'teachers') renderTeacherScanStatus();
     try {
-      const data = await mailRequest('/api/aula/revisar', {});
-      if (data.needsLogin) aulaLast = { tried: Date.now(), at: aulaLast.at, needsLogin: true };
+      const deep = manual || Date.now() - (aulaLast.deepAt || 0) > 24 * 3600e3;   // la página de cada curso, una vez al día
+      const data = await mailRequest('/api/aula/revisar', { deep, skip: manual ? [] : Object.keys(aulaDocsDone()) });
+      if (data.needsLogin) aulaLast = { tried: Date.now(), at: aulaLast.at, deepAt: aulaLast.deepAt, needsLogin: true };
       else {
         const r = applyAulaScan(data); if (r.changed) save();
-        aulaLast = { tried: Date.now(), at: Date.now(), courses: r.known, events: (data.events || []).length };
+        const info = data.deep ? await applyAulaInfo(data) : { filled: 0 }; if (info.changed) { save(); r.changed = true; }
+        aulaLast = { tried: Date.now(), at: Date.now(), deepAt: data.deep ? Date.now() : aulaLast.deepAt, courses: r.known, events: (data.events || []).length };
         const filled = await fillAulaTasks();
         if (r.changed || filled) { renderSubjects(); if (state.view === 'tasks') renderTasks(); }
-        const news = [r.teachers && (r.teachers === 1 ? '1 ficha de profesorado' : r.teachers + ' fichas de profesorado'), r.tasks && (r.tasks === 1 ? '1 tarea nueva' : r.tasks + ' tareas nuevas'), r.dates && (r.dates === 1 ? '1 plazo actualizado' : r.dates + ' plazos actualizados')].filter(Boolean);
+        const news = [r.teachers && (r.teachers === 1 ? '1 ficha de profesorado' : r.teachers + ' fichas de profesorado'), r.tasks && (r.tasks === 1 ? '1 tarea nueva' : r.tasks + ' tareas nuevas'), r.dates && (r.dates === 1 ? '1 plazo actualizado' : r.dates + ' plazos actualizados'), info.filled && (info.filled === 1 ? '1 ficha completada' : info.filled + ' fichas completadas')].filter(Boolean);
         if (news.length) toast('Aula Virtual: ' + news.join(', ')); else if (manual) toast('Aula Virtual revisada: no hay novedades');
       }
-    } catch (e) { aulaLast = { tried: Date.now(), at: aulaLast.at, error: e.message }; }
+    } catch (e) { aulaLast = { tried: Date.now(), at: aulaLast.at, deepAt: aulaLast.deepAt, error: e.message }; }
     finally { aulaBusy = false; try { localStorage.setItem('cuaderno-aula-revision', JSON.stringify(aulaLast)); } catch {} if (state.view === 'teachers') renderTeachers(); }
   }
   if (IN_APP) { setTimeout(() => reviewAula(), 25000); setInterval(() => reviewAula(), 20 * 60e3); }
@@ -5868,7 +5929,10 @@ Gracias.` },
   /* ---------- Novedades de la última versión ----------
      Solo las de la versión instalada (sin historial). Se escriben en castellano y su traducción está en CA,
      así salen en el idioma de la app. Al publicar una versión nueva: cambiar NEWS.v y la lista. */
-  const NEWS = { v: '4.0.2', items: [
+  const NEWS = { v: '4.0.3', items: [
+    'Tareas más claras: agrupadas en Atrasadas, Próximos 7 días, Más adelante y Sin fecha; una sola fecha que se cambia con un clic y las completadas recogidas al final.',
+    'La ventana de Intranet y Aula Virtual tiene botones para ir atrás, adelante y recargar.',
+    'El Aula Virtual lee el apartado de información de cada curso y sus PDF para completar correo, tutorías y despacho del profesorado.',
     'El Aula Virtual se revisa sola: crea las fichas del profesorado de cada curso y añade las entregas próximas con su plazo y su enunciado.',
     'El Aula Virtual se abre directamente, sin pasar por la pantalla de inicio de sesión; usa la misma cuenta del correo.',
     'En Profesorado, la lista de todas las fichas se abre y se cierra sin salir de la asignatura.',
