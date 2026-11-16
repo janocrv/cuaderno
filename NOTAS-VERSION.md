@@ -1,11 +1,11 @@
-# Cuaderno 4.0.4
+# Cuaderno 4.1.0
 
-- **Revisión del Aula Virtual más completa:** el profesorado de cada asignatura se toma de la lista de participantes del curso. Además se leen la guía docente, el programa, el temario y la presentación para completar el correo, las tutorías y el despacho de cada docente, sin mezclar los datos cuando hay varios.
-- **Más tareas:** se añaden también las entregas y cuestionarios que están en la página del curso aunque no aparezcan en el calendario, con su plazo y su enunciado. Las ya cerradas o entregadas no se añaden.
-- **Recordatorios con varias tareas:** el aviso «Tiene tareas con fecha de entrega en 7 días» crea una tarea por cada una, con su nombre, asignatura, fecha y hora. Los que estaban como una sola duda se convierten solos.
-- **Fichas de profesorado:** ya no se duplican por un «Prof. Dr.» ni toman como nombre el de una facultad o un departamento. Las que quedaron así se corrigen al actualizar.
+- **Inicio nuevo:** ya no hay pestañas en el inicio. En su lugar, cuatro botones grandes con su explicación: Asignaturas, Tareas, Apuntes y Profesorado. «Asignaturas» abre una página con una tarjeta por asignatura, con su color. Cada asignatura tiene su ficha: descripción (tomada de la guía docente cuando se revisa el Aula Virtual, y editable), próximas tareas, material, profesorado y el botón «Trabajar en esta asignatura».
+- **Carpetas en Archivos:** crea carpetas dentro de cada asignatura, mete archivos con el lápiz o arrastrándolos, pliégalas y renómbralas. Quitar una carpeta no borra sus archivos.
+- **NotebookLM:** sección propia junto a Gemini. Guarda tus cuadernos (los generales y uno por asignatura) y usa «Llevar documentos…» para elegir apuntes y archivos de cualquier asignatura: Cuaderno los deja en una carpeta y abre NotebookLM para subirlos. También se puede llevar una carpeta entera.
+- **Actualizar:** la confirmación se pide una sola vez; la barra muestra enseguida que la descarga se está preparando.
 
-Incluye todas las mejoras de la versión 4.0.3. Los datos guardados se conservan al actualizar.
+Incluye todas las mejoras de la versión 4.0.4. Los datos guardados se conservan al actualizar.
 
 ## Descargas
 
@@ -13,4 +13,4 @@ Incluye todas las mejoras de la versión 4.0.3. Los datos guardados se conservan
 - **Mac Intel:** Cuaderno-mac-x64.dmg.
 - **Windows de 64 bits:** Cuaderno-win-x64.exe.
 
-La lectura de cursos se comprobó contra un Aula Virtual real; el resto, con datos ficticios. Windows físico queda pendiente de comprobación.
+Pruebas con datos ficticios. NotebookLM se abre con tu cuenta de Google; subir las fuentes y preguntar se hace dentro de NotebookLM. Windows físico queda pendiente de comprobación.

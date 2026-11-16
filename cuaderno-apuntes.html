@@ -392,6 +392,9 @@ details.bform summary::-webkit-details-marker{display:none}
 .drop:hover,.drop.over{border-color:var(--c);background:color-mix(in srgb,var(--c) 7%,transparent)}
 .drop strong{display:block;color:var(--ink);font-size:1rem;margin-bottom:4px}
 .files{list-style:none;margin:0;padding:0}
+.folder{margin:8px 0;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface) 70%,transparent);overflow:hidden}.folder-head{display:flex;align-items:center;gap:6px;padding:4px 8px 4px 4px}.folder-head.over,.folder-loose.over{background:color-mix(in srgb,var(--accent) 16%,var(--surface));outline:2px dashed var(--accent);outline-offset:-3px}
+.folder-toggle{flex:1;display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:10px;text-align:left;font-weight:620;font-size:.92rem;min-width:0}.folder-toggle:hover{background:var(--soft)}.folder-toggle svg{width:22px;height:22px;flex-shrink:0;fill:color-mix(in srgb,var(--accent) 22%,transparent);stroke:var(--accent);stroke-width:1.6;stroke-linejoin:round}.folder-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.folder-toggle b{font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:9px;background:var(--soft);color:var(--muted)}
+.folder-files{padding:0 8px 6px 20px}.folder:not(.open) .folder-files{display:none}.folder-empty{padding:8px 4px 10px!important;font-size:.82rem}.folder-loose{margin:16px 4px 4px;padding:6px 8px;border-radius:9px;font-size:.76rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}.file[draggable=true]{cursor:grab}
 .file{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px}
 .file:hover{background:var(--soft)}
 .fic{width:38px;height:46px;border-radius:7px;display:grid;place-items:center;font-size:.62rem;font-weight:800;flex-shrink:0}
@@ -868,6 +871,32 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
 .home-pane{overflow:auto;padding:28px;flex:1;min-height:0}.home-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px}.home-heading h2{font-size:1.7rem;letter-spacing:-.035em;margin:0}.home-heading p{margin:5px 0;color:var(--muted)}.home-heading>div:first-child{margin-right:auto}
 .brand .rail-av,.rail.open .brand .rail-av{display:grid;width:46px;height:46px;min-width:46px;margin:0;border-radius:14px}.brand{gap:11px;align-items:center}.brand-t{display:none}.rail.open .brand-t{display:flex;opacity:1;flex:1;min-width:0}.brand-t b{font-size:.74rem;line-height:1.35;padding-right:0}.brand-t small{font-size:.72rem;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 ::highlight(cuaderno-spell){text-decoration:underline wavy #e45f65;text-underline-offset:3px}
+.top>.seg[hidden]{display:flex!important;visibility:hidden;pointer-events:none}
+.home-nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-bottom:26px}
+.home-nav button{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:18px 18px 16px;border:1px solid var(--line);border-radius:18px;background:color-mix(in srgb,var(--surface) 82%,transparent);transition:transform .15s,box-shadow .15s,border-color .15s;min-height:132px}
+.home-nav button:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(20,40,38,.10);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.home-nav .hn-ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent);margin-bottom:4px}.home-nav .hn-ic svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.home-nav .hn-t{font-size:1.02rem;font-weight:650;letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px}.home-nav .hn-t b{font-size:.74rem;font-weight:700;padding:1px 8px;border-radius:9px;background:var(--soft);color:var(--muted)}.home-nav .hn-d{font-size:.8rem;color:var(--muted);line-height:1.35}
+.home-back{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;font-weight:600;color:var(--muted);padding:6px 10px 6px 6px;border-radius:9px;margin:-6px 0 14px -6px}.home-back:hover{background:var(--soft);color:var(--accent)}.home-back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hs-title{font-size:1.7rem;font-weight:650;letter-spacing:-.04em;margin:0 0 4px}.hs-sub{color:var(--muted);font-size:.86rem;margin:0 0 22px}
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.subj-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:8px;min-height:168px;padding:18px;border-radius:20px;border:1px solid color-mix(in srgb,var(--c) 34%,var(--line));background:linear-gradient(160deg,color-mix(in srgb,var(--c) 24%,var(--surface)),color-mix(in srgb,var(--c) 8%,var(--surface)));transition:transform .15s,box-shadow .15s;overflow:hidden}
+.subj-card:hover{transform:translateY(-3px);box-shadow:0 14px 28px color-mix(in srgb,var(--c) 26%,transparent)}
+.subj-card .sc-code{font-size:1.5rem;font-weight:750;letter-spacing:-.02em;color:#fff;background:var(--c);padding:6px 13px;border-radius:13px;box-shadow:0 4px 12px color-mix(in srgb,var(--c) 40%,transparent)}
+.subj-card .sc-name{font-size:.93rem;font-weight:620;line-height:1.3;margin-top:4px}.subj-card .sc-meta{font-size:.76rem;color:var(--muted);margin-top:auto}.subj-card .sc-late{color:#c2543b;font-weight:650}
+.subj-page{max-width:900px}.subj-hero{display:flex;align-items:center;gap:18px;padding:22px;border-radius:22px;border:1px solid color-mix(in srgb,var(--c) 34%,var(--line));background:linear-gradient(150deg,color-mix(in srgb,var(--c) 26%,var(--surface)),color-mix(in srgb,var(--c) 7%,var(--surface)));margin-bottom:20px;flex-wrap:wrap}
+.subj-hero .sc-code{font-size:1.9rem;font-weight:750;color:#fff;background:var(--c);padding:10px 18px;border-radius:16px}.subj-hero h2{margin:0;font-size:1.35rem;letter-spacing:-.03em;line-height:1.2}.subj-hero p{margin:5px 0 0;color:var(--muted);font-size:.82rem}.subj-hero>div{flex:1;min-width:220px}
+.subj-go{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:14px;background:var(--c);color:#fff;font-weight:650;font-size:.92rem;box-shadow:0 6px 16px color-mix(in srgb,var(--c) 40%,transparent)}.subj-go:hover{filter:brightness(1.07)}.subj-go svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.subj-cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px}@media(max-width:860px){.subj-cols{grid-template-columns:1fr}}
+.subj-box{border:1px solid var(--line);border-radius:18px;padding:18px;background:color-mix(in srgb,var(--surface) 82%,transparent);margin-bottom:18px}.subj-box h3{margin:0 0 10px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.subj-about{width:100%;min-height:150px;border:0;background:none;resize:vertical;font:inherit;font-size:.9rem;line-height:1.55;color:var(--ink);outline:none;padding:0}.subj-about-src{font-size:.72rem;color:var(--muted);margin:8px 0 0}
+.subj-box ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}.subj-box li{font-size:.86rem;line-height:1.35}.subj-box li small{display:block;color:var(--muted);font-size:.76rem}.subj-box .empty{color:var(--muted);font-size:.84rem}
+.nb-block{border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0 18px;background:color-mix(in srgb,var(--surface) 80%,transparent)}.nb-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}.nb-head h3{margin:0;font-size:1rem}
+.nb-list{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}.nb-list li{display:flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:11px;padding-right:2px}.nb-list li:has(.of-subject){border-color:color-mix(in srgb,var(--c,var(--accent)) 40%,var(--line))}.nb-item{padding:8px 12px;font-size:.84rem;font-weight:600;border-radius:10px;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nb-item:hover{background:var(--soft)}.nb-item.of-subject{color:var(--c,var(--accent))}
+.nb-add{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.nb-add input{flex:1;min-width:200px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:.84rem}
+.nb-dlg{width:min(620px,92vw)}.nb-pick{max-height:46vh;overflow:auto;margin:10px 0;display:grid;gap:10px}.nb-subject{border:1px solid color-mix(in srgb,var(--c) 34%,var(--line));border-radius:12px;padding:6px 12px 10px;margin:0;min-width:0}.nb-subject legend{font-size:.78rem;font-weight:700;color:var(--c);padding:0 6px}.nb-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.86rem;min-width:0}.nb-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nb-row small{margin-left:auto;color:var(--muted);font-size:.74rem;white-space:nowrap}
+.sj-nb-url{width:100%;box-sizing:border-box;margin:10px 0;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:.82rem}.sj-nb-actions{display:flex;gap:8px;flex-wrap:wrap}.sj-nb .hint{margin:0;font-size:.8rem;line-height:1.4}.sj-nb-msg{margin-top:9px!important}
+.subj-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.subj-stats button{padding:11px 6px;border-radius:12px;border:1px solid var(--line);font-size:.74rem;color:var(--muted);text-align:center}.subj-stats button:hover{border-color:var(--c)}.subj-stats b{display:block;font-size:1.2rem;color:var(--ink)}
 .home-summary{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}.home-summary button{padding:11px 16px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--surface) 75%,transparent);font-size:.8rem}.home-summary b{font-size:1.1rem;margin-right:6px}
 .home-board{position:relative;min-height:600px;border:1px solid color-mix(in srgb,var(--line) 65%,transparent);border-radius:22px;background:radial-gradient(var(--line) .7px,transparent .7px) 0 0/20px 20px, color-mix(in srgb,var(--surface) 50%,transparent);backdrop-filter:blur(12px);overflow:hidden}
 .home-empty{position:absolute;inset:50px 20px auto;text-align:center;color:var(--muted);pointer-events:none}.home-empty b{display:block;color:var(--ink);margin-bottom:7px;font-size:1.1rem}
@@ -1140,10 +1169,13 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
       <button class="icon-btn" id="bannerClose" title="Cerrar aviso"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
 
-    <section class="view" id="homeView" hidden><div class="home-pane">
+    <section class="view" id="homeView" hidden><div class="home-pane" id="homeMain">
       <div class="home-heading"><div><h2 id="homeGreeting">Tu espacio</h2><p>Ideas, recuerdos y lo que quieres tener a mano.</p></div><button class="btn" id="homeNote">＋ Nota</button><button class="btn" id="homePhoto">＋ Foto</button><button class="icon-btn" id="homeCustomize" title="Personalizar Cuaderno"><svg viewBox="0 0 24 24"><path d="m4 20 4-1 12-12-3-3L5 16zM14 7l3 3"/></svg></button><input type="file" id="homePhotoFile" accept="image/*" multiple hidden></div>
-      <div class="home-summary" id="homeSummary"></div><div class="home-widgets" id="homeWidgets"></div><div class="home-board" id="homeBoard"></div>
-    </div></section>
+      <div class="home-nav" id="homeNav"></div><div class="home-summary" id="homeSummary" hidden></div><div class="home-widgets" id="homeWidgets"></div><div class="home-board" id="homeBoard"></div>
+    </div>
+      <div class="home-pane" id="homeSubjects" hidden></div>
+      <div class="home-pane" id="homeSubject" hidden></div>
+    </section>
     <section class="view" id="notesView">
       <div class="card notes" id="notesCard">
         <button type="button" class="notes-list-backdrop" id="notesListBackdrop" aria-label="Cerrar lista de apuntes" tabindex="-1" hidden></button>
@@ -1292,6 +1324,10 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
         <div class="al-head"><h2>Resumir con IA</h2><span class="hint" id="aiState"></span></div>
         <p class="hint ai-intro">Consultas, resúmenes e imágenes con tu cuenta de Gemini. Prepara la petición aquí, pégala en Gemini y trae la respuesta o la imagen a Cuaderno. Las funciones gratuitas dependen de los límites de Google.</p>
         <div class="ai-bar-row"><button type="button" class="btn" id="geminiWeb">Abrir Gemini</button><button type="button" class="btn" id="geminiBrowser">Abrir en el navegador</button><button type="button" class="btn" id="geminiPaste">Pegar respuesta o imagen</button><span class="hint">Los textos que envíes a Gemini se procesan en Google.</span></div>
+        <section class="nb-block" id="nbBlock"><div class="nb-head"><h3 data-noi18n>NotebookLM</h3><span class="hint">Cuadernos de Google que responden a partir de tus documentos, con citas, resúmenes en audio, guías de estudio y más.</span></div>
+          <div class="ai-bar-row"><button type="button" class="btn primary" id="nbOpenMain">Abrir NotebookLM</button><button type="button" class="btn" id="nbPrepare">Llevar documentos…</button><button type="button" class="btn" id="nbBrowser">Abrir en el navegador</button></div>
+          <ul class="nb-list" id="nbList"></ul>
+          <form class="nb-add" id="nbAdd"><input name="name" maxlength="80" placeholder="Nombre del cuaderno (p. ej. Proyecto Harry Potter)" aria-label="Nombre del cuaderno" autocomplete="off"><input name="url" type="url" placeholder="https://notebooklm.google.com/notebook/…" aria-label="Enlace del cuaderno"><button class="btn">Guardar cuaderno</button></form><p class="hint" id="nbMsg" role="status"></p></section>
         <div class="ai-notice" id="aiNotice" hidden><span class="ai-n-ic">!</span><span id="aiNoticeTxt">La IA todavía no está descargada en este ordenador. Hace falta descargarla una vez (unos 800 MB) para poder resumir.</span><button type="button" class="btn primary" id="aiNoticeGo">Descargar ahora</button></div>
         <div class="ai-drop" id="aiDrop">
           <textarea id="aiText" class="ai-text" placeholder="Pega aquí el texto que quieres resumir, o arrastra un PDF…"></textarea>
@@ -1382,7 +1418,7 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
     <section class="view" id="filesView" hidden>
       <div class="card pane">
         <div class="p-inner">
-          <div class="p-head"><h2>Archivos</h2></div>
+          <div class="p-head"><h2>Archivos</h2><button type="button" class="icon-btn" id="folderNew"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 11v5M9.500 13.500h5"/></svg>Nueva carpeta</button></div>
           <p class="hint" id="fileCount"></p>
           <label class="drop" id="drop" tabindex="0">
             <input type="file" id="fileInput" multiple hidden>
@@ -1467,8 +1503,11 @@ dialog[open]{animation:zoomIn .34s cubic-bezier(.2,.9,.25,1) both}
   <h3>Cambiar nombre o nota</h3>
   <label class="f">Nombre del documento<input name="name" required maxlength="180" autocomplete="off"></label>
   <label class="f">Nota breve (opcional)<textarea name="desc" rows="3" maxlength="1000" placeholder="Por ejemplo: Tema 3, para el examen…"></textarea></label>
+  <label class="f">Carpeta<select name="folder"></select></label>
   <div class="d-actions"><button type="button" class="btn" id="fileEditCancel">Cancelar</button><button type="submit" class="btn primary">Guardar</button></div>
 </form></dialog>
+<dialog id="folderDlg"><form class="dlg" id="folderForm"><h3 id="folderDlgTitle">Nueva carpeta</h3><label class="f">Nombre de la carpeta<input name="name" required maxlength="80" autocomplete="off" placeholder="Por ejemplo: Proyecto Harry Potter"></label><div class="d-actions"><button type="button" class="btn" id="folderCancel">Cancelar</button><button type="submit" class="btn primary">Guardar</button></div></form></dialog>
+<dialog id="nbDlg"><form class="dlg nb-dlg" id="nbForm"><h3>Llevar documentos a NotebookLM</h3><p class="sub">Elige lo que quieres usar como fuentes. Cuaderno los deja en una carpeta y abre NotebookLM: arrástralos allí o súbelos con «Añadir fuente».</p><div class="nb-pick" id="nbPick"></div><p class="hint" id="nbPickMsg" role="status"></p><div class="d-actions"><button type="button" class="btn" id="nbCancel">Cancelar</button><button type="submit" class="btn primary">Preparar y abrir NotebookLM</button></div></form></dialog>
 <dialog id="chooseSubjectDlg"><form class="dlg" id="chooseSubjectForm"><h3>Elige una asignatura</h3><label class="f">Asignatura<select name="subject" id="chooseSubjectSelect"></select></label><div class="d-actions"><button type="button" class="btn" id="chooseSubjectCancel">Cancelar</button><button type="submit" class="btn primary">Continuar</button></div></form></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <aside class="help-panel" id="helpPanel" hidden><div class="help-head"><strong>Ayuda de Cuaderno</strong><button id="helpNext" title="Otro consejo">💡</button><button id="helpClose" title="Cerrar">×</button></div><div class="help-answer" id="helpAnswer" data-noi18n></div><div class="help-actions" id="helpActions"></div><form class="help-form" id="helpForm"><input id="helpQuestion" placeholder="¿Cómo se hace…?" aria-label="Pregunta sobre Cuaderno" autocomplete="off"><button title="Preguntar">↵</button></form></aside>
@@ -2171,7 +2210,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     'Las credenciales de Intranet y Aula Virtual se guardan cifradas en este ordenador.':'Les credencials d’Intranet i Aula Virtual es guarden xifrades en este ordinador.',
     '¿Olvidar las sesiones y las credenciales de Intranet y Aula Virtual en este ordenador?':'Vols oblidar les sessions i les credencials d’Intranet i Aula Virtual en este ordinador?',
     'Accesos de Intranet y Aula Virtual eliminados':'Accessos d’Intranet i Aula Virtual eliminats',
-    "Revisar correos":"Revisa els correus", "No se ha podido revisar el correo. ":"No s'ha pogut revisar el correu. ", "El Aula Virtual se revisa sola: crea las fichas del profesorado de cada curso y añade las entregas próximas con su plazo y su enunciado.":"L'Aula Virtual es revisa sola: crea les fitxes del professorat de cada curs i afig els lliuraments pròxims amb el termini i l'enunciat.", "El Aula Virtual se abre directamente, sin pasar por la pantalla de inicio de sesión; usa la misma cuenta del correo.":"L'Aula Virtual s'obri directament, sense passar per la pantalla d'inici de sessió; usa el mateix compte del correu.", "En Profesorado, la lista de todas las fichas se abre y se cierra sin salir de la asignatura.":"En Professorat, la llista de totes les fitxes s'obri i es tanca sense eixir de l'assignatura.", "Los PDF llevan solo lo que has escrito, y el visor de documentos se cierra bien.":"Els PDF porten només el que has escrit, i el visor de documents es tanca bé.", "Desde el Aula Virtual":"Des de l'Aula Virtual", "Tareas más claras: agrupadas en Atrasadas, Próximos 7 días, Más adelante y Sin fecha; una sola fecha que se cambia con un clic y las completadas recogidas al final.":"Tasques més clares: agrupades en Endarrerides, Pròxims 7 dies, Més avant i Sense data; una sola data que es canvia amb un clic i les completades recollides al final.", "La ventana de Intranet y Aula Virtual tiene botones para ir atrás, adelante y recargar.":"La finestra d'Intranet i Aula Virtual té botons per a anar arrere, avant i tornar a carregar.", "El Aula Virtual lee el apartado de información de cada curso y sus PDF para completar correo, tutorías y despacho del profesorado.":"L'Aula Virtual llig l'apartat d'informació de cada curs i els seus PDF per a completar correu, tutories i despatx del professorat.", "El Aula Virtual se revisa mejor: el profesorado de cada asignatura sale de la lista de participantes, y se leen la guía, el programa y la presentación para completar correo, tutorías y despacho.":"L'Aula Virtual es revisa millor: el professorat de cada assignatura ix de la llista de participants, i es lligen la guia, el programa i la presentació per a completar correu, tutories i despatx.", "Se añaden también las entregas que están en la página del curso aunque no aparezcan en el calendario.":"S'afigen també els lliuraments que estan en la pàgina del curs encara que no apareguen en el calendari.", "Los recordatorios con varias tareas crean una tarea por cada una, con su nombre.":"Els recordatoris amb diverses tasques creen una tasca per cada una, amb el seu nom.", "Las fichas de profesorado ya no se duplican ni toman como nombre el de una facultad.":"Les fitxes de professorat ja no es dupliquen ni prenen com a nom el d'una facultat.", "Detalles":"Detalls", "Poner fecha":"Posa data", "Del correo":"Del correu", "Escribir mi trabajo":"Escriu el meu treball", "Abrir mi trabajo":"Obri el meu treball", "Atrasadas":"Endarrerides", "Próximos 7 días":"Pròxims 7 dies", "Más adelante":"Més avant", "Sin fecha":"Sense data", "Ver qué hay que hacer, el enunciado y los archivos":"Mira què cal fer, l'enunciat i els arxius", "Esta tarea la has creado tú. Con «Escribir mi trabajo» puedes hacerla dentro del Cuaderno.":"Esta tasca l'has creada tu. Amb «Escriu el meu treball» pots fer-la dins del Cuaderno.", "Revisar correos y Aula Virtual":"Revisa els correus i l'Aula Virtual", "Cerrar la lista completa":"Tanca la llista completa", "Revisando el Aula Virtual…":"Revisant l'Aula Virtual…", "Aula Virtual: hace falta iniciar sesión una vez. Pulsa el botón del Aula Virtual en la barra lateral.":"Aula Virtual: cal iniciar sessió una vegada. Prem el botó de l'Aula Virtual en la barra lateral.", "Aula Virtual: no se ha podido revisar.":"Aula Virtual: no s'ha pogut revisar.", "El Aula Virtual se revisa sola cada pocas horas.":"L'Aula Virtual es revisa sola cada poques hores.", "Aula Virtual revisada:":"Aula Virtual revisada:", "asignaturas reconocidas:":"assignatures reconegudes:", "entregas próximas:":"lliuraments pròxims:", "Docente del curso en el Aula Virtual":"Docent del curs en l'Aula Virtual", "Aula Virtual revisada: no hay novedades":"Aula Virtual revisada: no hi ha novetats", "Se revisan automáticamente al sincronizar el correo.":"Es revisen automàticament en sincronitzar el correu.", "Revisando los correos disponibles…":"Revisant els correus disponibles…", "Correo aún no encontrado":"Correu encara no trobat", "Autores del Aula Virtual por revisar":"Autors de l'Aula Virtual per revisar",
+    "Revisar correos":"Revisa els correus", "No se ha podido revisar el correo. ":"No s'ha pogut revisar el correu. ", "El Aula Virtual se revisa sola: crea las fichas del profesorado de cada curso y añade las entregas próximas con su plazo y su enunciado.":"L'Aula Virtual es revisa sola: crea les fitxes del professorat de cada curs i afig els lliuraments pròxims amb el termini i l'enunciat.", "El Aula Virtual se abre directamente, sin pasar por la pantalla de inicio de sesión; usa la misma cuenta del correo.":"L'Aula Virtual s'obri directament, sense passar per la pantalla d'inici de sessió; usa el mateix compte del correu.", "En Profesorado, la lista de todas las fichas se abre y se cierra sin salir de la asignatura.":"En Professorat, la llista de totes les fitxes s'obri i es tanca sense eixir de l'assignatura.", "Los PDF llevan solo lo que has escrito, y el visor de documentos se cierra bien.":"Els PDF porten només el que has escrit, i el visor de documents es tanca bé.", "Desde el Aula Virtual":"Des de l'Aula Virtual", "Tareas más claras: agrupadas en Atrasadas, Próximos 7 días, Más adelante y Sin fecha; una sola fecha que se cambia con un clic y las completadas recogidas al final.":"Tasques més clares: agrupades en Endarrerides, Pròxims 7 dies, Més avant i Sense data; una sola data que es canvia amb un clic i les completades recollides al final.", "La ventana de Intranet y Aula Virtual tiene botones para ir atrás, adelante y recargar.":"La finestra d'Intranet i Aula Virtual té botons per a anar arrere, avant i tornar a carregar.", "El Aula Virtual lee el apartado de información de cada curso y sus PDF para completar correo, tutorías y despacho del profesorado.":"L'Aula Virtual llig l'apartat d'informació de cada curs i els seus PDF per a completar correu, tutories i despatx del professorat.", "El Aula Virtual se revisa mejor: el profesorado de cada asignatura sale de la lista de participantes, y se leen la guía, el programa y la presentación para completar correo, tutorías y despacho.":"L'Aula Virtual es revisa millor: el professorat de cada assignatura ix de la llista de participants, i es lligen la guia, el programa i la presentació per a completar correu, tutories i despatx.", "Se añaden también las entregas que están en la página del curso aunque no aparezcan en el calendario.":"S'afigen també els lliuraments que estan en la pàgina del curs encara que no apareguen en el calendari.", "Los recordatorios con varias tareas crean una tarea por cada una, con su nombre.":"Els recordatoris amb diverses tasques creen una tasca per cada una, amb el seu nom.", "Las fichas de profesorado ya no se duplican ni toman como nombre el de una facultad.":"Les fitxes de professorat ja no es dupliquen ni prenen com a nom el d'una facultat.", "Entra en cada asignatura: su información, su profesorado y todo su material.":"Entra en cada assignatura: la informació, el professorat i tot el material.", "Todas las entregas de todas las asignaturas, ordenadas por urgencia.":"Tots els lliuraments de totes les assignatures, ordenats per urgència.", "Todos tus apuntes juntos, para buscar y seguir escribiendo.":"Tots els teus apunts junts, per a buscar i continuar escrivint.", "Correos, tutorías y despachos de quien te da clase.":"Correus, tutories i despatxos de qui et fa classe.", "Elige una para ver su información y empezar a trabajar.":"Tria'n una per a veure la informació i començar a treballar.", "Trabajar en esta asignatura":"Treballa en esta assignatura", "Sobre la asignatura":"Sobre l'assignatura", "Próximas tareas":"Pròximes tasques", "Tu material":"El teu material", "Código":"Codi", "Escrita por ti":"Escrita per tu", "Tomada del Aula Virtual":"Presa de l'Aula Virtual", "No hay tareas pendientes.":"No hi ha tasques pendents.", "Aún no hay profesorado en esta asignatura.":"Encara no hi ha professorat en esta assignatura.", "Aquí aparecerá la descripción de la guía docente cuando se revise el Aula Virtual. También puedes escribirla tú.":"Ací apareixerà la descripció de la guia docent quan es revise l'Aula Virtual. També pots escriure-la tu.", "Aún no hay asignaturas. Añade una con el botón + de la barra lateral.":"Encara no hi ha assignatures. Afig-ne una amb el botó + de la barra lateral.", "Abrir NotebookLM":"Obri NotebookLM", "Abrir el cuaderno":"Obri el quadern", "Preparar fuentes":"Prepara les fonts", "Estudia esta asignatura con tus apuntes y guías como fuentes. Crea un cuaderno en NotebookLM y pega aquí su enlace.":"Estudia esta assignatura amb els teus apunts i guies com a fonts. Crea un quadern en NotebookLM i enganxa ací l'enllaç.", "Ese enlace no es de NotebookLM. Cópialo de la barra de direcciones de tu cuaderno.":"Eixe enllaç no és de NotebookLM. Copia'l de la barra d'adreces del teu quadern.", "Guarda un archivo con todos los apuntes de la asignatura para subirlo a NotebookLM como fuente":"Guarda un arxiu amb tots els apunts de l'assignatura per a pujar-lo a NotebookLM com a font", "Cuadernos de NotebookLM con tus documentos":"Quaderns de NotebookLM amb els teus documents", "Enlace del cuaderno de NotebookLM":"Enllaç del quadern de NotebookLM", "Nueva carpeta":"Carpeta nova", "Carpeta":"Carpeta", "Sin carpeta":"Sense carpeta", "Nombre de la carpeta":"Nom de la carpeta", "Cambiar el nombre de la carpeta":"Canvia el nom de la carpeta", "Carpeta creada":"Carpeta creada", "Carpeta renombrada":"Carpeta reanomenada", "Carpeta vacía. Arrastra aquí archivos, o cámbialos de carpeta con el lápiz.":"Carpeta buida. Arrossega ací arxius, o canvia'ls de carpeta amb el llapis.", "Cambiar nombre, nota o carpeta":"Canvia el nom, la nota o la carpeta", "Quitar la carpeta (los archivos no se borran)":"Lleva la carpeta (els arxius no s'esborren)", "Llevar esta carpeta a NotebookLM":"Porta esta carpeta a NotebookLM", "Ese archivo es de otra asignatura":"Eixe arxiu és d'una altra assignatura", "Por ejemplo: Proyecto Harry Potter":"Per exemple: Projecte Harry Potter", "Llevar documentos a NotebookLM":"Porta documents a NotebookLM", "Elige lo que quieres usar como fuentes. Cuaderno los deja en una carpeta y abre NotebookLM: arrástralos allí o súbelos con «Añadir fuente».":"Tria el que vols usar com a fonts. Cuaderno els deixa en una carpeta i obri NotebookLM: arrossega'ls allí o puja'ls amb «Afig una font».", "Preparar y abrir NotebookLM":"Prepara i obri NotebookLM", "Llevar documentos…":"Porta documents…", "Cuadernos de Google que responden a partir de tus documentos, con citas, resúmenes en audio, guías de estudio y más.":"Quaderns de Google que responen a partir dels teus documents, amb cites, resums en àudio, guies d'estudi i més.", "Guardar cuaderno":"Guarda el quadern", "Cuaderno guardado":"Quadern guardat", "Nombre del cuaderno (p. ej. Proyecto Harry Potter)":"Nom del quadern (p. ex. Projecte Harry Potter)", "Quitar este cuaderno de la lista":"Lleva este quadern de la llista", "Todos los apuntes de la asignatura (un archivo)":"Tots els apunts de l'assignatura (un arxiu)", "Marca al menos un documento.":"Marca almenys un document.", "Preparando los documentos…":"Preparant els documents…", "Aún no hay apuntes ni archivos que llevar. Añade documentos en la pestaña Archivos.":"Encara no hi ha apunts ni arxius que portar. Afig documents en la pestanya Arxius.", "1 documento listo: arrástralo a NotebookLM":"1 document a punt: arrossega'l a NotebookLM", "Inicio nuevo: botones grandes para Asignaturas, Tareas, Apuntes y Profesorado, una página con todas las asignaturas y una ficha de cada una con su descripción y el botón «Trabajar en esta asignatura».":"Inici nou: botons grans per a Assignatures, Tasques, Apunts i Professorat, una pàgina amb totes les assignatures i una fitxa de cada una amb la descripció i el botó «Treballa en esta assignatura».", "Carpetas en Archivos: crea carpetas, mueve archivos con el lápiz o arrastrándolos y pliégalas.":"Carpetes en Arxius: crea carpetes, mou arxius amb el llapis o arrossegant-los i plega-les.", "NotebookLM: guarda tus cuadernos (también uno por asignatura) y lleva allí apuntes y archivos de cualquier asignatura.":"NotebookLM: guarda els teus quaderns (també un per assignatura) i porta-hi apunts i arxius de qualsevol assignatura.", "Actualizar pide confirmación una sola vez.":"Actualitzar demana confirmació una sola vegada.", "Detalles":"Detalls", "Poner fecha":"Posa data", "Del correo":"Del correu", "Escribir mi trabajo":"Escriu el meu treball", "Abrir mi trabajo":"Obri el meu treball", "Atrasadas":"Endarrerides", "Próximos 7 días":"Pròxims 7 dies", "Más adelante":"Més avant", "Sin fecha":"Sense data", "Ver qué hay que hacer, el enunciado y los archivos":"Mira què cal fer, l'enunciat i els arxius", "Esta tarea la has creado tú. Con «Escribir mi trabajo» puedes hacerla dentro del Cuaderno.":"Esta tasca l'has creada tu. Amb «Escriu el meu treball» pots fer-la dins del Cuaderno.", "Revisar correos y Aula Virtual":"Revisa els correus i l'Aula Virtual", "Cerrar la lista completa":"Tanca la llista completa", "Revisando el Aula Virtual…":"Revisant l'Aula Virtual…", "Aula Virtual: hace falta iniciar sesión una vez. Pulsa el botón del Aula Virtual en la barra lateral.":"Aula Virtual: cal iniciar sessió una vegada. Prem el botó de l'Aula Virtual en la barra lateral.", "Aula Virtual: no se ha podido revisar.":"Aula Virtual: no s'ha pogut revisar.", "El Aula Virtual se revisa sola cada pocas horas.":"L'Aula Virtual es revisa sola cada poques hores.", "Aula Virtual revisada:":"Aula Virtual revisada:", "asignaturas reconocidas:":"assignatures reconegudes:", "entregas próximas:":"lliuraments pròxims:", "Docente del curso en el Aula Virtual":"Docent del curs en l'Aula Virtual", "Aula Virtual revisada: no hay novedades":"Aula Virtual revisada: no hi ha novetats", "Se revisan automáticamente al sincronizar el correo.":"Es revisen automàticament en sincronitzar el correu.", "Revisando los correos disponibles…":"Revisant els correus disponibles…", "Correo aún no encontrado":"Correu encara no trobat", "Autores del Aula Virtual por revisar":"Autors de l'Aula Virtual per revisar",
     "Indicaciones del apartado":"Indicacions de l'apartat", "Archivos de la actividad":"Fitxers de l'activitat", "Buscar la actividad en Aula Virtual":"Busca l'activitat a l'Aula Virtual", "Pega el enlace de una tarea o cuestionario del Aula Virtual de la UV.":"Apega l'enllaç d'una tasca o qüestionari de l'Aula Virtual de la UV.", "Abre la app de escritorio para consultar la actividad con tu sesión de la UV. Aquí puedes leer la información ya guardada.":"Obri l'app d'escriptori per consultar l'activitat amb la teua sessió de la UV. Ací pots llegir la informació ja guardada.", "El correo original no está en la copia local. Se conservará aquí cuando vuelva a estar disponible.":"El correu original no està en la còpia local. Es conservarà ací quan torne a estar disponible.",
     "Ver detalles e instrucciones":"Veure detalls i instruccions", "Ocultar detalles":"Amaga els detalls", "Qué hay que hacer":"Què cal fer", "Desde el correo":"Des del correu", "Creada en Cuaderno":"Creada en Cuaderno", "Aula Virtual · Información consultada":"Aula Virtual · Informació consultada", "Aula Virtual · Pendiente de consultar":"Aula Virtual · Pendent de consultar", "Actividad":"Activitat", "Curso del Aula Virtual":"Curs de l'Aula Virtual", "Plazo en el Aula Virtual":"Termini a l'Aula Virtual", "Estado en el Aula Virtual":"Estat a l'Aula Virtual", "Última consulta":"Última consulta", "Abrir actividad original":"Obri l'activitat original", "Consultar Aula Virtual":"Consulta l'Aula Virtual", "Actualizar desde Aula Virtual":"Actualitza des de l'Aula Virtual", "Cambiar enlace de la actividad":"Canvia l'enllaç de l'activitat", "Vincular con una actividad del Aula Virtual":"Vincula amb una activitat de l'Aula Virtual", "Enlace de la actividad":"Enllaç de l'activitat", "Guardar enlace":"Guarda l'enllaç", "Detalles de la tarea":"Detalls de la tasca", "El aviso no incluye instrucciones completas. Consulta la actividad para ver el enunciado del profesor.":"L'avís no inclou instruccions completes. Consulta l'activitat per veure l'enunciat del professor.", "Consultando las instrucciones de la actividad…":"Consultant les instruccions de l'activitat…", "Instrucciones de la actividad actualizadas":"Instruccions de l'activitat actualitzades", "Se ha abierto el Aula Virtual. Inicia sesión allí y pulsa de nuevo para consultar la actividad.":"S'ha obert l'Aula Virtual. Inicia-hi sessió i torna a prémer per consultar l'activitat.",
     "Arrastra la tabla":"Arrossega la taula", "Arrastra la tabla libremente por el folio":"Arrossega la taula lliurement pel full", "Opciones de tabla":"Opcions de taula", "En línea con el texto":"En línia amb el text", "Devolver la tabla al flujo del texto":"Torna la taula al flux del text",
@@ -2310,7 +2349,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     "Guardar los datos en otra carpeta": "Guarda les dades en una altra carpeta", "Volver a guardar los datos en este ordenador": "Torna a guardar les dades en aquest ordinador",
     "Tienes la última versión": "Tens l'última versió", "Versión instalada": "Versió instal·lada", "Buscar actualizaciones": "Cerca actualitzacions",
     "Buscando actualizaciones…": "Cercant actualitzacions…", "Esta copia no tiene las actualizaciones activadas": "Aquesta còpia no té les actualitzacions activades",
-    "Descargando…": "Baixant…", "Reintentar": "Torna-ho a provar", "Comprobando…": "Comprovant…", "Comprobando con la UV…": "Comprovant amb la UV…",
+    "Descargando…": "Baixant…", "La actualización ya está en marcha": "L'actualització ja està en marxa", "Reintentar": "Torna-ho a provar", "Comprobando…": "Comprovant…", "Comprobando con la UV…": "Comprovant amb la UV…",
     "El Cuaderno se cerrará y se volverá a abrir solo en unos segundos. Tus datos no se tocan.": "El Cuaderno es tancarà i es tornarà a obrir sol en uns segons. Les teues dades no es toquen.",
     "Arrastra «Cuaderno» a Aplicaciones y elige «Reemplazar».": "Arrossega «Cuaderno» a Aplicacions i tria «Reemplaça».",
     "No se ha podido descargar la actualización. Inténtalo más tarde.": "No s'ha pogut baixar l'actualització. Torna-ho a provar més tard.",
@@ -2438,7 +2477,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     'Entregas cercanas':'Lliuraments pròxims','Próxima clase':'Pròxima classe','Cambiar color':'Canvia el color','Restablecer':'Restableix'
   });
   const CA_RX = [
-    [/^Ver solo (.+)$/, 'Mostra només $1'], [/^Aula Virtual revisada: (.+) · asignaturas reconocidas: (\d+) · entregas próximas: (\d+)$/, 'Aula Virtual revisada: $1 · assignatures reconegudes: $2 · lliuraments pròxims: $3'], [/^Aula Virtual: no se ha podido revisar\. (.*)$/, "Aula Virtual: no s'ha pogut revisar. $1"],
+    [/^Ver solo (.+)$/, 'Mostra només $1'], [/^(\d+) documentos listos: arrástralos a NotebookLM$/, '$1 documents a punt: arrossega\'ls a NotebookLM'], [/^Guardado: (\d+) apuntes? en un archivo\. Súbelo en NotebookLM con «Añadir fuente»\.$/, (m, n) => `Guardat: ${n} ${n === '1' ? 'apunt' : 'apunts'} en un arxiu. Puja'l en NotebookLM amb «Afig una font».`], [/^Archivo guardado en «(.+)»$/, 'Arxiu guardat en «$1»'], [/^(\d+) apuntes?$/, (m, n) => n + (n === '1' ? ' apunt' : ' apunts')], [/^(\d+) atrasadas?$/, (m, n) => n + (n === '1' ? ' endarrerida' : ' endarrerides')], [/^Aula Virtual revisada: (.+) · asignaturas reconocidas: (\d+) · entregas próximas: (\d+)$/, 'Aula Virtual revisada: $1 · assignatures reconegudes: $2 · lliuraments pròxims: $3'], [/^Aula Virtual: no se ha podido revisar\. (.*)$/, "Aula Virtual: no s'ha pogut revisar. $1"],
     [/^Correos disponibles: (\d+) · Fichas en esta asignatura: (\d+) · Total: (\d+)\.$/, 'Correus disponibles: $1 · Fitxes en esta assignatura: $2 · Total: $3.'],
     [/^Correos disponibles: (\d+) · Fichas de profesorado en total: (\d+)\.$/, 'Correus disponibles: $1 · Fitxes de professorat en total: $2.'],
     [/^¿Quieres actualizar Cuaderno a la versión (.+)\?$/, 'Vols actualitzar el Cuaderno a la versió $1?'],
@@ -2477,7 +2516,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     [/^Actualizado (.+)$/, (m, r) => 'Actualitzat ' + trCore(r)], [/^hace (\d+) min$/, 'fa $1 min'], [/^hace (\d+) h$/, 'fa $1 h'],
     [/^Ya tienes la última versión \((.+)\) ✓$/, "Ja tens l'última versió ($1) ✓"], [/^Actualizar a la versión (.+)$/, 'Actualitza a la versió $1'],
     [/^Hay una versión nueva del Cuaderno \((.+)\)$/, 'Hi ha una versió nova del Cuaderno ($1)'], [/^Hay una versión nueva: (.+)$/, 'Hi ha una versió nova: $1'],
-    [/^Descargando la versión (.+)…$/, 'Baixant la versió $1…'], [/^Instalando la versión (.+)$/, 'Instal·lant la versió $1'],
+    [/^Descargando la versión (.+)…$/, 'Baixant la versió $1…'], [/^Preparando la descarga de la versión (.+)…$/, 'Preparant la baixada de la versió $1…'], [/^Instalando la versión (.+)$/, 'Instal·lant la versió $1'],
     [/^Se ha abierto el instalador de la versión (.+)$/, "S'ha obert l'instal·lador de la versió $1"],
     [/^Hola, (.+)\. Tu correo de la UV ya está conectado: los correos aparecerán en «Correo» en un momento\.$/, 'Hola, $1. El teu correu de la UV ja està connectat: els correus apareixeran a «Correu» en un moment.'],
     [/^Hola, (.+)\. Puedes conectar tu correo cuando quieras desde Ajustes \(⚙ arriba a la derecha\)\.$/, 'Hola, $1. Pots connectar el teu correu quan vulgues des de Configuració (⚙ a dalt a la dreta).'],
@@ -2747,7 +2786,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   function subjButton(s, extra) {
     const b = document.createElement('button');
     b.className = 'subj' + (extra ? ' ' + extra : ''); b.style.setProperty('--c', s.color);
-    b.setAttribute('aria-current', s.id === state.subjectScope && !SPECIAL[state.view]);
+    b.setAttribute('aria-current', (s.id === state.subjectScope && !SPECIAL[state.view]) || (state.view === 'home' && homePage === 'subject:' + s.id));
     b.title = s.name + (s.group ? ` · ${s.group}` : '') + (s.archived ? ' · archivada' : '');
     const pend = s.tasks.filter(t => !t.done).length;
     b.innerHTML = `<span class="chip tint">${esc(s.short)}${pend ? `<span class="count" aria-label="${pend} tareas pendientes">${pend}</span>` : ''}</span><span class="nm">${esc(s.name)}<small class="live-label">En clase</small></span>`;
@@ -2955,6 +2994,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   const VIEWS = { notes: ['#tabNotes', '#notesView'], tasks: ['#tabTasks', '#tasksView'], files: ['#tabFiles', '#filesView'], biblio: ['#tabBiblio', '#biblioView'], schemas: ['#tabSchemas', '#schemasView'], teachers: ['#tabTeachers', '#teachersView'] };
   const SPECIAL = { schedule: { sec: '#scheduleView', btn: '#schedBtn', title: 'Horario de clases' }, mail: { sec: '#mailView', btn: '#mailBtn', title: 'Correo' }, alerts: { sec: '#alertsView', btn: '#alertsBtn', title: 'Avisos' }, cites: { sec: '#citesView', btn: '#citesBtn', title: 'Citas APA' }, ai: { sec: '#aiView', btn: '#aiBtn', title: 'Resumir con IA' } };
   SPECIAL.home = { sec: '#homeView', btn: '#homeBtn', title: 'Inicio' };
+  let homePage = 'main';   // inicio: 'main' | 'subjects' | 'subject:<id>'
   function renderHeader() {
     const s = subj();
     document.documentElement.style.setProperty('--c', s.color);
@@ -2963,8 +3003,10 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     if (!sp && !VIEWS[state.view]) state.view = 'notes';
     Object.entries(VIEWS).forEach(([v, [tab, sec]]) => { $(tab).setAttribute('aria-selected', state.view === v); $(sec).hidden = state.view !== v; });
     Object.entries(SPECIAL).forEach(([v, o]) => { $(o.sec).hidden = state.view !== v; $(o.btn).setAttribute('aria-current', state.view === v); });
-    document.querySelector('.top .seg').hidden = false; $('#shareBtn').hidden = !!sp || allSubjects(); $('#pdfBtn').hidden = !!sp || allSubjects(); $('#subjChip').hidden = !!sp || allSubjects();
-    if (sp) $('#subjName').textContent = sp.title;
+    const homeSubj = state.view === 'home' && homePage.startsWith('subject:');
+    document.querySelector('.top .seg').hidden = state.view === 'home' && !homeSubj; $('#shareBtn').hidden = !!sp || allSubjects(); $('#pdfBtn').hidden = !!sp || allSubjects(); $('#subjChip').hidden = !!sp || allSubjects();
+    if (homeSubj) { $('#subjName').textContent = s.name; $('#subjChip').hidden = false; }
+    else if (sp) $('#subjName').textContent = state.view === 'home' && homePage === 'subjects' ? 'Asignaturas' : sp.title;
     else if (allSubjects()) $('#subjName').textContent = ({ notes:'Todos los apuntes', files:'Todos los archivos', tasks:'Tareas', teachers:'Todo el profesorado' })[state.view] || 'Cuaderno';
     const filter = $('#globalSubjectFilter'), expected = ['all', ...orderedSubjects().map(s => s.id)].join('|');
     if (filter.dataset.items !== expected) { filter.innerHTML = '<option value="all">Todas las asignaturas</option>' + orderedSubjects().map(s => `<option value="${esc(s.id)}">${esc(s.short)} · ${esc(s.name)}</option>`).join(''); filter.dataset.items = expected; }
@@ -3036,6 +3078,7 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
   }
   function renderCurrentView() {
     if(state.view==='notes')renderNotesList();
+    if (state.view === 'ai') renderNotebooks();
     ({ home: renderHome, notes: renderEditor, tasks: renderTasks, files: renderFiles, biblio: renderBiblio, schemas: renderSchemas, teachers: renderTeachers, schedule: renderSchedule, mail: renderMail, alerts: renderAlerts, cites: renderCites, ai: renderAI })[state.view]?.();
   }
   function renderAll() { applyTheme(); applyRail(); renderUser(); renderSubjects(); renderHeader(); renderCurrentView(); applyPaper(); updateAlertBadge(); }
@@ -4385,13 +4428,13 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
   const canPreview = f => extOf(f) in MIMES;          // el resto se abre con el programa del ordenador
   const KIND = e => ({ doc: 'DOC', docx: 'DOC', odt: 'DOC', rtf: 'DOC', ppt: 'PPT', pptx: 'PPT', odp: 'PPT', key: 'PPT', xls: 'XLS', xlsx: 'XLS', ods: 'XLS',
     png: 'IMG', jpg: 'IMG', jpeg: 'IMG', gif: 'IMG', webp: 'IMG', bmp: 'IMG', heic: 'IMG', mp3: 'AUD', m4a: 'AUD', wav: 'AUD', ogg: 'AUD', mp4: 'VID', mov: 'VID', webm: 'VID', zip: 'ZIP', rar: 'ZIP', '7z': 'ZIP' }[e] || e.slice(0, 4).toUpperCase() || 'ARCH');
-  async function addFiles(list, subjectId) {
-    if (allSubjects() && !subjectId) { chooseSubject(id => addFiles(list, id)); return; }
+  async function addFiles(list, subjectId, folder = '') {
+    if (allSubjects() && !subjectId) { chooseSubject(id => addFiles(list, id, folder)); return; }
     const s = state.subjects.find(s => s.id === subjectId) || scopeSubjects()[0]; let n = 0;
     for (const f of list) {
       const m = f.name.match(/^(.*?)(?:\.([A-Za-z0-9]{1,8}))?$/), ext = (m[2] || '').toLowerCase();
       const id = uid();
-      try { await idb.put(id, f); uploadFile(id, f); s.files.push({ id, name: m[1] || f.name, ext, mime: f.type || '', size: f.size, added: Date.now(), desc: '' }); n++; }
+      try { await idb.put(id, f); uploadFile(id, f); s.files.push({ id, name: m[1] || f.name, ext, mime: f.type || '', size: f.size, added: Date.now(), desc: '', ...(folder ? { folder } : {}) }); n++; }
       catch (e) { toast('No se ha podido guardar «' + f.name + '». Puede que no quede espacio.'); }
     }
     if (n) { save(); renderFiles(); toast(n === 1 ? 'Archivo añadido' : n + ' archivos añadidos'); }
@@ -4407,41 +4450,85 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
       toast('Abriendo «' + f.name + '»…');
     } catch (e) { download(fileName(f.name, extOf(f)), b, mimeOf(f)); }
   }
+  // Carpetas: el nombre va dentro de cada archivo (f.folder) y las vacías en s.folders, para que se sincronicen con la asignatura
+  const FOLDER_ICON = '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+  const closedFolders = new Set();
+  const folderNames = s => [...new Set([...(s.folders || []), ...s.files.map(f => f.folder).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'es'));
+  function fileRow({ s, f }) {
+    const li = document.createElement('li'); li.className = 'file'; li.draggable = true;
+    li.innerHTML = `<span class="fic tint" style="--c:${s.color}">${esc(allSubjects() ? s.short : KIND(extOf(f)))}</span>
+      <button class="fbody" title="${canPreview(f) ? 'Ver' : 'Abrir con el programa del ordenador'}"><span class="fname">${esc(f.name)}</span><span class="fmeta">${f.desc ? esc(f.desc) + ' · ' : ''}${fmtSize(f.size)} · ${new Date(f.added).toLocaleDateString('es-ES')}</span></button>
+      <div class="f-actions-row">
+        <button class="icon-btn" data-a="dl" title="Descargar"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></button>
+        <button class="icon-btn" data-a="ed" title="Cambiar nombre, nota o carpeta"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+        <button class="icon-btn" data-a="del" title="Eliminar">${TRASH}</button>
+      </div>`;
+    li.addEventListener('dragstart', e => { e.dataTransfer.setData('application/x-cuaderno-file', s.id + '|' + f.id); e.dataTransfer.effectAllowed = 'move'; });
+    li.querySelector('.fbody').onclick = () => canPreview(f) ? openViewer(f) : openLocal(f);
+    li.querySelector('[data-a=dl]').onclick = async () => { const b = await getFile(f.id); if (!b) return toast('No se encuentra el archivo'); download(fileName(f.name, extOf(f)), b, mimeOf(f)); };
+    li.querySelector('[data-a=ed]').onclick = () => {
+      const form = $('#fileEditForm'); form.dataset.sid = s.id; form.dataset.fid = f.id;
+      form.elements.name.value = f.name; form.elements.desc.value = f.desc || '';
+      const sel = form.elements.folder; sel.replaceChildren(new Option('Sin carpeta', '')); for (const n of folderNames(s)) { const o = new Option(n, n); o.dataset.noi18n = ''; sel.add(o); } sel.value = f.folder || '';
+      $('#fileEditDlg').showModal(); requestAnimationFrame(() => { form.elements.name.focus(); form.elements.name.select(); });
+    };
+    li.querySelector('[data-a=del]').onclick = () => {
+      if (!confirm(`¿Eliminar «${f.name}»?`)) return;
+      idb.del(f.id).catch(() => {}); s.files = s.files.filter(x => x.id !== f.id); save(); renderFiles();
+    };
+    return li;
+  }
+  // soltar en una carpeta: archivos del ordenador (se suben dentro) o un archivo de la lista (se mueve)
+  function folderDrop(el, s, name) {
+    el.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); el.classList.add('over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation(); el.classList.remove('over');
+      const moved = e.dataTransfer.getData('application/x-cuaderno-file');
+      if (moved) { const [sid, fid] = moved.split('|'), src = state.subjects.find(x => x.id === sid), f = src?.files.find(x => x.id === fid); if (!f) return; if (s && sid !== s.id) return toast('Ese archivo es de otra asignatura'); if (name) f.folder = name; else delete f.folder; save(); renderFiles(); return; }
+      if (e.dataTransfer.files.length && s) addFiles([...e.dataTransfer.files], s.id, name);
+    });
+  }
   function renderFiles() {
-    const ul = $('#files'), list = scopeSubjects().flatMap(s => s.files.map(f => ({s,f}))).sort((a, b) => b.f.added - a.f.added);
+    const ul = $('#files'), subjects = scopeSubjects(), list = subjects.flatMap(s => s.files.map(f => ({s,f}))).sort((a, b) => b.f.added - a.f.added);
     const total = list.reduce((a, {f}) => a + (f.size || 0), 0);
     $('#fileCount').textContent = list.length ? `${list.length === 1 ? '1 archivo' : list.length + ' archivos'} · ${fmtSize(total)}${SERVED ? ' · guardados en tu Google Drive' : ''}` : 'Tu cajón de la asignatura: temarios, lecturas, rúbricas, presentaciones, hojas de cálculo, imágenes, audios…';
     ul.innerHTML = '';
-    list.forEach(({s,f}) => {
-      const li = document.createElement('li'); li.className = 'file';
-      li.innerHTML = `<span class="fic tint" style="--c:${s.color}">${esc(allSubjects() ? s.short : KIND(extOf(f)))}</span>
-        <button class="fbody" title="${canPreview(f) ? 'Ver' : 'Abrir con el programa del ordenador'}"><span class="fname">${esc(f.name)}</span><span class="fmeta">${f.desc ? esc(f.desc) + ' · ' : ''}${fmtSize(f.size)} · ${new Date(f.added).toLocaleDateString('es-ES')}</span></button>
-        <div class="f-actions-row">
-          <button class="icon-btn" data-a="dl" title="Descargar"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></button>
-          <button class="icon-btn" data-a="ed" title="Cambiar nombre o nota"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
-          <button class="icon-btn" data-a="del" title="Eliminar">${TRASH}</button>
-        </div>`;
-      li.querySelector('.fbody').onclick = () => canPreview(f) ? openViewer(f) : openLocal(f);
-      li.querySelector('[data-a=dl]').onclick = async () => { const b = await getFile(f.id); if (!b) return toast('No se encuentra el archivo'); download(fileName(f.name, extOf(f)), b, mimeOf(f)); };
-      li.querySelector('[data-a=ed]').onclick = () => {
-        const form = $('#fileEditForm'); form.dataset.sid = s.id; form.dataset.fid = f.id;
-        form.elements.name.value = f.name; form.elements.desc.value = f.desc || '';
-        $('#fileEditDlg').showModal(); requestAnimationFrame(() => { form.elements.name.focus(); form.elements.name.select(); });
-      };
-      li.querySelector('[data-a=del]').onclick = () => {
-        if (!confirm(`¿Eliminar «${f.name}»?`)) return;
-        idb.del(f.id).catch(() => {}); s.files = s.files.filter(x => x.id !== f.id); save(); renderFiles();
-      };
-      ul.appendChild(li);
-    });
+    const groups = subjects.flatMap(s => folderNames(s).map(name => ({ s, name })));
+    for (const { s, name } of groups) {
+      const key = s.id + '|' + name, items = list.filter(x => x.s === s && x.f.folder === name), open = !closedFolders.has(key), li = document.createElement('li'); li.className = 'folder' + (open ? ' open' : '');
+      li.innerHTML = `<div class="folder-head"><button type="button" class="folder-toggle" aria-expanded="${open}">${FOLDER_ICON}<span class="folder-name" data-noi18n>${esc(name)}</span>${allSubjects() ? `<span class="subj-tag tint" style="--c:${s.color}">${esc(s.short)}</span>` : ''}<b>${items.length}</b></button>
+        <div class="f-actions-row"><button class="icon-btn" data-a="nb" title="Llevar esta carpeta a NotebookLM"><svg viewBox="0 0 24 24"><path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6zM6 3v18M10 8h5M10 12h5"/></svg></button><button class="icon-btn" data-a="ren" title="Cambiar el nombre de la carpeta"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button><button class="icon-btn" data-a="del" title="Quitar la carpeta (los archivos no se borran)">${TRASH}</button></div></div><ul class="files folder-files"></ul>`;
+      li.querySelector('.folder-toggle').onclick = () => { open ? closedFolders.add(key) : closedFolders.delete(key); renderFiles(); };
+      li.querySelector('[data-a=nb]').onclick = () => openNbDlg(items.map(x => x.f.id));
+      li.querySelector('[data-a=ren]').onclick = () => openFolderDlg(s, name);
+      li.querySelector('[data-a=del]').onclick = () => { if (items.length && !confirm(`¿Quitar la carpeta «${name}»? Sus archivos no se borran: quedan fuera de la carpeta.`)) return; s.files.forEach(f => { if (f.folder === name) delete f.folder; }); s.folders = (s.folders || []).filter(n => n !== name); save(); renderFiles(); };
+      folderDrop(li.querySelector('.folder-head'), s, name);
+      const inner = li.querySelector('.folder-files'); if (open) { items.forEach(x => inner.append(fileRow(x))); if (!items.length) inner.innerHTML = '<li class="empty folder-empty">Carpeta vacía. Arrastra aquí archivos, o cámbialos de carpeta con el lápiz.</li>'; }
+      ul.append(li);
+    }
+    const loose = list.filter(x => !x.f.folder);
+    if (groups.length && loose.length) { const sep = document.createElement('li'); sep.className = 'folder-loose'; sep.textContent = 'Sin carpeta'; folderDrop(sep, null, ''); ul.append(sep); }
+    loose.forEach(x => ul.append(fileRow(x)));
   }
+  let folderEdit = null;
+  function openFolderDlg(s, name = '') { folderEdit = { sid: s.id, old: name }; $('#folderDlgTitle').textContent = name ? 'Cambiar el nombre de la carpeta' : 'Nueva carpeta'; const f = $('#folderForm'); f.elements.name.value = name; $('#folderDlg').showModal(); requestAnimationFrame(() => { f.elements.name.focus(); f.elements.name.select(); }); }
+  $('#folderNew').onclick = () => { if (allSubjects()) chooseSubject(id => openFolderDlg(state.subjects.find(s => s.id === id))); else openFolderDlg(scopeSubjects()[0]); };
+  $('#folderCancel').onclick = () => $('#folderDlg').close();
+  $('#folderForm').onsubmit = e => {
+    e.preventDefault(); const name = e.currentTarget.elements.name.value.replace(/\s+/g, ' ').trim(), s = state.subjects.find(x => x.id === folderEdit?.sid); if (!name || !s) return;
+    s.folders ||= [];
+    if (folderEdit.old && folderEdit.old !== name) { s.files.forEach(f => { if (f.folder === folderEdit.old) f.folder = name; }); s.folders = s.folders.filter(n => n !== folderEdit.old); }
+    if (!s.folders.includes(name)) s.folders.push(name);
+    save(); renderFiles(); $('#folderDlg').close(); toast(folderEdit.old ? 'Carpeta renombrada' : 'Carpeta creada');
+  };
   const drop = $('#drop');
   $('#fileEditCancel').onclick = () => $('#fileEditDlg').close();
   $('#fileEditForm').onsubmit = e => {
     e.preventDefault(); const form = e.currentTarget, s = state.subjects.find(s => s.id === form.dataset.sid), f = s?.files.find(f => f.id === form.dataset.fid);
     if (!f) { $('#fileEditDlg').close(); return; }
     const name = form.elements.name.value.trim(); if (!name) { form.elements.name.focus(); return; }
-    f.name = name; f.desc = form.elements.desc.value.trim(); save(); renderFiles(); $('#fileEditDlg').close(); toast('Cambios guardados');
+    f.name = name; f.desc = form.elements.desc.value.trim(); if (form.elements.folder.value) f.folder = form.elements.folder.value; else delete f.folder; save(); renderFiles(); $('#fileEditDlg').close(); toast('Cambios guardados');
   };
   $('#fileInput').onchange = e => { addFiles([...e.target.files]); e.target.value = ''; };
   drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#fileInput').click(); } });
@@ -4944,7 +5031,22 @@ Gracias.` },
     }
     return changed;
   }
-  const aulaDocsDone = () => { try { return JSON.parse(localStorage.getItem('cuaderno-aula-docs')) || {}; } catch { return {}; } };
+  // Descripción de la asignatura: el párrafo que sigue a «Resumen», «Descripción», «Introducción»… en la guía docente
+  function extractAbout(text) {
+    const lines = String(text || '').split(/\r?\n/).map(l => l.trim());
+    const HEAD = /^(?:\d+[.)]?\s*)?(resumen|resum|descripci[oó]n?(?: general)?(?: de (?:la|l')\s*(?:asignatura|assignatura|materia|mat[eè]ria))?|presentaci[oó]n?(?: de (?:la|l')\s*(?:asignatura|assignatura))?|introducci[oó]n?(?: a (?:la|l')\s*(?:asignatura|assignatura|materia|mat[eè]ria))?|orientaci[oó]n espec[ií]fica[^.]{0,40}|descripci[oó]n de contenidos)\s*:?$/i;
+    const isHead = l => l.length < 70 && (/^\d+[.)]\s+\S/.test(l) || (l === l.toUpperCase() && /[A-ZÁÉÍÓÚÑÇ]{4}/.test(l) && !/[.,;]$/.test(l)));
+    let best = '';
+    for (let i = 0; i < lines.length; i++) {
+      if (!HEAD.test(lines[i])) continue; let out = '';
+      for (let j = i + 1; j < lines.length && j < i + 40; j++) { const l = lines[j]; if (!l) { if (out.length > 200) break; continue; } if (out && isHead(l)) break; if (/@|https?:\/\//.test(l) && out.length < 40) continue; out += (out && !/-$/.test(out) ? ' ' : '') + l; if (out.length > 1100) break; }
+      out = out.replace(/\s+/g, ' ').trim(); if (out.length > 900) { const cut = out.slice(0, 900), end = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('.')); out = end > 300 ? cut.slice(0, end + 1) : cut.replace(/\s+\S*$/, '') + '…'; }
+      if (out.length >= 140 && out.length > best.length && /[a-záéíóú]{4}/.test(out)) best = out;
+      if (best && /resum|descripci/i.test(lines[i])) break;   // el resumen oficial manda
+    }
+    return best;
+  }
+  const aulaDocsDone = () => { try { return JSON.parse(localStorage.getItem('cuaderno-aula-docs2')) || {}; } catch { return {}; } };
   // Apartado de información de cada curso (texto y PDF): correo, tutorías, despacho y teléfono del profesorado.
   async function applyAulaInfo(data) {
     let changed = false, filled = 0; const done = aulaDocsDone(), words = n => CuadernoCorreoAnalisis.personKey(n).split(' ').filter(w => w.length > 2), RX = /[\w.+-]+@[\w-]+(\.[\w-]+)+/;
@@ -4952,6 +5054,7 @@ Gracias.` },
       const s = aulaSubject(c); if (!s || !c.info) continue;
       const texts = [{ name: 'Información del curso', text: c.info.text || '' }];
       for (const d of c.info.docs || []) { if (!d.data) continue; try { texts.push({ name: d.name || 'PDF del curso', text: await pdfBytesText(Uint8Array.from(atob(d.data), ch => ch.charCodeAt(0))) }); done[d.url] = Date.now(); } catch (e) { console.warn('PDF del Aula Virtual:', e.message); } }
+      if (!s.about?.manual) { const ranked = [...texts].sort((a, b) => (/gu[ií]a doc/i.test(b.name) ? 2 : /gu[ií]a|programa|temari/i.test(b.name) ? 1 : 0) - (/gu[ií]a doc/i.test(a.name) ? 2 : /gu[ií]a|programa|temari/i.test(a.name) ? 1 : 0)); for (const src of ranked) { const about = extractAbout(src.text); if (about) { if (s.about?.text !== about) { s.about = { text: about, source: src.name, date: new Date().toISOString() }; changed = true; } break; } } }
       for (const src of texts) {
         if (!src.text.trim()) continue;
         const mails = [...new Set((src.text.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g) || []).map(e => e.toLowerCase().replace(/\.$/, '')))].filter(e => /(^|\.)uv\.es$/.test(e.split('@')[1]) && !/alumni\.uv\.es$/.test(e));
@@ -4984,7 +5087,7 @@ Gracias.` },
       }
       syncTeacherEmails(s);
     }
-    try { localStorage.setItem('cuaderno-aula-docs', JSON.stringify(done)); } catch {}
+    try { localStorage.setItem('cuaderno-aula-docs2', JSON.stringify(done)); } catch {}
     return { changed, filled };
   }
   // Entregas que están en la página del curso pero no en el calendario: se leen y, si siguen abiertas, se añaden
@@ -5948,6 +6051,47 @@ Gracias.` },
   }
   async function openGeminiWeb(prompt='') {if(IN_APP)await mailRequest('/api/gemini/abrir',{prompt});else{if(prompt)await navigator.clipboard.writeText(prompt);window.open('https://gemini.google.com/app','_blank','noopener');}}
   $('#geminiWeb').onclick=()=>openGeminiWeb().catch(e=>toast(e.message));
+  /* ---------- NotebookLM: cuadernos propios (no ligados a una asignatura) y envío de documentos ---------- */
+  function renderNotebooks() {
+    const ul = $('#nbList'); if (!ul) return; ul.replaceChildren();
+    const rows = [...(state.notebooks || []).map(n => ({ n })), ...state.subjects.filter(s => s.notebook && !s.archived).map(s => ({ s }))];
+    for (const r of rows) {
+      const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button'; b.className = 'nb-item'; b.dataset.noi18n = '';
+      b.textContent = r.n ? r.n.name : r.s.short + ' · ' + r.s.name; if (r.s) b.style.setProperty('--c', r.s.color); b.classList.toggle('of-subject', !!r.s);
+      b.onclick = () => openNotebookWeb(r.n ? r.n.url : r.s.notebook).catch(e => toast(e.message)); li.append(b);
+      if (r.n) { const x = document.createElement('button'); x.type = 'button'; x.className = 'icon-btn'; x.title = 'Quitar este cuaderno de la lista'; x.innerHTML = TRASH; x.onclick = () => { if (!confirm(`¿Quitar «${r.n.name}» de la lista? El cuaderno sigue en NotebookLM.`)) return; state.deleted[r.n.id] = Date.now(); state.notebooks = state.notebooks.filter(o => o.id !== r.n.id); save(); renderNotebooks(); }; li.append(x); }
+      ul.append(li);
+    }
+  }
+  $('#nbOpenMain').onclick = () => openNotebookWeb('').catch(e => toast(e.message));
+  $('#nbBrowser').onclick = () => window.open('https://notebooklm.google.com/', '_blank', 'noopener');
+  $('#nbAdd').onsubmit = e => { e.preventDefault(); const f = e.currentTarget, url = notebookLink(f.elements.url.value), name = f.elements.name.value.replace(/\s+/g, ' ').trim(); if (!url) { $('#nbMsg').textContent = 'Ese enlace no es de NotebookLM. Cópialo de la barra de direcciones de tu cuaderno.'; return; } $('#nbMsg').textContent = ''; state.notebooks ||= []; state.notebooks.push({ id: uid(), name: name || 'Cuaderno', url, created: Date.now() }); f.reset(); save(); renderNotebooks(); toast('Cuaderno guardado'); };
+  // Elegir documentos de cualquier asignatura (y los apuntes de cada una) y dejarlos listos para subirlos
+  function openNbDlg(preselect = []) {
+    const pick = $('#nbPick'); pick.replaceChildren(); $('#nbPickMsg').textContent = '';
+    for (const s of orderedSubjects().filter(x => !x.archived)) {
+      const box = document.createElement('fieldset'); box.className = 'nb-subject'; box.style.setProperty('--c', s.color);
+      const lg = document.createElement('legend'); lg.dataset.noi18n = ''; lg.textContent = s.short + ' · ' + s.name; box.append(lg);
+      const row = (value, label, sub, checked) => { const l = document.createElement('label'); l.className = 'check nb-row'; const c = document.createElement('input'); c.type = 'checkbox'; c.value = value; c.checked = !!checked; const t = document.createElement('span'); t.textContent = label; if (!value.startsWith('notes:')) t.dataset.noi18n = ''; l.append(c, t); if (sub) { const m = document.createElement('small'); m.dataset.noi18n = ''; m.textContent = sub; l.append(m); } box.append(l); };
+      if (s.notes.length) row('notes:' + s.id, 'Todos los apuntes de la asignatura (un archivo)', String(s.notes.length), false);
+      for (const f of [...s.files].sort((a, b) => (a.folder || '').localeCompare(b.folder || '') || a.name.localeCompare(b.name))) row('file:' + s.id + ':' + f.id, f.name + '.' + extOf(f), [f.folder, fmtSize(f.size)].filter(Boolean).join(' · '), preselect.includes(f.id));
+      if (box.children.length > 1) pick.append(box);
+    }
+    if (!pick.children.length) pick.innerHTML = '<p class="empty">Aún no hay apuntes ni archivos que llevar. Añade documentos en la pestaña Archivos.</p>';
+    $('#nbDlg').showModal();
+  }
+  $('#nbPrepare').onclick = () => openNbDlg();
+  $('#nbCancel').onclick = () => $('#nbDlg').close();
+  $('#nbForm').onsubmit = async e => {
+    e.preventDefault(); const chosen = [...$('#nbPick').querySelectorAll('input:checked')].map(c => c.value), msg = $('#nbPickMsg');
+    if (!chosen.length) { msg.textContent = 'Marca al menos un documento.'; return; }
+    flushEditor(); const files = [], texts = [];
+    for (const v of chosen) { const [kind, sid, fid] = v.split(':'), s = state.subjects.find(x => x.id === sid); if (!s) continue; if (kind === 'notes') texts.push({ name: fileName('Apuntes ' + s.short, 'md'), text: subjectSourcesText(s).text }); else { const f = s.files.find(x => x.id === fid); if (f) files.push({ id: f.id, name: fileName(f.name, extOf(f)) }); } }
+    if (!IN_APP) { for (const t of texts) download(t.name, t.text, 'text/markdown'); for (const f of files) { const b = await getFile(f.id); if (b) download(f.name, b, 'application/octet-stream'); } $('#nbDlg').close(); window.open('https://notebooklm.google.com/', '_blank', 'noopener'); return; }
+    msg.textContent = 'Preparando los documentos…';
+    try { const r = await mailRequest('/api/notebook/preparar', { files, texts }); $('#nbDlg').close(); toast(r.count === 1 ? '1 documento listo: arrástralo a NotebookLM' : `${r.count} documentos listos: arrástralos a NotebookLM`); if (r.missing) toast(`${r.missing} no se han encontrado en este ordenador`); }
+    catch (err) { msg.textContent = err.message; }
+  };
   $('#geminiBrowser').onclick=()=>window.open('https://gemini.google.com/app','_blank','noopener');
   $('#aiGo').onclick=async()=>{
     const text=$('#aiText').value.trim(),question=$('#aiQ').value.trim();let prompt;
@@ -6023,7 +6167,11 @@ Gracias.` },
   /* ---------- Novedades de la última versión ----------
      Solo las de la versión instalada (sin historial). Se escriben en castellano y su traducción está en CA,
      así salen en el idioma de la app. Al publicar una versión nueva: cambiar NEWS.v y la lista. */
-  const NEWS = { v: '4.0.4', items: [
+  const NEWS = { v: '4.1.0', items: [
+    'Inicio nuevo: botones grandes para Asignaturas, Tareas, Apuntes y Profesorado, una página con todas las asignaturas y una ficha de cada una con su descripción y el botón «Trabajar en esta asignatura».',
+    'Carpetas en Archivos: crea carpetas, mueve archivos con el lápiz o arrastrándolos y pliégalas.',
+    'NotebookLM: guarda tus cuadernos (también uno por asignatura) y lleva allí apuntes y archivos de cualquier asignatura.',
+    'Actualizar pide confirmación una sola vez.',
     'El Aula Virtual se revisa mejor: el profesorado de cada asignatura sale de la lista de participantes, y se leen la guía, el programa y la presentación para completar correo, tutorías y despacho.',
     'Se añaden también las entregas que están en la página del curso aunque no aparezcan en el calendario.',
     'Los recordatorios con varias tareas crean una tarea por cada una, con su nombre.',
@@ -6083,11 +6231,12 @@ Gracias.` },
     $('#updTopBtn').title = v && v.available ? `Actualizar a la versión ${v.latest}` : 'Actualizar Cuaderno';
     $('#updTopBtn').setAttribute('aria-label',$('#updTopBtn').title);
     const bar = $('#updBar'), go = $('#updGo'), txt = $('#updTxt');
-    const busy = v && ['downloading', 'installing'].includes(v.state);
+    const busy = v && (v.starting || ['downloading', 'installing'].includes(v.state));
     if (!v || !v.available || (updHidden && !busy)) { bar.hidden = true; return; }
     bar.hidden = false; go.hidden = false; go.disabled = busy; $('#updClose').hidden = busy;
     const first = (v.notes || '').split('\n').map(x => x.replace(/^[-*•\s]+/, '').trim()).filter(Boolean)[0] || '';
-    if (v.state === 'downloading') { txt.innerHTML = `Descargando la versión ${esc(v.latest)}… <b>${v.progress || 0}%</b>`; go.textContent = 'Descargando…'; }
+    if (v.starting && v.state !== 'downloading' && v.state !== 'installing') { txt.innerHTML = `Preparando la descarga de la versión ${esc(v.latest)}…`; go.textContent = 'Descargando…'; }
+    else if (v.state === 'downloading') { txt.innerHTML = `Descargando la versión ${esc(v.latest)}… <b>${v.progress || 0}%</b>`; go.textContent = 'Descargando…'; }
     else if (v.state === 'installing') { txt.innerHTML = `Instalando la versión ${esc(v.latest)}<small>El Cuaderno se cerrará y se volverá a abrir solo en unos segundos. Tus datos no se tocan.</small>`; go.hidden = true; }
     else if (v.state === 'manual') { txt.innerHTML = `Se ha abierto el instalador de la versión ${esc(v.latest)}<small>Arrastra «Cuaderno» a Aplicaciones y elige «Reemplazar».</small>`; go.hidden = true; $('#updClose').hidden = false; }
     else if (v.state === 'error') { txt.innerHTML = `${esc(v.error || 'No se ha podido actualizar.')}`; go.textContent = 'Reintentar'; }
@@ -6098,7 +6247,7 @@ Gracias.` },
   $('#updClose').onclick = () => { updHidden = true; $('#updBar').hidden = true; };
   let updateRequested = false;
   $('#updGo').onclick = async () => {
-    if (updateRequested || !updInfo?.available || ['downloading','installing'].includes(updInfo.state)) return;
+    if (updateRequested || !updInfo?.available || updInfo.starting || ['downloading','installing'].includes(updInfo.state)) return;
     updateRequested = true;
     try {
       const dlg = $('#updConfirmDlg');
@@ -6109,6 +6258,7 @@ Gracias.` },
       if (await answer !== 'update') return;
       const go = $('#updGo'); go.disabled = true; go.textContent = 'Guardando…';
       try { flushEditor(); await syncState(); localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}   // todo guardado antes de cerrar
+      updInfo = { ...updInfo, starting: true }; updHidden = false; renderUpd(updInfo);
       try { await fetch('/api/actualizar', { method: 'POST' }); } catch (e) {}
       await checkVersion(false);
     } finally { updateRequested = false; }
@@ -6120,7 +6270,8 @@ Gracias.` },
     const v = await checkVersion(true);
     if (!v || v.error) { toast((v && v.error) || 'No se ha podido comprobar si hay versiones nuevas'); return; }
     if (!v.enabled) { toast('Esta copia no tiene las actualizaciones activadas'); return; }
-    if (v.available) { updHidden = false; renderUpd(v); $('#updGo').click(); }
+    if (v.available && (v.starting || ['downloading', 'installing'].includes(v.state))) { updHidden = false; renderUpd(v); toast('La actualización ya está en marcha'); }
+    else if (v.available) { updHidden = false; renderUpd(v); $('#updGo').click(); }
     else toast(`Ya tienes la última versión (${v.current}) ✓`);
     renderVersion();
   }
@@ -6333,7 +6484,93 @@ Gracias.` },
   $('#appearanceReset').onclick = () => { delete state.settings.appearance; applyAppearance(); renderAppearance(); save(); };
   matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => { if (!state.theme) applyTheme(); });
   const BOARD_COLORS = ['#fff0aa','#f9dce2','#d8eddb','#d9eaf6','#e9dff4','#f9e0cb'];
+  const HN_ICONS = {
+    subjects: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>',
+    tasks: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12.5 2.5 2.5 4.5-5.5"/></svg>',
+    notes: '<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg>',
+    teachers: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.5-5.5 7-5.5s6.2 1.900 7 5.5"/></svg>' };
+  const BACK_ICON = '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>', GO_ICON = '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  function goHome(page) { homePage = page; const m = page.match(/^subject:(.+)$/); if (m && state.subjects.some(s => s.id === m[1])) { flushEditor(); state.active = m[1]; state.subjectScope = m[1]; state.activeNote = sortedNotes(subj())[0]?.id || null; } else if (page !== 'main') state.subjectScope = 'all'; state.view = 'home'; save(); renderAll(); $('#homeView .home-pane:not([hidden])')?.scrollTo(0, 0); }
+  function renderHomeNav() {
+    const live = orderedSubjects().filter(s => !s.archived), pend = live.reduce((n, s) => n + s.tasks.filter(t => !t.done).length, 0);
+    const items = [['subjects', 'Asignaturas', live.length, 'Entra en cada asignatura: su información, su profesorado y todo su material.'],
+      ['tasks', 'Tareas', pend, 'Todas las entregas de todas las asignaturas, ordenadas por urgencia.'],
+      ['notes', 'Apuntes', live.reduce((n, s) => n + s.notes.length, 0), 'Todos tus apuntes juntos, para buscar y seguir escribiendo.'],
+      ['teachers', 'Profesorado', live.reduce((n, s) => n + (s.teachers || []).length, 0), 'Correos, tutorías y despachos de quien te da clase.']];
+    const nav = $('#homeNav'); nav.innerHTML = items.map(([v, t, n, d]) => `<button type="button" data-home-view="${v}"><span class="hn-ic">${HN_ICONS[v]}</span><span class="hn-t"><span>${t}</span><b>${n}</b></span><span class="hn-d">${d}</span></button>`).join('');
+    nav.querySelectorAll('button').forEach(b => b.onclick = () => { if (b.dataset.homeView === 'subjects') return goHome('subjects'); state.subjectScope = 'all'; setView(b.dataset.homeView); renderSubjects(); });
+  }
+  function renderHomeSubjects() {
+    const box = $('#homeSubjects'), live = orderedSubjects().filter(s => !s.archived);
+    box.innerHTML = `<button type="button" class="home-back">${BACK_ICON}<span>Inicio</span></button><h2 class="hs-title">Asignaturas</h2><p class="hs-sub">Elige una para ver su información y empezar a trabajar.</p><div class="subj-grid"></div>`;
+    box.querySelector('.home-back').onclick = () => goHome('main');
+    const grid = box.querySelector('.subj-grid');
+    for (const s of live) {
+      const pend = s.tasks.filter(t => !t.done), late = pend.filter(t => t.due && daysTo(t.due) < 0).length, b = document.createElement('button');
+      b.type = 'button'; b.className = 'subj-card'; b.style.setProperty('--c', s.color);
+      b.innerHTML = `<span class="sc-code" data-noi18n>${esc(s.short)}</span><span class="sc-name" data-noi18n>${esc(s.name)}</span><span class="sc-meta"></span>`;
+      const meta = b.querySelector('.sc-meta'), parts = [s.notes.length === 1 ? '1 apunte' : s.notes.length + ' apuntes', pend.length === 1 ? '1 tarea pendiente' : pend.length + ' tareas pendientes'];
+      parts.forEach((t, i) => { if (i) meta.append(' · '); const sp = document.createElement('span'); sp.textContent = t; meta.append(sp); });
+      if (late) { meta.append(' · '); const sp = document.createElement('span'); sp.className = 'sc-late'; sp.textContent = late === 1 ? '1 atrasada' : late + ' atrasadas'; meta.append(sp); }
+      b.onclick = () => goHome('subject:' + s.id); grid.append(b);
+    }
+    if (!live.length) grid.innerHTML = '<p class="empty">Aún no hay asignaturas. Añade una con el botón + de la barra lateral.</p>';
+  }
+  // --- NotebookLM: un cuaderno por asignatura (solo enlaces de notebooklm.google.com) ---
+  const notebookLink = v => { try { const u = new URL(String(v || '').trim()); return u.protocol === 'https:' && u.hostname === 'notebooklm.google.com' && !u.port && !u.username ? u.origin + u.pathname : ''; } catch { return ''; } };
+  async function openNotebookWeb(url) { const target = notebookLink(url) || 'https://notebooklm.google.com/'; if (IN_APP) await mailRequest('/api/notebook/abrir', { url: target }); else window.open(target, '_blank', 'noopener'); }
+  // Un único archivo de texto con lo que la app sabe de la asignatura y todos sus apuntes, para subirlo como fuente
+  function subjectSourcesText(s) {
+    const plain = html => { const d = document.createElement('div'); d.innerHTML = String(html || ''); d.querySelectorAll('script,style,.st-bar,.st-size,.st-rot').forEach(el => el.remove()); d.querySelectorAll('li').forEach(el => el.prepend('- ')); d.querySelectorAll('h1,h2,h3,h4').forEach(el => el.prepend('#### ')); d.querySelectorAll('p,div,li,tr,br,h1,h2,h3,h4,blockquote').forEach(el => el.append('\n')); d.querySelectorAll('td,th').forEach(el => el.append(' | ')); return d.textContent.replace(/​/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim(); };
+    const out = ['# ' + s.short + ' · ' + s.name, s.code ? 'Código: ' + s.code : ''];
+    if (s.about?.text) out.push('', '## Sobre la asignatura', s.about.text);
+    if ((s.teachers || []).length) out.push('', '## Profesorado', ...s.teachers.map(t => '- ' + [t.name, t.email, t.hours && 'Tutorías: ' + t.hours, t.room && 'Despacho: ' + t.room].filter(Boolean).join(' · ')));
+    const pend = s.tasks.filter(t => !t.done); if (pend.length) out.push('', '## Tareas pendientes', ...pend.map(t => '- ' + t.title + (t.due ? ' (entrega: ' + t.due + ')' : '') + (t.aula?.instructions ? '\n  ' + t.aula.instructions.replace(/\s+/g, ' ').slice(0, 1500) : '')));
+    out.push('', '## Apuntes'); const notes = [...s.notes].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    for (const n of notes) { const body = plain(n.content); if (!body && !n.title) continue; out.push('', '### ' + (n.title || 'Sin título') + (n.date ? ' (' + n.date + ')' : ''), body); }
+    return { text: out.filter((l, i) => l !== '' || out[i - 1] !== '').join('\n') + '\n', notes: notes.length };
+  }
+  async function exportSubjectSources(s) {
+    flushEditor(); const { text, notes } = subjectSourcesText(s), name = fileName('Cuaderno ' + s.short + ' - fuentes para NotebookLM', 'md'), blob = new Blob([text], { type: 'text/markdown' });
+    if (IN_APP) { const j = await (await fetch('/api/guardar?nombre=' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'text/markdown' }, body: blob })).json(); if (!j.ok) return ''; toast(`Archivo guardado en «${j.folder}»`); }
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+    return (notes === 1 ? 'Guardado: 1 apunte en un archivo.' : `Guardado: ${notes} apuntes en un archivo.`) + ' Súbelo en NotebookLM con «Añadir fuente».';
+  }
+  function renderHomeSubject(s) {
+    const box = $('#homeSubject'), pend = s.tasks.filter(t => !t.done).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999')), about = s.about || {};
+    box.innerHTML = `<div class="subj-page" style="--c:${esc(s.color)}"><button type="button" class="home-back">${BACK_ICON}<span>Asignaturas</span></button>
+      <div class="subj-hero"><span class="sc-code" data-noi18n>${esc(s.short)}</span><div><h2 data-noi18n>${esc(s.name)}</h2><p>${s.code ? '<span>Código</span> <span data-noi18n>' + esc(s.code) + '</span>' : ''}</p></div><button type="button" class="subj-go"><span>Trabajar en esta asignatura</span>${GO_ICON}</button></div>
+      <div class="subj-cols"><div>
+        <section class="subj-box"><h3>Sobre la asignatura</h3><textarea class="subj-about" placeholder="Aquí aparecerá la descripción de la guía docente cuando se revise el Aula Virtual. También puedes escribirla tú."></textarea><p class="subj-about-src"></p></section>
+        <section class="subj-box"><h3>Próximas tareas</h3><ul class="sj-tasks"></ul></section>
+      </div><div>
+        <section class="subj-box"><h3>Tu material</h3><div class="subj-stats"></div></section>
+        <section class="subj-box"><h3>Profesorado</h3><ul class="sj-teachers"></ul></section>
+        <section class="subj-box sj-nb"><h3 data-noi18n>NotebookLM</h3><p class="hint">Estudia esta asignatura con tus apuntes y guías como fuentes. Crea un cuaderno en NotebookLM y pega aquí su enlace.</p><input type="url" class="sj-nb-url" placeholder="https://notebooklm.google.com/notebook/…" aria-label="Enlace del cuaderno de NotebookLM"><div class="sj-nb-actions"><button type="button" class="btn primary sj-nb-open"></button><button type="button" class="btn sj-nb-export" title="Guarda un archivo con todos los apuntes de la asignatura para subirlo a NotebookLM como fuente">Preparar fuentes</button></div><p class="hint sj-nb-msg" role="status"></p></section>
+      </div></div></div>`;
+    const cur = () => state.subjects.find(x => x.id === s.id) || s;   // al sincronizar, los objetos de state se renuevan
+    box.querySelector('.home-back').onclick = () => goHome('subjects');
+    box.querySelector('.subj-go').onclick = () => selectSubject(s.id);
+    const ta = box.querySelector('.subj-about'), src = box.querySelector('.subj-about-src'); ta.value = about.text || ''; ta.dataset.noi18n = '';
+    const paintSrc = () => { src.replaceChildren(); if (!s.about?.text) return; const a = document.createElement('span'); a.textContent = s.about.manual ? 'Escrita por ti' : 'Tomada del Aula Virtual'; src.append(a); if (!s.about.manual && s.about.source) { const b = document.createElement('span'); b.dataset.noi18n = ''; b.textContent = ' · ' + s.about.source; src.append(b); } };
+    paintSrc(); ta.oninput = () => { const c = cur(); c.about = { text: ta.value, manual: true, date: new Date().toISOString() }; if (!ta.value.trim()) delete c.about; s.about = c.about; save(); paintSrc(); };
+    const tl = box.querySelector('.sj-tasks'); if (!pend.length) tl.innerHTML = '<li class="empty">No hay tareas pendientes.</li>';
+    for (const t of pend.slice(0, 4)) { const li = document.createElement('li'), di = dueInfo(t.due); const a = document.createElement('span'); a.dataset.noi18n = ''; a.textContent = t.title; const sm = document.createElement('small'); if (di && di.cls) { const d = document.createElement('span'); d.className = 'due ' + di.cls; d.textContent = di.txt; sm.append(d, ' '); } const d2 = document.createElement('span'); d2.textContent = t.due ? fmtDate(t.due) : 'Sin fecha'; sm.append(d2); li.append(a, sm); tl.append(li); }
+    const st = box.querySelector('.subj-stats'); for (const [v, label, n] of [['notes', 'Apuntes', s.notes.length], ['tasks', 'Tareas', pend.length], ['files', 'Archivos', s.files.length]]) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = `<b>${n}</b><span>${label}</span>`; b.onclick = () => { selectSubject(s.id); setView(v); }; st.append(b); }
+    const nbIn = box.querySelector('.sj-nb-url'), nbOpen = box.querySelector('.sj-nb-open'), nbMsg = box.querySelector('.sj-nb-msg');
+    nbIn.value = s.notebook || ''; const nbPaint = () => { nbOpen.textContent = s.notebook ? 'Abrir el cuaderno' : 'Abrir NotebookLM'; }; nbPaint();
+    nbIn.onchange = () => { const v = nbIn.value.trim(), ok = notebookLink(v); if (v && !ok) { nbMsg.textContent = 'Ese enlace no es de NotebookLM. Cópialo de la barra de direcciones de tu cuaderno.'; return; } nbMsg.textContent = ''; const c = cur(); if (ok) c.notebook = ok; else delete c.notebook; s.notebook = c.notebook; nbIn.value = c.notebook || ''; save(); nbPaint(); };
+    nbOpen.onclick = () => openNotebookWeb(cur().notebook).catch(e => { nbMsg.textContent = e.message; });
+    box.querySelector('.sj-nb-export').onclick = async () => { nbMsg.textContent = ''; try { const r = await exportSubjectSources(cur()); if (r) nbMsg.textContent = r; } catch (e) { nbMsg.textContent = e.message; } };
+    const tc = box.querySelector('.sj-teachers'); if (!(s.teachers || []).length) tc.innerHTML = '<li class="empty">Aún no hay profesorado en esta asignatura.</li>';
+    for (const t of s.teachers || []) { const li = document.createElement('li'); li.dataset.noi18n = ''; li.textContent = t.name || t.email || ''; const sm = document.createElement('small'); sm.textContent = [t.email, t.hours, t.room && 'Despacho ' + t.room].filter(Boolean).join(' · '); if (sm.textContent) li.append(sm); tc.append(li); }
+  }
   function renderHome() {
+    const m = homePage.match(/^subject:(.+)$/), s = m && state.subjects.find(x => x.id === m[1]); if (m && !s) homePage = 'subjects';
+    $('#homeMain').hidden = homePage !== 'main'; $('#homeSubjects').hidden = homePage !== 'subjects'; $('#homeSubject').hidden = !s;
+    if (s) return renderHomeSubject(s);
+    if (homePage === 'subjects') return renderHomeSubjects();
+    renderHomeNav();
     $('#homeGreeting').textContent = state.settings.userName ? 'Hola, '+state.settings.userName.split(' ')[0] : 'Tu espacio';
     const summary = $('#homeSummary'); summary.innerHTML = [['notes','Apuntes',state.subjects.reduce((n,s)=>n+s.notes.length,0)],['tasks','Tareas',state.subjects.reduce((n,s)=>n+s.tasks.filter(t=>!t.done).length,0)],['files','Archivos',state.subjects.reduce((n,s)=>n+s.files.length,0)],['teachers','Profesorado',state.subjects.reduce((n,s)=>n+(s.teachers||[]).length,0)]].map(([v,label,n])=>`<button data-home-view="${v}"><b>${n}</b>${label}</button>`).join('');
     summary.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.subjectScope='all';setView(b.dataset.homeView);renderSubjects();});
@@ -6370,7 +6607,7 @@ Gracias.` },
     board.style.minHeight=Math.max(600,...[...board.querySelectorAll('.board-card')].map(c=>c.offsetTop+c.offsetHeight+24))+'px';
   }
   function addBoardCard(photo) { const board=$('#homeBoard'),cols=Math.max(1,Math.floor(board.clientWidth/286)),n=state.homeBoard.length;state.homeBoard.push({id:uid(),text:'',photo:photo||'',color:n%BOARD_COLORS.length,x:16+(n%cols)*286,y:16+Math.floor(n/cols)*250});save();renderHome();if(!photo)board.querySelector('.board-card:last-child textarea')?.focus(); }
-  $('#homeBtn').onclick=()=>{setView('home');renderSubjects();};$('#homeNote').onclick=()=>addBoardCard();$('#homePhoto').onclick=()=>$('#homePhotoFile').click();
+  $('#homeBtn').onclick=()=>{homePage='main';setView('home');renderSubjects();};$('#homeNote').onclick=()=>addBoardCard();$('#homePhoto').onclick=()=>$('#homePhotoFile').click();
   $('#homePhotoFile').onchange=async e=>{const files=[...e.target.files];e.target.value='';for(const file of files){try{const photo=await compactPhoto(file,1000);if(JSON.stringify(state).length+photo.length>3500000){toast('Haz una copia de seguridad y reduce las fotos del tablero antes de añadir más.');break;}addBoardCard(photo);}catch(_){toast('No se ha podido abrir esta imagen');}}};
   /* ---------- Documentos: índice, Word, historial y continuidad ---------- */
   function rememberDocument(){if(state.view!=='notes'||!note())return;try{localStorage.setItem('cuaderno-ultimo-documento',JSON.stringify({sid:subj().id,nid:note().id,scroll:$('.ed-scroll').scrollTop,pos:rich.editor.state.selection.head,time:Date.now()}));}catch(_){}}

@@ -106,6 +106,17 @@ async function quietAulaLogin(){
   return ok;
 }
 const aulaLector=require('./aula-lector')({BrowserWindow,web:WEB,open:openIntranet,login:quietAulaLogin});
+// NotebookLM en su propia ventana, con la misma sesión de Google que Gemini. Solo se abre notebooklm.google.com.
+let notebookWindow=null;
+function notebookURL(value){try{const u=new URL(String(value||'').trim()||'https://notebooklm.google.com/');return u.protocol==='https:'&&u.hostname==='notebooklm.google.com'&&!u.port&&!u.username&&!u.password?u.href:'';}catch(_){return '';}}
+function openNotebook(target) {
+  const url=notebookURL(target);if(!url)throw new Error('El enlace no es de NotebookLM (notebooklm.google.com).');
+  if(notebookWindow&&!notebookWindow.isDestroyed()){if(notebookWindow.webContents.getURL().split('?')[0]!==url.split('?')[0])notebookWindow.loadURL(url).catch(()=>{});notebookWindow.show();notebookWindow.focus();return;}
+  notebookWindow=new BrowserWindow({width:1200,height:880,title:'NotebookLM · Cuaderno',webPreferences:{partition:'persist:cuaderno-gemini',nodeIntegration:false,contextIsolation:true,sandbox:true}});
+  notebookWindow.webContents.on('context-menu',(event,p)=>contextMenu(notebookWindow.webContents,p));
+  notebookWindow.webContents.setWindowOpenHandler(({url})=>{if(/^https?:/i.test(url))shell.openExternal(url);return {action:'deny'};});
+  notebookWindow.on('closed',()=>{notebookWindow=null;});notebookWindow.loadURL(url).catch(()=>{});
+}
 function openGemini(prompt) {
   if(prompt)clipboard.writeText(String(prompt).slice(0,200000));
   if(geminiWindow&&!geminiWindow.isDestroyed()){geminiWindow.show();geminiWindow.focus();return;}
@@ -205,11 +216,13 @@ function mergeStates(disk, inc) {
   out.deleted = deleted;
   out.library = mergeList(disk.library, inc.library, deleted);
   out.homeBoard = mergeList(disk.homeBoard, inc.homeBoard, deleted);
+  if (disk.notebooks || inc.notebooks) out.notebooks = mergeList(disk.notebooks, inc.notebooks, deleted);   // cuadernos de NotebookLM guardados
   out.mailSeen = { ...(disk.mailSeen || {}), ...(inc.mailSeen || {}) };
   const ad = disk.autoMail || {}, ai = inc.autoMail || {};
   out.autoMail = {
     seen: { ...(ad.seen || {}), ...(ai.seen || {}) },
     dismissed: { ...(ad.dismissed || {}), ...(ai.dismissed || {}) },
+    dg: { ...(ad.dg || {}), ...(ai.dg || {}) },
     review: (incNewer ? ai : ad).review || [],
   };
   out.notified = { ...(disk.notified || {}), ...(inc.notified || {}) };
@@ -626,10 +639,14 @@ else
 fi
 `;
 async function installUpdate() {
-  if (['downloading', 'installing'].includes(upd.state)) return;
+  if (upd.starting || ['downloading', 'installing'].includes(upd.state)) return;
   if (!app.isPackaged) { upd.state = 'error'; upd.error = 'Esta copia de prueba no se puede actualizar.'; return; }   // nunca sustituir Electron en pruebas
-  await checkUpdate();   // siempre la última publicada en ese momento (no la que se vio hace horas)
-  if (!upd.available || !updAsset) return;
+  // «starting»: ya se ha pedido actualizar. La interfaz lo muestra al momento y no vuelve a ofrecer el botón
+  // mientras se consulta GitHub (antes parecía que no había pasado nada y había que confirmar dos veces).
+  upd.starting = true;
+  try { await checkUpdate(); }   // siempre la última publicada en ese momento (no la que se vio hace horas)
+  finally { upd.starting = false; }
+  if (!upd.available || !updAsset) { if (!upd.error) upd.error = 'No se ha encontrado el instalador de la versión nueva.'; upd.state = 'error'; return; }
   upd.state = 'downloading'; upd.progress = 0; upd.error = null;
   try {
     const { spawn } = require('child_process');
@@ -722,6 +739,18 @@ async function handle(req) {
       if (p === '/api/aula/revisar') {const d=await req.json().catch(()=>({}));return json(await aulaLector.scan(d||{}));}
       if (p === '/api/aula/abrir') {const d=await req.json(),u=new URL(d.url||'https://aulavirtual.uv.es/');if(u.protocol!=='https:'||u.hostname!=='aulavirtual.uv.es'||u.port||u.username||u.password||!(/^(\/|\/my\/?|\/mod\/(assign|quiz|resource|folder)\/view\.php|\/pluginfile\.php\/.*)$/.test(u.pathname)))throw new Error('El enlace no pertenece al Aula Virtual de la UV.');openIntranet(u.href);return json({ok:true});}
       if (p === '/api/intranet/olvidar') {uvAccess.clear();const uvSession=session.fromPartition('persist:cuaderno-intranet');await uvSession.clearStorageData();await uvSession.clearAuthCache();if(intranetWindow&&!intranetWindow.isDestroyed())intranetWindow.reload();return json({ok:true});}
+      if (p === '/api/notebook/preparar') {   // copia los documentos elegidos a una carpeta y la abre junto a NotebookLM
+        const d = await req.json(), clean = n => String(n || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 150) || 'documento';
+        const stamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-'), prueba = process.env.CUADERNO_PRUEBA, dir = path.join(prueba || app.getPath('documents'), 'Cuaderno para NotebookLM', stamp);   // en pruebas, nunca en Documentos
+        fs.mkdirSync(dir, { recursive: true }); let count = 0, missing = 0; const used = new Set();
+        const free = n => { let name = clean(n), k = 2; const m = name.match(/^(.*?)(\.[^.]{1,8})?$/); while (used.has(name.toLowerCase())) name = m[1] + ' (' + (k++) + ')' + (m[2] || ''); used.add(name.toLowerCase()); return path.join(dir, name); };
+        for (const f of (Array.isArray(d.files) ? d.files : []).slice(0, 200)) { const src = path.join(FILES_DIR(), `${f.id}.bin`); if (!safeId(f.id) || !fs.existsSync(src)) { missing++; continue; } fs.copyFileSync(src, free(f.name)); count++; }
+        for (const t of (Array.isArray(d.texts) ? d.texts : []).slice(0, 50)) { if (typeof t.text !== 'string') continue; fs.writeFileSync(free(t.name), t.text.slice(0, 5e6), 'utf8'); count++; }
+        if (!count) { try { fs.rmdirSync(dir); } catch (e) {} throw new Error('No se ha encontrado ninguno de los documentos en este ordenador.'); }
+        if (!prueba) { await shell.openPath(dir); try { openNotebook(''); } catch (e) {} }
+        return json({ ok: true, count, missing, folder: dir });
+      }
+      if (p === '/api/notebook/abrir') {const d=await req.json();openNotebook(d.url||'');return json({ok:true});}
       if (p === '/api/gemini/abrir') {const d=await req.json();openGemini(d.prompt||'');return json({ok:true});}
       if (p === '/api/ortografia') {const d=await req.json();setSpellLang(d.lang);return json({results:await spelling(Array.isArray(d.words)?d.words:[],d.lang==='ca'?'ca':'es',!!d.suggest)});}
       if (p === '/api/correo/borradores') return json({draft:mailSuite.saveDraft(await req.json())});
@@ -752,7 +781,8 @@ async function handle(req) {
       if (p === '/api/guardar') {   // guardar un archivo (p. ej. el PDF de un resumen) donde elija la persona
         const name = String(u.searchParams.get('nombre') || 'documento.pdf').replace(/[\\/:*?"<>|]+/g, '').slice(0, 150) || 'documento.pdf';
         const buf = Buffer.from(await req.arrayBuffer());
-        const r = await dialog.showSaveDialog(win, { title: 'Guardar el PDF', defaultPath: path.join(app.getPath('documents'), name), filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+        const ext = (name.match(/\.([a-z0-9]{1,5})$/i) || [, 'pdf'])[1].toLowerCase(), isPdf = ext === 'pdf';
+        const r = await dialog.showSaveDialog(win, { title: isPdf ? 'Guardar el PDF' : 'Guardar el archivo', defaultPath: path.join(app.getPath('documents'), name), filters: [{ name: isPdf ? 'PDF' : ext.toUpperCase(), extensions: [ext] }] });
         if (r.canceled || !r.filePath) return json({ ok: false, canceled: true });
         fs.writeFileSync(r.filePath, buf);
         return json({ ok: true, path: r.filePath, folder: path.basename(path.dirname(r.filePath)) });
