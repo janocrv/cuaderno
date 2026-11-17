@@ -294,6 +294,29 @@ function itemIds(st) {
   return ids;
 }
 // Copia de seguridad automática antes de cambiar los datos (como mucho una cada 20 minutos; se guardan 60)
+/* Al cambiar de carpeta de datos (p. ej. de la local a Google Drive) se COMBINAN los datos de las dos: antes la
+   app adoptaba los de la carpeta nueva y lo hecho en este ordenador se quedaba fuera. Copia de seguridad de la
+   carpeta nueva antes de escribir; la carpeta antigua no se toca. */
+function mergeDataInto(fromDir, toDir) {
+  try {
+    if (!fromDir || !toDir || path.resolve(fromDir) === path.resolve(toDir)) return;
+    const fromFiles = path.join(fromDir, 'archivos');
+    if (fs.existsSync(fromFiles)) { try { fs.cpSync(fromFiles, path.join(toDir, 'archivos'), { recursive: true, force: false }); } catch (e) { log('Copia de archivos:', e.message); } }
+    const fromF = path.join(fromDir, 'cuaderno-datos.json'), toF = path.join(toDir, 'cuaderno-datos.json');
+    if (!fs.existsSync(fromF)) return;
+    const mine = loadJSON(fromF, null);
+    if (!mine) { log('Combinar carpetas: los datos de', fromDir, 'no se pueden leer; no se combina'); return; }
+    if (!fs.existsSync(toF)) { fs.mkdirSync(toDir, { recursive: true }); fs.copyFileSync(fromF, toF); log('Datos copiados a', toDir); return; }
+    const theirs = loadJSON(toF, null);
+    if (!theirs) { log('Combinar carpetas: los datos de', toDir, 'no se pueden leer; no se combina'); return; }
+    const d = new Date(), p2 = n => String(n).padStart(2, '0');
+    const bdir = path.join(toDir, 'copias'); fs.mkdirSync(bdir, { recursive: true });
+    fs.copyFileSync(toF, path.join(bdir, `cuaderno-datos-antes-de-unir-${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}.json`));
+    const merged = mergeStates(theirs, mine);
+    const tmp = toF + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(merged), 'utf8'); JSON.parse(fs.readFileSync(tmp, 'utf8')); fs.renameSync(tmp, toF);
+    log('Datos de', fromDir, 'combinados con', toDir);
+  } catch (e) { log('Combinar carpetas:', e.message); }
+}
 function backupState() {
   try {
     const f = STATE_FILE(); if (!fs.existsSync(f)) return;
@@ -534,7 +557,7 @@ async function htmlToPdf(html, regions = {}) {
     await w.loadFile(file);
     await new Promise(r => setTimeout(r, 400));   // tipos de letra e imágenes
     const escape=s=>String(s||'').slice(0,240).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const template=text=>'<div style="font:10px Arial;color:#666;width:100%;margin:0 20mm"><span style="white-space:pre-wrap">'+escape(text)+'</span></div>';
+    const template=text=>'<div style="font:10px Arial;color:#666;width:100%;margin:0 18mm"><span style="white-space:pre-wrap">'+escape(text)+'</span></div>';
     return await w.webContents.printToPDF({ printBackground: true, preferCSSPageSize: true, pageSize: 'A4',displayHeaderFooter:!!(regions.header||regions.footer),headerTemplate:template(regions.header),footerTemplate:template(regions.footer) });
   } finally {
     w.destroy();
@@ -684,10 +707,15 @@ function fileResponse(p, type) {
   try { return new Response(fs.readFileSync(p), { headers: { 'Content-Type': type || TYPES[path.extname(p)] || 'application/octet-stream', 'Cache-Control': 'no-store' } }); }
   catch (e) { return json({}, 404); }
 }
+const trabajos = require('./trabajos')({ settings: ajustes, save: setAjustes, safeStorage, userDir: USER, log, dialog, shell, window: () => win, json, buzon: PKG.cuadernoBuzon,
+  // carpeta propia elegida en Ajustes (p. ej. Drive): tus trabajos viajan a tus otros ordenadores; con la local, nada cambia
+  sharedDir: () => ajustes().dataDir ? dataDir() : null,
+  person: () => { const st = loadJSON(STATE_FILE(), null); return { name: (st && st.settings && st.settings.userName) || '' }; } });   // trabajos en grupo (beta)
 async function handle(req) {
   const u = new URL(req.url);
   const p = decodeURIComponent(u.pathname);
   const M = req.method;
+  if (p.startsWith('/api/trabajos')) { const r = await trabajos.handle(p, M, req, u); if (r) return r; }
   if (M === 'GET') {
     if(p==='/api/historial')return json({versions:history.list(u.searchParams.get('nota'))});
     if(p==='/api/historial/version')return json(history.get(u.searchParams.get('nota'),u.searchParams.get('version')));
@@ -793,6 +821,7 @@ async function handle(req) {
         return json({ ok: !err, error: err || undefined });
       }
       if (p === '/api/carpeta/local') {   // volver a la carpeta de este ordenador
+        mergeDataInto(dataDir(), path.join(USER(), 'datos'));
         setAjustes({ dataDir: undefined });
         return json({ ok: true, dir: dataDir(), adopt: fs.existsSync(STATE_FILE()) });
       }
@@ -807,10 +836,9 @@ async function handle(req) {
         // Si eligen la carpeta del Cuaderno (la que contiene «datos»), se usa «datos»
         if (!fs.existsSync(path.join(dir, 'cuaderno-datos.json')) && fs.existsSync(path.join(dir, 'datos', 'cuaderno-datos.json'))) dir = path.join(dir, 'datos');
         const adopt = fs.existsSync(path.join(dir, 'cuaderno-datos.json'));
-        const oldFiles = FILES_DIR();
-        if (!adopt && path.resolve(dir) !== path.resolve(dataDir()) && fs.existsSync(oldFiles)) {
-          try { fs.cpSync(oldFiles, path.join(dir, 'archivos'), { recursive: true, force: false }); } catch (e) { log('Copia de archivos:', e.message); }
-        }
+        // Nunca se descarta nada: si la carpeta nueva ya tiene datos, se combinan con los de la carpeta actual
+        // (cada apunte, tarea… gana su versión más reciente) y los archivos adjuntos se copian sin pisar nada.
+        mergeDataInto(dataDir(), dir);
         setAjustes({ dataDir: dir });
         log('Carpeta de datos:', dir);
         return json({ ok: true, dir, adopt });
@@ -917,7 +945,8 @@ if (!app.requestSingleInstanceLock()) {
     let hidden = process.argv.includes('--oculto');
     if (app.isPackaged && !process.env.CUADERNO_PRUEBA) {
       try {
-        if (IS_MAC) { hidden = hidden || app.getLoginItemSettings().wasOpenedAtLogin; app.setLoginItemSettings({ openAtLogin: true }); }
+        // Mac: NO se apunta a «abrir al iniciar sesión» (Jano no lo quiere); si una versión anterior lo dejó puesto, se quita
+        if (IS_MAC) { hidden = hidden || app.getLoginItemSettings().wasOpenedAtLogin; if (app.getLoginItemSettings().openAtLogin) app.setLoginItemSettings({ openAtLogin: false }); }
         else app.setLoginItemSettings({ openAtLogin: true, args: ['--oculto'] });
       } catch (e) { log('Inicio automático:', e.message); }
     }
@@ -928,6 +957,9 @@ if (!app.requestSingleInstanceLock()) {
     setInterval(checkUpdate, 30 * 60 * 1000);   // cada media hora mira si hay versión nueva en GitHub
     setTimeout(rotatingBackup, 60 * 1000);
     setInterval(rotatingBackup, 5 * 60 * 1000);   // dos copias que se turnan cada 5 minutos (copias-seguridad/copia-A y copia-B)
+    // tus trabajos en grupo, en todos tus ordenadores (si la carpeta de datos es tuya y sincronizada)
+    setTimeout(() => trabajos.syncMine().catch(() => {}), 20 * 1000);
+    setInterval(() => trabajos.syncMine().catch(() => {}), 15 * 60 * 1000);
     log('Cuaderno', app.getVersion(), 'iniciado. Datos en', dataDir());
   });
 }

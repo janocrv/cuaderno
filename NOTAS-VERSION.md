@@ -1,11 +1,10 @@
-# Cuaderno 4.1.0
+# Cuaderno 5.0.4
 
-- **Inicio nuevo:** ya no hay pestañas en el inicio. En su lugar, cuatro botones grandes con su explicación: Asignaturas, Tareas, Apuntes y Profesorado. «Asignaturas» abre una página con una tarjeta por asignatura, con su color. Cada asignatura tiene su ficha: descripción (tomada de la guía docente cuando se revisa el Aula Virtual, y editable), próximas tareas, material, profesorado y el botón «Trabajar en esta asignatura».
-- **Carpetas en Archivos:** crea carpetas dentro de cada asignatura, mete archivos con el lápiz o arrastrándolos, pliégalas y renómbralas. Quitar una carpeta no borra sus archivos.
-- **NotebookLM:** sección propia junto a Gemini. Guarda tus cuadernos (los generales y uno por asignatura) y usa «Llevar documentos…» para elegir apuntes y archivos de cualquier asignatura: Cuaderno los deja en una carpeta y abre NotebookLM para subirlos. También se puede llevar una carpeta entera.
-- **Actualizar:** la confirmación se pide una sola vez; la barra muestra enseguida que la descarga se está preparando.
+- **Trabajos en grupo en todos tus ordenadores:** si guardas tus datos en tu propio Drive (Ajustes → Carpeta de datos), los trabajos en grupo que crees o a los que te unas aparecen solos en tus otros ordenadores, sin volver a escribir el código. Si usas la carpeta de este ordenador, todo sigue igual.
+- **Cambiar de carpeta de datos sin perder nada:** al elegir otra carpeta, lo de las dos carpetas se junta en lugar de quedarse una fuera.
+- **Mac:** Cuaderno ya no se abre solo al encender el ordenador.
 
-Incluye todas las mejoras de la versión 4.0.4. Los datos guardados se conservan al actualizar.
+Incluye todas las mejoras de la versión 5.0.3. Los datos guardados se conservan al actualizar.
 
 ## Descargas
 
@@ -13,4 +12,4 @@ Incluye todas las mejoras de la versión 4.0.4. Los datos guardados se conservan
 - **Mac Intel:** Cuaderno-mac-x64.dmg.
 - **Windows de 64 bits:** Cuaderno-win-x64.exe.
 
-Pruebas con datos ficticios. NotebookLM se abre con tu cuenta de Google; subir las fuentes y preguntar se hace dentro de NotebookLM. Windows físico queda pendiente de comprobación.
+Probado con datos ficticios (dos ordenadores simulados con la misma carpeta de Drive).
