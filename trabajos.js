@@ -218,6 +218,18 @@ module.exports = function ({ settings, save: save0, safeStorage, userDir, log, d
     return syncing;
   }
 
+  // Lista común de documentos del grupo: lo aportado por todos menos lo quitado por cualquiera después
+  async function groupDocs(t) {
+    const files = await store(t).list('docs').catch(() => []);
+    const lists = (await Promise.all(files.map(f => getEnc(t, 'docs/' + f.name).then(x => x && { by: f.name.replace(/\.cdz$/, ''), ...x })))).filter(Boolean);
+    const added = new Map(), removed = {};
+    for (const l of lists) {
+      for (const x of l.added || []) if (x && safe(x.fid) && (!added.has(x.fid) || added.get(x.fid).at < x.at)) added.set(x.fid, { ...x, by: l.by });
+      for (const [fid, at] of Object.entries(l.removed || {})) removed[fid] = Math.max(removed[fid] || 0, at || 0);
+    }
+    return [...added.values()].filter(x => !(removed[x.fid] >= x.at)).sort((a, b) => b.at - a.at);
+  }
+
   async function handle(p, M, req, u) {
     if (!p.startsWith('/api/trabajos')) return null;
     try {
@@ -252,6 +264,25 @@ module.exports = function ({ settings, save: save0, safeStorage, userDir, log, d
         const meta = { name: String(u.searchParams.get('nombre') || 'archivo').slice(0, 160), type: String(u.searchParams.get('tipo') || '').slice(0, 100), size: bytes.length, by: myId(), at: Date.now() };
         await store(t).put('archivos/' + fid + '.cdz', encFile(keyOf(t), meta, bytes));
         return json({ ok: true });
+      }
+      /* Documentos del grupo (17-11-2026): cada persona escribe solo su lista `docs/<su id>.cdz`
+         = { added: [{ fid, name, type, size, at, note }], removed: { fid: hora } }. Lo que se ve es la suma de todo lo
+         aportado menos lo que CUALQUIERA haya quitado después (todos pueden quitar). El archivo cifrado sigue en
+         `archivos/<fid>.cdz` (el buzón no borra), así que quitar es reversible. */
+      if (M === 'GET' && p === '/api/trabajos/documentos') {
+        if (!t) return json({ error: 'No encuentro ese trabajo.' }, 404);
+        return json({ docs: await groupDocs(t) });
+      }
+      if (M === 'POST' && p === '/api/trabajos/documentos/aportar') {   // el cuerpo es el archivo tal cual
+        const fid = u.searchParams.get('fid'); if (!t || !safe(fid)) return json({ error: 'Documento no válido.' }, 400);
+        const bytes = Buffer.from(await req.arrayBuffer()); if (!bytes.length) throw new Error('El archivo está vacío.');
+        if (bytes.length > 25 * 1024 * 1024) throw new Error('El archivo supera los 25 MB.');
+        const doc = { fid, name: String(u.searchParams.get('nombre') || 'documento').slice(0, 160), type: String(u.searchParams.get('tipo') || '').slice(0, 100), size: bytes.length, at: Date.now(), note: String(u.searchParams.get('nota') || '').slice(0, 200) };
+        await store(t).put('archivos/' + fid + '.cdz', encFile(keyOf(t), { name: doc.name, type: doc.type, size: doc.size, by: myId(), at: doc.at }, bytes));
+        const mine = (await getEnc(t, 'docs/' + myId() + '.cdz')) || { added: [], removed: {} };
+        mine.added = [...(mine.added || []).filter(x => x.fid !== fid), doc]; delete (mine.removed || {})[fid];
+        await putEnc(t, 'docs/' + myId() + '.cdz', mine);
+        return json({ ok: true, docs: await groupDocs(t) });
       }
       if (M !== 'POST') return json({}, 404);
       const d = await req.json().catch(() => ({}));
@@ -353,6 +384,13 @@ module.exports = function ({ settings, save: save0, safeStorage, userDir, log, d
         const err = await shell.openPath(out); return json({ ok: !err, error: err || undefined });
       }
       if (p === '/api/trabajos/mostrar') { if (process.env.CUADERNO_PRUEBA || !t3.dir) return json({ ok: true }); const err = await shell.openPath(t3.dir); return json({ ok: !err, error: err || undefined }); }
+      if (p === '/api/trabajos/documentos/quitar') {   // cualquiera del grupo puede quitar cualquier documento
+        if (!safe(d.fid)) throw new Error('Documento no válido.');
+        const mine = (await getEnc(t3, 'docs/' + myId() + '.cdz')) || { added: [], removed: {} };
+        mine.removed = { ...(mine.removed || {}), [d.fid]: Date.now() };
+        await putEnc(t3, 'docs/' + myId() + '.cdz', mine);
+        return json({ ok: true, docs: await groupDocs(t3) });
+      }
       if (p === '/api/trabajos/asignatura') { save({ trabajos: list().map(x => x.id === t3.id ? { ...x, subject: String(d.subject || '').slice(0, 64) } : x) }); return json({ ok: true }); }
       if (p === '/api/trabajos/salir') { markLeft(t3.id); save({ trabajos: list().filter(x => x.id !== t3.id) }); return json({ ok: true }); }
       return json({}, 404);

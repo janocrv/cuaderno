@@ -1,10 +1,9 @@
-# Cuaderno 5.0.4
+# Cuaderno 5.0.5
 
-- **Trabajos en grupo en todos tus ordenadores:** si guardas tus datos en tu propio Drive (Ajustes → Carpeta de datos), los trabajos en grupo que crees o a los que te unas aparecen solos en tus otros ordenadores, sin volver a escribir el código. Si usas la carpeta de este ordenador, todo sigue igual.
-- **Cambiar de carpeta de datos sin perder nada:** al elegir otra carpeta, lo de las dos carpetas se junta en lugar de quedarse una fuera.
-- **Mac:** Cuaderno ya no se abre solo al encender el ordenador.
+- **Documentos del grupo:** en cada trabajo en grupo, el botón «Documentos» guarda rúbricas, artículos, plantillas… para todo el grupo. Aporta archivos (también arrastrándolos, hasta 25 MB) con una nota opcional, ábrelos o guarda una copia. Se ve quién aportó cada uno y cuándo. Cualquiera del grupo puede quitar un documento. Todo va cifrado, como el resto del trabajo.
+- **Aviso de documentos nuevos:** un punto en el botón «Documentos» avisa cuando alguien del grupo ha aportado algo.
 
-Incluye todas las mejoras de la versión 5.0.3. Los datos guardados se conservan al actualizar.
+Incluye todas las mejoras de la versión 5.0.4 (trabajos en grupo en todos tus ordenadores si guardas los datos en tu Drive). Los datos guardados se conservan al actualizar.
 
 ## Descargas
 
@@ -12,4 +11,4 @@ Incluye todas las mejoras de la versión 5.0.3. Los datos guardados se conservan
 - **Mac Intel:** Cuaderno-mac-x64.dmg.
 - **Windows de 64 bits:** Cuaderno-win-x64.exe.
 
-Probado con datos ficticios (dos ordenadores simulados con la misma carpeta de Drive).
+Probado con datos ficticios (dos personas simuladas en el mismo trabajo).

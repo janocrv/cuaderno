@@ -1123,6 +1123,30 @@ body.team-open .top .title,body.team-open #globalSubjectFilter{visibility:hidden
 .team-person.online .team-av::after{content:'';position:absolute;right:-1px;bottom:-1px;width:9px;height:9px;border-radius:50%;background:#34c759;box-shadow:0 0 0 2px var(--surface)}
 .tp-act{width:22px;height:22px;border-radius:50%;border:0;background:var(--soft);color:var(--muted);font-size:.75rem;cursor:pointer}.tp-act.ok{background:#34c759;color:#fff}
 .tb-actions{display:flex;gap:6px;align-items:center}
+/* Documentos del grupo (botón en la barra del trabajo y panel desplegable) */
+.team-docs-btn{position:relative;display:inline-flex;align-items:center;gap:6px}
+.team-docs-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.team-docs-btn .td-n:empty{display:none}.team-docs-btn .td-n{min-width:18px;height:18px;padding:0 5px;border-radius:9px;font-size:.7rem;display:inline-grid;place-items:center;background:color-mix(in srgb,var(--c,var(--accent)) 18%,transparent);color:var(--ink)}
+.team-docs-btn .td-dot{display:none;position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--c,var(--accent));box-shadow:0 0 0 2px var(--surface)}
+.team-docs-btn.has-news .td-dot{display:block}.team-docs-btn.on{background:color-mix(in srgb,var(--c,var(--accent)) 14%,var(--surface))}
+.tb-docs{margin-top:12px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--c,var(--accent)) 18%,var(--line))}
+.tb-docs[hidden]{display:none}
+.tb-docs .td-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:10px}.tb-docs .td-head b{font-size:.92rem}
+.tb-docs .td-hint{font-size:.76rem;color:var(--muted)}
+.tb-docs .td-add{display:flex;gap:8px;margin-bottom:10px}
+.tb-docs .td-add input[type=text]{flex:1;min-width:0;font:inherit;font-size:.84rem;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.tb-docs .td-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto}
+.tb-docs .td-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.tb-docs .td-ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:.62rem;font-weight:800;letter-spacing:.02em;color:#fff;background:var(--tdc,#8e8e93);flex-shrink:0}
+.tb-docs .td-txt{flex:1;min-width:0}.tb-docs .td-txt b{display:block;font-size:.86rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.tb-docs .td-txt b:hover{text-decoration:underline}.tb-docs .td-txt small{display:block;font-size:.74rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-docs .td-txt em{font-style:normal;color:var(--ink)}
+.tb-docs .td-item .btn{padding:5px 9px;font-size:.78rem}
+.tb-docs .td-del{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--muted)}.tb-docs .td-del:hover{background:var(--soft);color:var(--danger)}
+.tb-docs .td-del svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
+.tb-docs .td-empty{font-size:.84rem;color:var(--muted);padding:12px;text-align:center;border:1.5px dashed var(--line);border-radius:12px}
+.tb-docs .td-drop{margin-top:8px;font-size:.74rem;color:var(--muted);text-align:center}
+.tb-docs.dragging{outline:2px dashed var(--c,var(--accent));outline-offset:6px;border-radius:12px}
 .team-sync{position:relative;display:inline-flex;align-items:center;gap:7px;font-weight:600;background:var(--c,var(--accent));color:#fff;border-color:transparent}
 .team-sync:hover{filter:brightness(1.06)}.team-sync svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .team-sync.working svg{animation:teamSpin .9s linear infinite}@keyframes teamSpin{to{transform:rotate(360deg)}}
@@ -1408,7 +1432,14 @@ body.team-open .top .title,body.team-open #globalSubjectFilter{visibility:hidden
                 <div class="tb-head"><span class="beta-tag">BETA</span><span class="tb-kind">Trabajo en grupo</span><span class="tb-status" id="teamStatus"></span></div>
                 <div class="tb-row"><div class="team-people" id="teamPeople" aria-label="Personas en este trabajo"></div>
                   <div class="tb-actions"><button type="button" class="btn team-sync" id="teamSync" title="Envía tus cambios al grupo y recibe los de los demás"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.5V12l3 2"/><path class="ts-arrow" d="M20.6 4.8v4.4h-4.4"/></svg><span>Actualizar</span><i class="ts-dot"></i></button>
+                  <button type="button" class="btn team-docs-btn" id="teamDocsBtn" title="Documentos útiles que aporta el grupo (rúbricas, artículos, plantillas…)"><svg viewBox="0 0 24 24"><path d="M20.5 11.5l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.8-8.8a3.3 3.3 0 0 1 4.7 4.7l-8.8 8.8a1.7 1.7 0 0 1-2.4-2.4l8-8"/></svg><span>Documentos</span><b class="td-n"></b><i class="td-dot"></i></button>
                   <button type="button" class="btn" id="teamInvite">Invitar</button><button type="button" class="btn" id="teamClose" title="Volver a tus apuntes">Cerrar</button></div></div>
+                <div class="tb-docs" id="teamDocs" hidden>
+                  <div class="td-head"><b>Documentos del grupo</b><span class="td-hint">Lo que aportes lo verá todo el grupo. Cualquiera puede quitar un documento.</span></div>
+                  <div class="td-add"><input type="text" id="teamDocNote" maxlength="200" placeholder="Nota opcional para lo que aportes (p. ej. «rúbrica del profe»)"><button type="button" class="btn primary" id="teamDocAdd">+ Aportar documento</button><input type="file" id="teamDocFile" multiple hidden></div>
+                  <ul class="td-list" id="teamDocList"></ul>
+                  <div class="td-drop">También puedes arrastrar archivos aquí · máximo 25 MB cada uno</div>
+                </div>
               </div>
               <input class="note-title" id="noteTitle" placeholder="Título del apunte" aria-label="Título del apunte">
               <div class="note-meta">
@@ -2719,6 +2750,15 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     "Por ejemplo «1.er cuatrimestre», «Optativas» o «Prácticas».": "Per exemple «1r quadrimestre», «Optatives» o «Pràctiques».",
     "Grupo deshecho: no se ha borrado nada": "Grup desfet: no s'ha esborrat res", "Ya hay un grupo con ese nombre": "Ja hi ha un grup amb aquest nom",
     "Tiene que quedar al menos una asignatura en el dock": "Ha de quedar almenys una assignatura a la barra", "Hace falta otra asignatura suelta para formar un grupo": "Cal una altra assignatura solta per a formar un grup",
+    // documentos del grupo
+    "Documentos": "Documents", "Documentos del grupo": "Documents del grup", "Documentos útiles que aporta el grupo (rúbricas, artículos, plantillas…)": "Documents útils que aporta el grup (rúbriques, articles, plantilles…)",
+    "Lo que aportes lo verá todo el grupo. Cualquiera puede quitar un documento.": "El que aportes ho veurà tot el grup. Qualsevol pot llevar un document.",
+    "Nota opcional para lo que aportes (p. ej. «rúbrica del profe»)": "Nota opcional per al que aportes (p. ex. «rúbrica del professor»)", "+ Aportar documento": "+ Aporta un document",
+    "También puedes arrastrar archivos aquí · máximo 25 MB cada uno": "També pots arrossegar fitxers ací · màxim 25 MB cadascun",
+    "Aún no hay documentos. Aporta la rúbrica, artículos o plantillas y los verá todo el grupo.": "Encara no hi ha documents. Aporta la rúbrica, articles o plantilles i els veurà tot el grup.",
+    "Guardar una copia en este ordenador": "Guarda una còpia en aquest ordinador", "Quitar de los documentos del grupo": "Lleva dels documents del grup",
+    "Tú": "Tu", "Alguien del grupo": "Algú del grup", "Documento quitado": "Document llevat", "Documento aportado: ya lo ve todo el grupo": "Document aportat: ja el veu tot el grup",
+    "No se ha podido descargar el documento": "No s'ha pogut baixar el document",
     "Ocultar las asignaturas archivadas": "Amaga les assignatures arxivades", "Eliminar asignatura…": "Elimina l'assignatura…", "Editar asignatura": "Edita l'assignatura",
     // avisos de versión y novedades
     "Las notificaciones de Windows están bloqueadas. Puedes activarlas desde el candado de la barra de la ventana → Notificaciones → Permitir.": "Les notificacions de Windows estan blocades. Pots activar-les des del cadenat de la barra de la finestra → Notificacions → Permet.",
@@ -2770,6 +2810,8 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     [/^Información encontrada en (\d+) correo(s)?$/, (m,n,s)=>`Informació trobada en ${n} correu${s?'s':''}`],
     [/^(\d+) correos revisados · (\d+) fichas de profesorado\. Los datos no encontrados quedan en blanco\.$/, '$1 correus revisats · $2 fitxes de professorat. Les dades no trobades queden en blanc.'],
     [/^(\d+) fichas rellenadas: revísalas$/, '$1 fitxes omplides: revisa-les'], [/^¿Quitar la ficha de «(.+)»\?$/, 'Vols llevar la fitxa de «$1»?'],
+    [/^(\d+) documentos aportados$/, '$1 documents aportats'], [/^Subiendo «(.+)»…$/, 'Pujant «$1»…'], [/^«(.+)» supera los 25 MB$/, '«$1» supera els 25 MB'],
+    [/^¿Quitar «([\s\S]+)» de los documentos del grupo\? Dejará de verlo todo el grupo\.$/, 'Vols llevar «$1» dels documents del grup? Deixarà de veure\'l tot el grup.'],
     [/^Mover a «(.+)»$/, 'Mou a «$1»'], [/^Archivadas \((\d+)\)$/, 'Arxivades ($1)'], [/^Asignaturas archivadas \((\d+)\)$/, 'Assignatures arxivades ($1)'],
     [/^(\d+) asignaturas$/, '$1 assignatures'], [/^(.+) · (\d+) asignaturas( \(clic para abrir\))?$/, (m, g, n, c) => `${g} · ${n} assignatures${c ? ' (clic per a obrir)' : ''}`],
     [/^«(.+)» está ahora en (.+)$/, '«$1» és ara a $2'], [/^«(.+)» vuelve al dock$/, '«$1» torna a la barra'],
@@ -6590,6 +6632,10 @@ Gracias.` },
   // Historial (17-11-2026): cada versión con un resumen corto y comprensible, en castellano y en catalán.
   // Al publicar una versión nueva: añadir arriba su entrada (v, fecha, frase y 3-5 puntos con icono).
   const HISTORY = [
+    { v: '5.0.5', d: '17-11-2026', es: 'Documentos útiles en los trabajos en grupo.', ca: 'Documents útils als treballs en grup.', items: [
+      ['📎', 'Documentos del grupo', 'en cada trabajo en grupo, el botón «Documentos» guarda rúbricas, artículos o plantillas para todo el grupo: aporta archivos (también arrastrándolos) con una nota, ábrelos o guarda una copia. Cualquiera puede quitar un documento.', 'Documents del grup', 'en cada treball en grup, el botó «Documents» guarda rúbriques, articles o plantilles per a tot el grup: aporta fitxers (també arrossegant-los) amb una nota, obri\'ls o guarda una còpia. Qualsevol pot llevar un document.'],
+      ['🔴', 'Aviso de documentos nuevos', 'un punto en el botón te avisa cuando alguien del grupo ha aportado algo desde la última vez que miraste.', 'Avís de documents nous', 'un punt al botó t\'avisa quan algú del grup ha aportat alguna cosa des de l\'última vegada que vas mirar.'],
+    ] },
     { v: '5.0.4', d: '17-11-2026', es: 'Tus trabajos en grupo, en todos tus ordenadores.', ca: 'Els teus treballs en grup, en tots els teus ordinadors.', items: [
       ['👥', 'Trabajos en grupo sincronizados', 'si guardas tus datos en tu Drive (Ajustes → Carpeta de datos), los trabajos en grupo que crees o a los que te unas aparecen solos en tus otros ordenadores, sin volver a escribir el código.', 'Treballs en grup sincronitzats', 'si guardes les teues dades al teu Drive (Configuració → Carpeta de dades), els treballs en grup que crees o als quals t\'unisques apareixen sols als teus altres ordinadors, sense tornar a escriure el codi.'],
       ['🗂️', 'Cambiar de carpeta sin perder nada', 'al elegir otra carpeta de datos, lo de las dos carpetas se junta en vez de quedarse una fuera.', 'Canviar de carpeta sense perdre res', 'en triar una altra carpeta de dades, el que hi ha a les dues carpetes s\'ajunta en lloc de quedar-se una fora.'],
@@ -7230,6 +7276,7 @@ Gracias.` },
       $('#notesCard').classList.add('team-mode'); document.body.classList.add('team-open'); $('#teamBar').hidden = false;
       $('#noteTitle').readOnly = true; loadedEditorNote = null;
       renderCurrentView(); renderTeamBar();
+      teamDocs = []; $('#teamDocs').hidden = true; renderTeamDocs(); loadTeamDocs();   // documentos del grupo
       teamApi('/api/trabajos/visto', { id, person: await teamMe(), force: true }).then(refreshTeam).catch(() => {});
     } catch (e) { toast(e.message); }
   }
@@ -7274,6 +7321,7 @@ Gracias.` },
   async function refreshTeam() {
     if (!sharedWork) return;
     try { const { trabajos } = await teamApi('/api/trabajos'), t = trabajos.find(x => x.id === sharedWork?.id); if (t && sharedWork) { sharedWork.summary = t; renderTeamBar(); } } catch (e) {}
+    loadTeamDocs();   // por si alguien ha aportado o quitado documentos
   }
   setInterval(refreshTeam, 30000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshTeam(); });
@@ -7294,6 +7342,73 @@ Gracias.` },
     } catch (e) { toast(e.message); }
     finally { rich.editor.setEditable(true); b.disabled = false; b.classList.remove('working'); }
   };
+  /* ---------- Documentos del grupo ----------
+     Rúbricas, artículos, plantillas… que aporta cualquiera del grupo y que cualquiera puede quitar (escritorio/trabajos.js,
+     `docs/<persona>.cdz`). Botón «Documentos» de la barra: número de documentos y punto si alguien ha aportado algo nuevo
+     desde la última vez que abriste la lista en este ordenador. */
+  let teamDocs = [];
+  const docSeenKey = id => 'cuaderno-docs-visto-' + id;
+  const DOC_COL = { pdf: '#e5484d', doc: '#2b6cd9', docx: '#2b6cd9', odt: '#2b6cd9', rtf: '#2b6cd9', ppt: '#e0742d', pptx: '#e0742d', odp: '#e0742d', key: '#e0742d', xls: '#2f9e5b', xlsx: '#2f9e5b', ods: '#2f9e5b', csv: '#2f9e5b', png: '#8e5ad8', jpg: '#8e5ad8', jpeg: '#8e5ad8', gif: '#8e5ad8', webp: '#8e5ad8', heic: '#8e5ad8', zip: '#6b7280', txt: '#6b7280', md: '#6b7280', mp3: '#d6449b', m4a: '#d6449b', wav: '#d6449b', mp4: '#d6449b', mov: '#d6449b' };
+  async function loadTeamDocs() {
+    if (!sharedWork) return; const id = sharedWork.id;
+    try { const r = await teamApi('/api/trabajos/documentos?id=' + encodeURIComponent(id)); if (!sharedWork || sharedWork.id !== id) return; teamDocs = r.docs || []; renderTeamDocs(); } catch (e) {}
+  }
+  function renderTeamDocs() {
+    if (!sharedWork) return; const btn = $('#teamDocsBtn'), open = !$('#teamDocs').hidden, members = sharedWork.summary.members || [];
+    btn.querySelector('.td-n').textContent = teamDocs.length || ''; btn.classList.toggle('on', open);
+    let seen = 0; try { seen = +localStorage.getItem(docSeenKey(sharedWork.id)) || 0; } catch (e) {}
+    const me = (members.find(m => m.me) || {}).id;
+    btn.classList.toggle('has-news', !open && teamDocs.some(d => d.at > seen && d.by !== me));
+    const ul = $('#teamDocList'); ul.innerHTML = '';
+    if (!teamDocs.length) { ul.innerHTML = '<li class="td-empty">Aún no hay documentos. Aporta la rúbrica, artículos o plantillas y los verá todo el grupo.</li>'; return; }
+    for (const d of teamDocs) {
+      const who = members.find(m => m.id === d.by), ext = (d.name.match(/\.([a-z0-9]{1,5})$/i) || [, ''])[1].toLowerCase();
+      const li = document.createElement('li'); li.className = 'td-item';
+      li.innerHTML = `<span class="td-ic" style="--tdc:${DOC_COL[ext] || '#8e8e93'}">${esc((ext || 'doc').toUpperCase().slice(0, 4))}</span>
+        <span class="td-txt"><b data-noi18n title="Abrir"></b><small><span class="td-who"></span> · ${esc(ago(d.at))} · ${esc(fmtSize(d.size || 0))}${d.note ? ' · <em data-noi18n></em>' : ''}</small></span>
+        <button type="button" class="btn" data-a="open">Abrir</button><button type="button" class="btn" data-a="save" title="Guardar una copia en este ordenador">Guardar</button>
+        <button type="button" class="td-del" data-a="del" title="Quitar de los documentos del grupo"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>`;
+      li.querySelector('b').textContent = d.name;
+      li.querySelector('.td-who').textContent = who ? (who.me ? 'Tú' : who.name) : 'Alguien del grupo';
+      if (d.note) li.querySelector('em').textContent = d.note;
+      const open1 = () => teamApi('/api/trabajos/abrir', { id: sharedWork.id, fid: d.fid }).catch(e => toast(e.message));
+      li.querySelector('b').onclick = open1; li.querySelector('[data-a=open]').onclick = open1;
+      li.querySelector('[data-a=save]').onclick = async () => {
+        try { const r = await fetch('/api/trabajos/archivo?id=' + encodeURIComponent(sharedWork.id) + '&fid=' + encodeURIComponent(d.fid)); if (!r.ok) throw new Error(); download(d.name, await r.blob(), d.type || 'application/octet-stream'); }
+        catch (e) { toast('No se ha podido descargar el documento'); }
+      };
+      li.querySelector('[data-a=del]').onclick = async () => {
+        if (!confirm(`¿Quitar «${d.name}» de los documentos del grupo? Dejará de verlo todo el grupo.`)) return;
+        try { const r = await teamApi('/api/trabajos/documentos/quitar', { id: sharedWork.id, fid: d.fid }); teamDocs = r.docs || []; renderTeamDocs(); toast('Documento quitado'); } catch (e) { toast(e.message); }
+      };
+      ul.append(li);
+    }
+  }
+  async function addTeamDocs(files) {
+    if (!sharedWork || !files.length) return; const id = sharedWork.id, note = $('#teamDocNote').value.trim(); let n = 0;
+    for (const f of files) {
+      if (f.size > 25 * 1024 * 1024) { toast(`«${f.name}» supera los 25 MB`); continue; }
+      toast(`Subiendo «${f.name}»…`);
+      try {
+        const q = new URLSearchParams({ id, fid: uid(), nombre: f.name || 'documento', tipo: f.type || '', nota: note });
+        const r = await fetch('/api/trabajos/documentos/aportar?' + q, { method: 'POST', body: f }), j = await r.json().catch(() => ({}));
+        if (!r.ok || j.error) throw new Error(j.error || 'No se ha podido subir el documento');
+        if (sharedWork && sharedWork.id === id) teamDocs = j.docs || teamDocs; n++;
+      } catch (e) { toast(e.message); }
+    }
+    if (n) { $('#teamDocNote').value = ''; renderTeamDocs(); toast(n === 1 ? 'Documento aportado: ya lo ve todo el grupo' : n + ' documentos aportados'); }
+  }
+  $('#teamDocsBtn').onclick = () => {
+    const p = $('#teamDocs'); p.hidden = !p.hidden;
+    if (!p.hidden && sharedWork) { try { localStorage.setItem(docSeenKey(sharedWork.id), String(Date.now())); } catch (e) {} loadTeamDocs(); }
+    renderTeamDocs();
+  };
+  $('#teamDocAdd').onclick = () => $('#teamDocFile').click();
+  $('#teamDocFile').onchange = e => { addTeamDocs([...e.target.files]); e.target.value = ''; };
+  ['dragenter', 'dragover'].forEach(ev => $('#teamDocs').addEventListener(ev, e => { if ([...(e.dataTransfer?.types || [])].includes('Files')) { e.preventDefault(); e.stopPropagation(); $('#teamDocs').classList.add('dragging'); } }));
+  $('#teamDocs').addEventListener('dragleave', e => { if (!$('#teamDocs').contains(e.relatedTarget)) $('#teamDocs').classList.remove('dragging'); });
+  $('#teamDocs').addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); $('#teamDocs').classList.remove('dragging'); addTeamDocs([...(e.dataTransfer?.files || [])]); });
+
   $('#teamClose').onclick = () => { closeShared(true); setView('groups'); };
   $('#teamInvite').onclick = async () => {
     try { const { code, where } = await teamApi('/api/trabajos/invitacion?id=' + encodeURIComponent(sharedWork.id)); $('#teamInvCode').value = code; $('#teamInvCode').style.fontSize = code.length > 20 ? '12px' : ''; $('#teamInvDrive').hidden = where === 'buzon'; $('#teamInvFolder').textContent = '«' + (sharedWork.summary.folder || sharedWork.summary.name) + '»'; $('#teamInvDlg').showModal(); } catch (e) { toast(e.message); }
