@@ -6,7 +6,7 @@ permissions:
 jobs:
   compilar:
     # Mac con chip Apple: los Intel gratuitos de GitHub se quedan sin sitio (17-11-2026). Compila igual los dos .dmg y el .exe.
-    runs-on: macos-14
+    runs-on: macos-latest
     timeout-minutes: 60
     permissions:
       contents: write
