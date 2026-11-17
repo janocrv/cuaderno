@@ -4041,8 +4041,21 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
       const r = +x.dataset.r, c = +x.dataset.c; pop.hidden = true; paint(0, 0);
       const row = tag => '<tr>' + Array.from({ length: c }, () => `<${tag}><br></${tag}>`).join('') + '</tr>';
       $('#editor').focus();
+      // dónde está el cursor (para crear la tabla ahí, como una nota o una foto)
+      const ed = $('#editor'), er = ed.getBoundingClientRect(), scale = er.width / (ed.offsetWidth || er.width) || 1;
+      let caret = null; try { const sel = getSelection(); if (sel.rangeCount) { const rr = sel.getRangeAt(0).getClientRects(); caret = rr[0] || sel.getRangeAt(0).getBoundingClientRect(); } } catch (err) {}
       rich.table(r, c);
-      $('#editor').dispatchEvent(new Event('input'));
+      // la tabla nueva sale suelta (se mueve con «Arrastra la tabla» y se escala con ⤢ en la esquina), no a todo el ancho
+      requestAnimationFrame(() => {
+        try {
+          const a = getSelection().anchorNode, t = (a && (a.nodeType === 1 ? a : a.parentElement))?.closest('table'); if (!t) return;
+          const w = Math.max(220, Math.min(c * 110, ed.clientWidth - 80));
+          let x = caret && caret.width + caret.height ? (caret.left - er.left) / scale : 68, y = caret && caret.width + caret.height ? (caret.top - er.top) / scale : 64;
+          x = Math.max(12, Math.min(ed.clientWidth - w - 12, x)); y = Math.max(16, y);
+          rich.tablePosition(t, Math.round(x), Math.round(y), Math.round(w)); rich.layout();
+        } catch (err) {}
+        ed.dispatchEvent(new Event('input'));
+      });
     });
     document.addEventListener('mousedown', e => { if (!pop.hidden && !e.target.closest('.tb-table-wrap')) pop.hidden = true; });
   })();
@@ -6773,7 +6786,8 @@ Gracias.` },
   // Historial (17-11-2026): cada versión con un resumen corto y comprensible, en castellano y en catalán.
   // Al publicar una versión nueva: añadir arriba su entrada (v, fecha, frase y 3-5 puntos con icono).
   const HISTORY = [
-    { v: '5.0.5', d: '17-11-2026', es: 'Horario editable y documentos en los trabajos en grupo.', ca: 'Horari editable i documents als treballs en grup.', items: [
+    { v: '5.0.5', d: '17-11-2026', es: 'Horario editable, tablas sueltas y documentos en los trabajos en grupo.', ca: 'Horari editable, taules soltes i documents als treballs en grup.', items: [
+      ['▦', 'Tablas más manejables', 'las tablas nuevas se crean donde está el cursor y más pequeñas; muévelas con «Arrastra la tabla» y cámbiales el tamaño con ⤢ en la esquina inferior derecha.', 'Taules més manejables', 'les taules noves es creen on hi ha el cursor i més menudes; mou-les amb «Arrossega la taula» i canvia\'n la mida amb ⤢ a la cantonada inferior dreta.'],
       ['🗓️', 'Horario editable', 'cambia la hora, el día o el aula de una clase (✎ o clic derecho), elimínala, o añade clases y tutorías con «Añadir clase» o con doble clic en un hueco. Puedes aplicarlo también a las semanas siguientes. Tus cambios se conservan aunque vuelvas a cargar el horario.', 'Horari editable', 'canvia l\'hora, el dia o l\'aula d\'una classe (✎ o clic dret), elimina-la, o afig classes i tutories amb «Afig una classe» o amb doble clic en un buit. Pots aplicar-ho també a les setmanes següents. Els teus canvis es conserven encara que tornes a carregar l\'horari.'],
       ['📎', 'Documentos del grupo', 'en cada trabajo en grupo, el botón «Documentos» guarda rúbricas, artículos o plantillas para todo el grupo: aporta archivos (también arrastrándolos) con una nota, ábrelos o guarda una copia. Cualquiera puede quitar un documento.', 'Documents del grup', 'en cada treball en grup, el botó «Documents» guarda rúbriques, articles o plantilles per a tot el grup: aporta fitxers (també arrossegant-los) amb una nota, obri\'ls o guarda una còpia. Qualsevol pot llevar un document.'],
       ['🔴', 'Aviso de documentos nuevos', 'un punto en el botón te avisa cuando alguien del grupo ha aportado algo desde la última vez que miraste.', 'Avís de documents nous', 'un punt al botó t\'avisa quan algú del grup ha aportat alguna cosa des de l\'última vegada que vas mirar.'],
