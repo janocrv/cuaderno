@@ -1,7 +1,7 @@
 {
   "name": "cuaderno",
   "productName": "Cuaderno",
-  "version": "4.2.3",
+  "version": "5.0.0",
   "description": "Cuaderno del Máster en Profesor/a de Educación Secundaria (UV)",
   "author": "Cuaderno UV",
   "main": "main.js",
@@ -54,7 +54,12 @@
       "documentos-worker.js",
       "editor-exportar.js",
       "package.json",
-      "web/**"
+      "web/**",
+      "!**/*.map",
+      "!node_modules/@napi-rs/**",
+      "!node_modules/pdfjs-dist/{build,web,types,image_decoders}/**",
+      "!node_modules/pdfjs-dist/legacy/{web,image_decoders}/**",
+      "!node_modules/pdfjs-dist/legacy/build/pdf.sandbox.*"
     ],
     "directories": {
       "output": "dist",
