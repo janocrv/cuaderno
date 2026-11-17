@@ -1,5 +1,6 @@
 # Cuaderno 5.0.5
 
+- **Horario editable:** cambia la hora, el día, el aula o la asignatura de una clase (con el lápiz ✎ o con clic derecho) o elimínala, solo esa o también las de las semanas siguientes. Añade clases, tutorías o exámenes con «Añadir clase» o con doble clic en un hueco, y repítelos cada semana si quieres. Tus cambios se conservan aunque vuelvas a cargar el horario (.ics) y se sincronizan con tus otros ordenadores.
 - **Documentos del grupo:** en cada trabajo en grupo, el botón «Documentos» guarda rúbricas, artículos, plantillas… para todo el grupo. Aporta archivos (también arrastrándolos, hasta 25 MB) con una nota opcional, ábrelos o guarda una copia. Se ve quién aportó cada uno y cuándo. Cualquiera del grupo puede quitar un documento. Todo va cifrado, como el resto del trabajo.
 - **Aviso de documentos nuevos:** un punto en el botón «Documentos» avisa cuando alguien del grupo ha aportado algo.
 

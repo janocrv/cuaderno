@@ -436,6 +436,22 @@ dialog.viewer[open]{display:flex;flex-direction:column;animation:none!important;
 .cls .tm,.cls .rm{display:block;color:var(--muted)}
 .cls .nm2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:2px 0}
 .cls.past{opacity:.55}
+/* Horario editable: lápiz en cada clase, clases añadidas o cambiadas por ti */
+.cls,.ag-item{position:relative}
+.cls-ed{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;background:var(--surface);color:var(--muted);box-shadow:0 1px 4px rgba(16,48,70,.18);opacity:0;transition:opacity .15s;cursor:pointer}
+.cls-ed svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cls:hover .cls-ed,.ag-item:hover .cls-ed,.cls-ed:focus{opacity:1}.cls-ed:hover{color:var(--c);opacity:1}
+.ag-item .cls-ed{top:50%;transform:translateY(-50%);right:10px}
+.cls.mine{border-left-style:dashed}.cls .mk,.ag-item .mk{font-size:.66rem;color:var(--muted);font-style:italic}
+.sch-add{display:inline-flex;align-items:center;gap:6px}
+.sch-add svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.wk-day{cursor:copy}.wk-day .cls{cursor:pointer}
+#clsDlg{overflow-x:hidden}#clsDlg .dlg{width:min(440px,86vw);box-sizing:border-box}
+#clsDlg select,#clsDlg input:not([type=checkbox]){width:100%;max-width:100%;min-width:0;box-sizing:border-box;text-overflow:ellipsis}
+#clsDlg .row2{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px}#clsDlg .row2>*{min-width:0}
+#clsDlg .chk{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--ink);margin:6px 0 2px}
+#clsDlg .chk input{width:auto;margin:0}
+#clsDlg [hidden]{display:none!important}
 .now-line{position:absolute;left:0;right:0;height:2px;background:var(--danger);z-index:2;pointer-events:none}
 .now-line::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--danger)}
 .wk-empty{padding:48px 20px;text-align:center;color:var(--muted)}
@@ -1636,6 +1652,7 @@ body.team-open .top .title,body.team-open #globalSubjectFilter{visibility:hidden
             <strong id="wkLabel"></strong>
           </div>
           <div class="sch-next" id="schNext"></div>
+          <button class="btn sch-add" id="clsAdd" title="Añadir una clase o un acontecimiento al horario (también con doble clic en un hueco)"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Añadir clase</button>
           <button class="icon-btn" id="icsBtn" title="Cargar un horario nuevo en formato .ics"><svg viewBox="0 0 24 24"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></svg><span class="t">Actualizar horario</span></button>
           <input type="file" id="icsInput" accept=".ics,text/calendar" hidden>
         </div>
@@ -1833,6 +1850,30 @@ body.team-open .top .title,body.team-open #globalSubjectFilter{visibility:hidden
     </ol>
     <div class="d-actions"><button type="button" class="btn primary" id="teamInvCopy">Copiar el código</button><button type="button" class="btn" id="teamInvClose">Cerrar</button></div>
   </div>
+</dialog>
+<dialog id="clsDlg">
+  <form class="dlg" id="clsForm" autocomplete="off">
+    <h3 id="clsDlgTitle">Editar clase</h3>
+    <p class="sub" id="clsDlgSub">Los cambios se guardan aunque vuelvas a cargar el horario (.ics).</p>
+    <label class="f">Asignatura <select name="sid" id="clsSubj"></select></label>
+    <label class="f">Nombre <input type="text" name="name" maxlength="120" placeholder="p. ej. Seminario, tutoría, examen…"></label>
+    <div class="row2">
+      <label class="f">Día <input type="date" name="d" required></label>
+      <label class="f">Empieza <input type="time" name="s" required step="300"></label>
+      <label class="f">Acaba <input type="time" name="e" required step="300"></label>
+    </div>
+    <label class="f">Aula <input type="text" name="room" maxlength="60" placeholder="p. ej. 2.14"></label>
+    <label class="chk" id="clsAllRow"><input type="checkbox" name="all"> <span id="clsAllTxt">Cambiar también las siguientes semanas (misma asignatura, día y hora)</span></label>
+    <div id="clsRepRow" hidden>
+      <label class="chk"><input type="checkbox" name="rep"> Repetir cada semana</label>
+      <label class="f" id="clsUntilRow" hidden>Hasta el <input type="date" name="until"></label>
+    </div>
+    <div class="d-actions">
+      <button type="button" class="btn danger" id="clsDel" style="margin-right:auto">Eliminar</button>
+      <button type="button" class="btn" id="clsCancel">Cancelar</button>
+      <button type="submit" class="btn primary">Guardar</button>
+    </div>
+  </form>
 </dialog>
 <dialog id="grpDlg">
   <form class="dlg" id="grpForm">
@@ -2750,6 +2791,16 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     "Por ejemplo «1.er cuatrimestre», «Optativas» o «Prácticas».": "Per exemple «1r quadrimestre», «Optatives» o «Pràctiques».",
     "Grupo deshecho: no se ha borrado nada": "Grup desfet: no s'ha esborrat res", "Ya hay un grupo con ese nombre": "Ja hi ha un grup amb aquest nom",
     "Tiene que quedar al menos una asignatura en el dock": "Ha de quedar almenys una assignatura a la barra", "Hace falta otra asignatura suelta para formar un grupo": "Cal una altra assignatura solta per a formar un grup",
+    // horario editable
+    "Añadir clase": "Afig una classe", "Añadir una clase o un acontecimiento al horario (también con doble clic en un hueco)": "Afig una classe o un esdeveniment a l'horari (també amb doble clic en un buit)",
+    "Editar clase": "Edita la classe", "Cambiar clase": "Canvia la classe", "Añadir al horario": "Afig a l'horari",
+    "Los cambios se guardan aunque vuelvas a cargar el horario (.ics).": "Els canvis es guarden encara que tornes a carregar l'horari (.ics).",
+    "Asignatura": "Assignatura", "Sin asignatura (otra cosa)": "Sense assignatura (una altra cosa)", "Nombre": "Nom", "p. ej. Seminario, tutoría, examen…": "p. ex. Seminari, tutoria, examen…",
+    "Día": "Dia", "Empieza": "Comença", "Acaba": "Acaba", "Aula": "Aula", "p. ej. 2.14": "p. ex. 2.14", "Repetir cada semana": "Repeteix cada setmana", "Hasta el": "Fins al",
+    "Cambiar también las siguientes semanas (misma asignatura, día y hora)": "Canvia també les setmanes següents (mateixa assignatura, dia i hora)",
+    "Cambiar o eliminar esta clase": "Canvia o elimina aquesta classe", "Doble clic en un hueco para añadir una clase": "Doble clic en un buit per a afegir una classe",
+    "añadida por ti": "afegida per tu", "cambiada por ti": "canviada per tu", "Clase cambiada": "Classe canviada", "Añadida al horario": "Afegida a l'horari",
+    "Clase eliminada del horario": "Classe eliminada de l'horari", "La hora de acabar tiene que ser después de la de empezar": "L'hora d'acabar ha de ser després de la de començar",
     // documentos del grupo
     "Documentos": "Documents", "Documentos del grupo": "Documents del grup", "Documentos útiles que aporta el grupo (rúbricas, artículos, plantillas…)": "Documents útils que aporta el grup (rúbriques, articles, plantilles…)",
     "Lo que aportes lo verá todo el grupo. Cualquiera puede quitar un documento.": "El que aportes ho veurà tot el grup. Qualsevol pot llevar un document.",
@@ -2810,6 +2861,10 @@ if (IN_APP) { document.documentElement.classList.add('in-app'); if (/Mac/i.test(
     [/^Información encontrada en (\d+) correo(s)?$/, (m,n,s)=>`Informació trobada en ${n} correu${s?'s':''}`],
     [/^(\d+) correos revisados · (\d+) fichas de profesorado\. Los datos no encontrados quedan en blanco\.$/, '$1 correus revisats · $2 fitxes de professorat. Les dades no trobades queden en blanc.'],
     [/^(\d+) fichas rellenadas: revísalas$/, '$1 fitxes omplides: revisa-les'], [/^¿Quitar la ficha de «(.+)»\?$/, 'Vols llevar la fitxa de «$1»?'],
+    [/^Cambiar también las (\d+) siguientes \(misma asignatura, mismo día y hora\)$/, 'Canvia també les $1 següents (mateixa assignatura, mateix dia i hora)'],
+    [/^Cambiadas (\d+) clases$/, 'Canviades $1 classes'], [/^Añadidas (\d+) clases$/, 'Afegides $1 classes'], [/^(\d+) clases eliminadas$/, '$1 classes eliminades'],
+    [/^¿Eliminar del horario «([\s\S]+)» del (.+) a las (\d\d:\d\d)\?$/, (m, a, b, c) => `Vols eliminar de l'horari «${a}» del ${trDate(b)} a les ${c}?`],
+    [/^¿Eliminar «([\s\S]+)» del (.+) y las (\d+) siguientes\?$/, (m, a, b, c) => `Vols eliminar «${a}» del ${trDate(b)} i les ${c} següents?`],
     [/^(\d+) documentos aportados$/, '$1 documents aportats'], [/^Subiendo «(.+)»…$/, 'Pujant «$1»…'], [/^«(.+)» supera los 25 MB$/, '«$1» supera els 25 MB'],
     [/^¿Quitar «([\s\S]+)» de los documentos del grupo\? Dejará de verlo todo el grupo\.$/, 'Vols llevar «$1» dels documents del grup? Deixarà de veure\'l tot el grup.'],
     [/^Mover a «(.+)»$/, 'Mou a «$1»'], [/^Archivadas \((\d+)\)$/, 'Arxivades ($1)'], [/^Asignaturas archivadas \((\d+)\)$/, 'Assignatures arxivades ($1)'],
@@ -5026,6 +5081,7 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
   const HH = 64;
   const norm = t => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
   function subjFor(ev) {
+    if (ev.sid) { const s = state.subjects.find(x => x.id === ev.sid); if (s) return s; }   // elegida a mano al editar
     const n = norm(ev.name);
     return state.subjects.find(s => s.code && s.code === ev.code)
       || state.subjects.find(s => norm(s.name) === n)
@@ -5043,7 +5099,14 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
     if (sc.length && t > sc[sc.length - 1].d) return mondayOf(sc[sc.length - 1].d);
     return mondayOf(t);
   }
+  /* Horario editable (17-11-2026). Cada clase lleva `id`; las del .ics, `src` (día|hora|código) para reconocerlas al
+     volver a cargarlo. Editadas: `edited`; añadidas por ti: `manual`; borradas del .ics: state.settings.schedRemoved[src]
+     (los ajustes y el horario se sincronizan juntos). Al recargar el .ics se respetan los tres. */
+  const schedKey = e => e.d + '|' + e.s + '|' + (e.code || e.name || '');
+  function ensureSchedIds() { (state.schedule || []).forEach(e => { if (!e.id) e.id = (e.manual ? 'm' : 'i') + uid(); if (!e.manual && !e.src) e.src = schedKey(e); }); }
+  const ED_SVG = '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg>';
   function renderSchedule() {
+    ensureSchedIds();
     const sc = state.schedule || [];
     if (!weekStart) weekStart = initialWeek();
     const days = [...Array(7)].map((_, i) => addDays(weekStart, i));
@@ -5079,12 +5142,13 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
     for (let k = minH; k < maxH; k++) h += `<span style="top:${(k - minH) * HH + 3}px">${k}:00</span>`;
     h += '</div>';
     shown.forEach(d => {
-      h += `<div class="wk-day ${d === tdy ? 'today' : ''}" style="height:${H}px">`;
+      h += `<div class="wk-day ${d === tdy ? 'today' : ''}" style="height:${H}px" data-d="${d}" data-minh="${minH}" title="Doble clic en un hueco para añadir una clase">`;
       evs.filter(e => e.d === d).forEach(e => {
         const { c, ab, sid } = info(e);
         const top = (toMin(e.s) - minH * 60) / 60 * HH + 2, ht = (toMin(e.e) - toMin(e.s)) / 60 * HH - 4;
-        h += `<button class="cls ${isPast(e) ? 'past' : ''}" style="top:${top}px;height:${ht}px;--c:${c}" data-d="${d}" data-sid="${sid}" title="${esc(e.name)} · Abrir los apuntes de esta clase">
-          <span class="ab">${esc(ab)}</span><span class="tm">${e.s} – ${e.e}</span><span class="nm2">${esc(e.name)}</span>${e.room ? `<span class="rm">Aula ${esc(e.room)}</span>` : ''}</button>`;
+        const mk = e.manual ? 'añadida por ti' : e.edited ? 'cambiada por ti' : '';
+        h += `<button class="cls ${isPast(e) ? 'past' : ''} ${mk ? 'mine' : ''}" style="top:${top}px;height:${ht}px;--c:${c}" data-d="${d}" data-sid="${sid}" data-id="${e.id}" title="${esc(e.name)} · Abrir los apuntes de esta clase (clic derecho o ✎ para cambiarla)">
+          <span class="ab">${esc(ab)}</span><span class="tm">${e.s} – ${e.e}</span><span class="nm2">${esc(e.name)}</span>${e.room ? `<span class="rm">Aula ${esc(e.room)}</span>` : ''}${mk ? `<span class="mk">${mk}</span>` : ''}<span class="cls-ed" data-ed="${e.id}" title="Cambiar o eliminar esta clase">${ED_SVG}</span></button>`;
       });
       if (d === tdy && nowMin >= minH * 60 && nowMin <= maxH * 60) h += `<div class="now-line" style="top:${(nowMin - minH * 60) / 60 * HH}px"></div>`;
       h += '</div>';
@@ -5097,7 +5161,8 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
       a += `<div class="ag-day ${d === tdy ? 'today' : ''}">${esc(fmtLong(d))}${d === tdy ? ' · hoy' : ''}</div>`;
       list.forEach(e => {
         const { c, ab, sid } = info(e);
-        a += `<button class="ag-item ${isPast(e) ? 'past' : ''}" style="--c:${c}" data-d="${d}" data-sid="${sid}"><span class="ag-time">${e.s}<br>${e.e}</span><span class="ag-body"><b>${esc(ab)} · ${esc(e.name)}</b>${e.room ? `<span>Aula ${esc(e.room)}</span>` : ''}</span></button>`;
+        const mk = e.manual ? 'añadida por ti' : e.edited ? 'cambiada por ti' : '';
+        a += `<button class="ag-item ${isPast(e) ? 'past' : ''}" style="--c:${c}" data-d="${d}" data-sid="${sid}" data-id="${e.id}"><span class="ag-time">${e.s}<br>${e.e}</span><span class="ag-body"><b>${esc(ab)} · ${esc(e.name)}</b>${e.room ? `<span>Aula ${esc(e.room)}</span>` : ''}${mk ? ` <span class="mk">${mk}</span>` : ''}</span><span class="cls-ed" data-ed="${e.id}" title="Cambiar o eliminar esta clase">${ED_SVG}</span></button>`;
       });
     });
     $('#agenda').innerHTML = a;
@@ -5114,9 +5179,78 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
     }
     state.activeNote = n.id; $('#search').value = ''; save(); renderAll(); $('#editor').focus();
   }
-  ['#week', '#agenda'].forEach(sel => $(sel).addEventListener('click', e => {
-    const b = e.target.closest('.cls, .ag-item'); if (b) openClass(b.dataset.sid, b.dataset.d);
-  }));
+  ['#week', '#agenda'].forEach(sel => {
+    $(sel).addEventListener('click', e => {
+      const ed = e.target.closest('.cls-ed'); if (ed) { e.stopPropagation(); openClsDlg(ed.dataset.ed); return; }
+      const b = e.target.closest('.cls, .ag-item'); if (b) openClass(b.dataset.sid, b.dataset.d);
+    });
+    $(sel).addEventListener('contextmenu', e => { const b = e.target.closest('.cls, .ag-item'); if (b) { e.preventDefault(); openClsDlg(b.dataset.id); } });
+  });
+  // doble clic en un hueco del horario: añadir una clase ese día a esa hora (redondeada al cuarto de hora)
+  $('#week').addEventListener('dblclick', e => {
+    const day = e.target.closest('.wk-day'); if (!day || e.target.closest('.cls')) return;
+    const y = e.clientY - day.getBoundingClientRect().top, m = Math.round(((+day.dataset.minh) * 60 + y / HH * 60) / 15) * 15;
+    const hm = x => String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0');
+    openClsDlg(null, { d: day.dataset.d, s: hm(m), e: hm(Math.min(m + 60, 23 * 60 + 45)) });
+  });
+
+  /* Ventana para cambiar, eliminar o añadir clases */
+  let clsEditing = null;
+  const daysBetween = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
+  // las mismas clases en semanas siguientes: misma asignatura (o nombre), mismo día de la semana y misma hora de inicio
+  function siblings(ev) {
+    const s0 = subjFor(ev), wd = parseISO(ev.d).getDay();
+    return (state.schedule || []).filter(x => x !== ev && x.d > ev.d && x.s === ev.s && parseISO(x.d).getDay() === wd && (s0 ? subjFor(x) === s0 : norm(x.name) === norm(ev.name)));
+  }
+  function openClsDlg(id, preset) {
+    ensureSchedIds(); state.schedule ||= [];
+    const f = $('#clsForm'), ev = id ? state.schedule.find(x => x.id === id) : null;
+    clsEditing = ev ? ev.id : null;
+    $('#clsDlgTitle').textContent = ev ? 'Cambiar clase' : 'Añadir al horario';
+    const s0 = ev ? subjFor(ev) : null;
+    $('#clsSubj').innerHTML = '<option value="">Sin asignatura (otra cosa)</option>' + orderedSubjects().filter(x => !x.archived || x === s0).map(x => `<option value="${esc(x.id)}">${esc(x.short)} · ${esc(x.name)}</option>`).join('');
+    $('#clsSubj').value = s0 ? s0.id : (state.subjects.find(x => x.id === state.active) && !ev ? '' : '');
+    f.name.value = ev ? ev.name : ''; f.d.value = ev ? ev.d : (preset && preset.d) || today();
+    f.s.value = ev ? ev.s : (preset && preset.s) || '09:00'; f.e.value = ev ? ev.e : (preset && preset.e) || '10:00'; f.room.value = ev ? ev.room || '' : '';
+    const sib = ev ? siblings(ev).length : 0;
+    f.all.checked = false; $('#clsAllRow').hidden = !sib;
+    $('#clsAllTxt').textContent = `Cambiar también las ${sib} siguientes (misma asignatura, mismo día y hora)`;
+    $('#clsRepRow').hidden = !!ev; f.rep.checked = false; $('#clsUntilRow').hidden = true; f.until.value = '';
+    $('#clsDel').hidden = !ev;
+    $('#clsDlg').showModal(); (ev ? f.s : f.name).focus();
+  }
+  $('#clsAdd').onclick = () => openClsDlg(null, { d: weekStart && today() < weekStart ? weekStart : today() });
+  $('#clsCancel').onclick = () => $('#clsDlg').close();
+  $('#clsForm').rep.onchange = e => { $('#clsUntilRow').hidden = !e.target.checked; if (e.target.checked && !$('#clsForm').until.value) $('#clsForm').until.value = addDays($('#clsForm').d.value, 7 * 8); };
+  $('#clsForm').addEventListener('submit', e => {
+    e.preventDefault(); const f = e.target;
+    if (f.e.value <= f.s.value) { toast('La hora de acabar tiene que ser después de la de empezar'); return; }
+    const s = state.subjects.find(x => x.id === f.sid.value);
+    const fields = { s: f.s.value, e: f.e.value, room: f.room.value.trim(), name: f.name.value.trim() || (s ? s.name : 'Clase'), sid: s ? s.id : '', code: s ? (s.code || '') : '' };
+    if (clsEditing) {
+      const ev = state.schedule.find(x => x.id === clsEditing); if (!ev) return;
+      const sibs = f.all.checked ? siblings(ev) : [], shift = daysBetween(ev.d, f.d.value);
+      Object.assign(ev, fields, { d: f.d.value }); if (!ev.manual) ev.edited = true;
+      sibs.forEach(x => { Object.assign(x, fields, { d: addDays(x.d, shift) }); if (!x.manual) x.edited = true; });
+      toast(sibs.length ? `Cambiadas ${sibs.length + 1} clases` : 'Clase cambiada');
+    } else {
+      const dates = [f.d.value];
+      if (f.rep.checked && f.until.value) { let d = addDays(f.d.value, 7); while (d <= f.until.value && dates.length < 60) { dates.push(d); d = addDays(d, 7); } }
+      dates.forEach(d => state.schedule.push({ id: 'm' + uid(), manual: true, d, ...fields }));
+      toast(dates.length > 1 ? `Añadidas ${dates.length} clases` : 'Añadida al horario');
+    }
+    state.schedule.sort((a, b) => (a.d + a.s).localeCompare(b.d + b.s));
+    $('#clsDlg').close(); save(); renderSchedule(); markLive();
+  });
+  $('#clsDel').onclick = () => {
+    const f = $('#clsForm'), ev = state.schedule.find(x => x.id === clsEditing); if (!ev) return;
+    const all = [ev, ...(f.all.checked ? siblings(ev) : [])];
+    if (!confirm(all.length === 1 ? `¿Eliminar del horario «${ev.name}» del ${fmtDate(ev.d)} a las ${ev.s}?` : `¿Eliminar «${ev.name}» del ${fmtDate(ev.d)} y las ${all.length - 1} siguientes?`)) return;
+    state.settings.schedRemoved ||= {};
+    all.forEach(x => { if (x.src) state.settings.schedRemoved[x.src] = 1; });
+    const gone = new Set(all); state.schedule = state.schedule.filter(x => !gone.has(x));
+    $('#clsDlg').close(); save(); renderSchedule(); markLive(); toast(all.length === 1 ? 'Clase eliminada del horario' : `${all.length} clases eliminadas`);
+  };
   $('#schedBtn').onclick = () => {
     setView('schedule'); renderSubjects();
     if (matchMedia('(max-width:640px)').matches && state.railOpen) { state.railOpen = false; applyRail(); }
@@ -5152,8 +5286,15 @@ const standaloneHTML = (title, body) => `<!DOCTYPE html><html lang="es"><head><m
     const f = e.target.files[0]; e.target.value = ''; if (!f) return;
     const evs = parseICS(await f.text());
     if (!evs.length) { alert('No se han encontrado clases en ese archivo. Comprueba que es un calendario .ics.'); return; }
-    if (!confirm(`Se han encontrado ${evs.length} clases. ¿Sustituir el horario actual por este?`)) return;
-    state.schedule = evs; weekStart = null; save(); renderSchedule(); toast('Horario actualizado');
+    // tus cambios se conservan: lo borrado sigue borrado, lo cambiado sigue cambiado y lo añadido sigue ahí
+    ensureSchedIds();
+    const old = state.schedule || [], removed = state.settings.schedRemoved || {};
+    const edited = new Map(old.filter(x => x.edited && x.src).map(x => [x.src, x])), mine = old.filter(x => x.manual || x.edited).length;
+    if (!confirm(`Se han encontrado ${evs.length} clases. ¿Sustituir el horario actual por este?` + (mine || Object.keys(removed).length ? '\n\nTus cambios (clases añadidas, cambiadas o eliminadas por ti) se conservan.' : ''))) return;
+    const merged = evs.map(n => ({ ...n, src: schedKey(n), id: 'i' + uid() })).filter(n => !removed[n.src]).map(n => edited.get(n.src) || n);
+    const keep = old.filter(x => (x.manual || x.edited) && !merged.includes(x));
+    state.schedule = [...merged, ...keep].sort((a, b) => (a.d + a.s).localeCompare(b.d + b.s));
+    weekStart = null; save(); renderSchedule(); toast('Horario actualizado');
   };
 
   /* ---------- Correo ---------- */
@@ -6632,7 +6773,8 @@ Gracias.` },
   // Historial (17-11-2026): cada versión con un resumen corto y comprensible, en castellano y en catalán.
   // Al publicar una versión nueva: añadir arriba su entrada (v, fecha, frase y 3-5 puntos con icono).
   const HISTORY = [
-    { v: '5.0.5', d: '17-11-2026', es: 'Documentos útiles en los trabajos en grupo.', ca: 'Documents útils als treballs en grup.', items: [
+    { v: '5.0.5', d: '17-11-2026', es: 'Horario editable y documentos en los trabajos en grupo.', ca: 'Horari editable i documents als treballs en grup.', items: [
+      ['🗓️', 'Horario editable', 'cambia la hora, el día o el aula de una clase (✎ o clic derecho), elimínala, o añade clases y tutorías con «Añadir clase» o con doble clic en un hueco. Puedes aplicarlo también a las semanas siguientes. Tus cambios se conservan aunque vuelvas a cargar el horario.', 'Horari editable', 'canvia l\'hora, el dia o l\'aula d\'una classe (✎ o clic dret), elimina-la, o afig classes i tutories amb «Afig una classe» o amb doble clic en un buit. Pots aplicar-ho també a les setmanes següents. Els teus canvis es conserven encara que tornes a carregar l\'horari.'],
       ['📎', 'Documentos del grupo', 'en cada trabajo en grupo, el botón «Documentos» guarda rúbricas, artículos o plantillas para todo el grupo: aporta archivos (también arrastrándolos) con una nota, ábrelos o guarda una copia. Cualquiera puede quitar un documento.', 'Documents del grup', 'en cada treball en grup, el botó «Documents» guarda rúbriques, articles o plantilles per a tot el grup: aporta fitxers (també arrossegant-los) amb una nota, obri\'ls o guarda una còpia. Qualsevol pot llevar un document.'],
       ['🔴', 'Aviso de documentos nuevos', 'un punto en el botón te avisa cuando alguien del grupo ha aportado algo desde la última vez que miraste.', 'Avís de documents nous', 'un punt al botó t\'avisa quan algú del grup ha aportat alguna cosa des de l\'última vegada que vas mirar.'],
     ] },
